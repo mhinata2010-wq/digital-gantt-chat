@@ -6,25 +6,56 @@
   <title>snake site｜現場工程表</title>
   <meta name="description" content="建設工事の予定登録と遅延影響を確認できる工程表">
   <link rel="stylesheet" href="style.css">
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M5 5v22M3 22h18' stroke='%23000' stroke-width='3'/%3E%3Cpath d='M9 12h13c4 0 4 5 8 5' fill='none' stroke='%2300703c' stroke-width='3'/%3E%3C/svg%3E">
+  <link rel="icon" type="image/gif" href="snake-site.gif">
+  <link rel="apple-touch-icon" href="snake-site.gif">
 </head>
 <body>
   <section class="account-gate" id="accountGate">
-    <div class="account-panel">
+    <header class="account-header">
       <img src="snake-site.gif" alt="snake site" class="account-logo">
-      <p class="kicker">CONSTRUCTION WORKSPACE</p>
-      <h1 id="authTitle">工程を、チームで進める。</h1>
-      <p class="account-copy">現場ごとに工程表を保存し、担当会社と共有できる検証版です。</p>
-      <form id="authForm" class="auth-form">
-        <label id="nameField"><span>表示名</span><input id="authName" autocomplete="name" placeholder="例：宮地 陽大"></label>
-        <label><span>メールアドレス</span><input id="authEmail" type="email" autocomplete="email" required placeholder="name@example.com"></label>
-        <label><span>パスワード</span><input id="authPassword" type="password" minlength="6" required placeholder="6文字以上"></label>
-        <p id="authError" class="auth-error" role="alert"></p>
-        <button class="primary-button auth-submit" id="authSubmit" type="submit">アカウントを作成</button>
-      </form>
-      <button class="auth-switch" id="authSwitch" type="button">すでにアカウントをお持ちの方</button>
-      <button class="demo-button" id="demoLogin" type="button">デモアカウントで試す</button>
-      <p class="prototype-note">プロトタイプのため、アカウントと案件はこの端末内だけに保存されます。</p>
+      <div class="account-product"><b>工程管理</b><span>PROTOTYPE 01</span></div>
+    </header>
+    <div class="account-layout">
+      <section class="site-intro" aria-label="サービス概要">
+        <p class="site-number">01 / FIELD SCHEDULE</p>
+        <h1>段取りを、<br>一本に。</h1>
+        <p class="site-copy">工種ごとの予定と前後関係を整理し、遅れが出たときの影響をその場で確認する工程表です。</p>
+
+        <div class="site-board" aria-hidden="true">
+          <div class="board-head"><span>木造住宅 新築工事</span><time>8月1日 — 8月14日</time></div>
+          <div class="board-row"><b>土木</b><i style="--start:0;--span:4;--tone:#0b7545"></i><small>完了</small></div>
+          <div class="board-row"><b>基礎</b><i style="--start:4;--span:3;--tone:#c78326"></i><small>進行中</small></div>
+          <div class="board-row"><b>躯体</b><i style="--start:7;--span:7;--tone:#2e6885"></i><small>予定</small></div>
+          <div class="board-scale"><span>8/1</span><span>8/7</span><span>8/14</span></div>
+        </div>
+
+        <dl class="site-points">
+          <div><dt>01</dt><dd>工程を上から並べて登録</dd></div>
+          <div><dt>02</dt><dd>遅延後の日程候補を再計算</dd></div>
+          <div><dt>03</dt><dd>協力会社へリンクで共有</dd></div>
+        </dl>
+      </section>
+
+      <main class="account-panel">
+        <div class="account-panel-head">
+          <p>ACCOUNT</p>
+          <h2 id="authTitle">利用をはじめる</h2>
+          <span id="authDescription">案件を保存するためのアカウントを作成します。</span>
+        </div>
+        <form id="authForm" class="auth-form">
+          <label id="nameField"><span>表示名</span><input id="authName" autocomplete="name" placeholder="例：宮地 陽大"></label>
+          <label><span>メールアドレス</span><input id="authEmail" type="email" autocomplete="email" required placeholder="name@example.com"></label>
+          <label><span>パスワード</span><input id="authPassword" type="password" minlength="6" required placeholder="6文字以上"></label>
+          <p id="authError" class="auth-error" role="alert"></p>
+          <button class="primary-button auth-submit" id="authSubmit" type="submit">アカウントを作成 <span>→</span></button>
+        </form>
+        <div class="account-options">
+          <button class="auth-switch" id="authSwitch" type="button">すでにアカウントをお持ちの方</button>
+          <span>または</span>
+          <button class="demo-button" id="demoLogin" type="button">登録せずにデモを見る</button>
+        </div>
+        <p class="prototype-note"><b>検証版</b>　入力した情報はこの端末内だけに保存されます。普段使っているパスワードは使用しないでください。</p>
+      </main>
     </div>
   </section>
 
@@ -183,7 +214,8 @@
       const registering=mode==='register';
       $('nameField').hidden=!registering;
       $('authName').required=registering;
-      $('authTitle').textContent=registering?'工程を、チームで進める。':'おかえりなさい';
+      $('authTitle').textContent=registering?'利用をはじめる':'ログイン';
+      $('authDescription').textContent=registering?'案件を保存するためのアカウントを作成します。':'登録したメールアドレスとパスワードを入力してください。';
       $('authSubmit').textContent=registering?'アカウントを作成':'ログイン';
       $('authSwitch').textContent=registering?'すでにアカウントをお持ちの方':'新しいアカウントを作る';
       $('authError').textContent='';
