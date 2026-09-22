@@ -18,7 +18,12 @@
           <button id="calendarTab" class="tab" data-view="calendar">カレンダー</button>
           <span class="tab-indicator" aria-hidden="true"></span>
         </nav>
-        <button class="icon-button" id="settingsButton" aria-label="現場情報を表示">•••</button>
+        <div class="header-actions">
+          <button class="icon-button share-button" id="shareButton" aria-label="この工程表を共有">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 13v6h14v-6"/></svg>
+          </button>
+          <button class="icon-button settings-button" id="settingsButton" aria-label="現場情報を表示">•••</button>
+        </div>
       </header>
 
       <div class="view-stage">
@@ -86,6 +91,7 @@
       </div>
     </main>
   </div>
+  <div id="shareToast" class="share-toast" role="status" aria-live="polite"></div>
 
   <script>
     const $=id=>document.getElementById(id);
@@ -106,6 +112,77 @@
     const add=(date,n)=>{const x=new Date(date);x.setDate(x.getDate()+n);return x};
     const fmt=date=>`${date.getMonth()+1}/${date.getDate()}`;
     const esc=value=>String(value).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+
+    function sharedPlanUrl(){
+      const payload={
+        name:$('projectName').value,
+        start:$('projectStart').value,
+        manager:$('manager').value,
+        tasks
+      };
+      const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+      const url=new URL(location.href);
+      url.hash=`plan=${encodeURIComponent(encoded)}`;
+      return url.href;
+    }
+
+    function loadSharedPlan(){
+      if(!location.hash.startsWith('#plan='))return;
+      try{
+        const encoded=decodeURIComponent(location.hash.slice(6));
+        const payload=JSON.parse(decodeURIComponent(escape(atob(encoded))));
+        if(!payload||!Array.isArray(payload.tasks)||!payload.tasks.length)return;
+        tasks=payload.tasks.map(task=>({
+          name:String(task.name||'新しい工程'),
+          company:String(task.company||'担当会社'),
+          days:Math.max(1,Number(task.days)||1),
+          blocked:String(task.blocked||''),
+          status:['未着手','進行中','完了','遅延'].includes(task.status)?task.status:'未着手'
+        }));
+        $('projectName').value=String(payload.name||'共有された工程表');
+        $('projectStart').value=/^\\d{4}-\\d{2}-\\d{2}$/.test(payload.start||'')?payload.start:'2026-08-01';
+        $('manager').value=String(payload.manager||'');
+      }catch(error){
+        console.warn('共有リンクを読み込めませんでした',error);
+      }
+    }
+
+    let toastTimer;
+    function showShareToast(message){
+      const toast=$('shareToast');
+      toast.textContent=message;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer=setTimeout(()=>toast.classList.remove('show'),2400);
+    }
+
+    async function shareSchedule(){
+      const url=sharedPlanUrl();
+      const title=`${$('projectName').value||'現場工程表'}｜snake site`;
+      const text='工程表を共有します。';
+      if(navigator.share){
+        try{
+          await navigator.share({title,text,url});
+          showShareToast('工程表を共有しました');
+          return;
+        }catch(error){
+          if(error.name==='AbortError')return;
+        }
+      }
+      try{
+        await navigator.clipboard.writeText(url);
+      }catch(error){
+        const input=document.createElement('textarea');
+        input.value=url;
+        input.style.position='fixed';
+        input.style.opacity='0';
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand('copy');
+        input.remove();
+      }
+      showShareToast('共有リンクをコピーしました');
+    }
 
     function switchView(next){
       if(next===activeView||switching)return;
@@ -290,10 +367,12 @@
 
     document.querySelectorAll('.tab').forEach(tab=>tab.addEventListener('click',()=>switchView(tab.dataset.view)));
     $('openCalendar').addEventListener('click',()=>switchView('calendar'));
+    $('shareButton').addEventListener('click',shareSchedule);
     $('settingsButton').addEventListener('click',()=>{$('projectSettings').classList.toggle('compact-hidden');$('settingsButton').classList.toggle('selected')});
     $('addProcess').addEventListener('click',()=>{tasks.push({name:'新しい工程',company:'担当会社',days:1,blocked:'',status:'未着手'});renderBuilder(true)});
     $('resetBuilder').addEventListener('click',()=>{tasks=structuredClone(defaults);$('projectStart').value='2026-08-01';$('projectName').value='木造住宅 新築工事';$('manager').value='現場監督';renderBuilder()});
     $('simulate').addEventListener('click',simulate);
+    loadSharedPlan();
     renderBuilder();
   </script>
 </body>
