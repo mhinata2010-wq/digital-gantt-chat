@@ -3,45 +3,298 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>現場フロー｜工事工程表</title>
-  <meta name="description" content="建設工事の工程作成と遅延影響の再計算を行う工程表">
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231b2a3a'/%3E%3Cpath d='M7 10h18M7 16h18M7 22h18' stroke='%23fff' stroke-width='2'/%3E%3Cpath d='M11 7v18M21 7v18' stroke='%23ee6a3b' stroke-width='2'/%3E%3C/svg%3E">
+  <title>snake site｜現場工程表</title>
+  <meta name="description" content="建設工事の予定登録と遅延影響を確認できる工程表">
   <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M5 5v22M3 22h18' stroke='%23000' stroke-width='3'/%3E%3Cpath d='M9 12h13c4 0 4 5 8 5' fill='none' stroke='%2300703c' stroke-width='3'/%3E%3C/svg%3E">
 </head>
 <body>
-  <header class="appbar"><div class="brand"><span class="brandmark" aria-hidden="true"><i></i><i></i><i></i></span>現場フロー</div><nav class="tabs" aria-label="画面切り替え"><button id="createTab" class="active">工程を作成</button><button id="ganttTab">工程表・遅延調整</button></nav></header>
-  <main>
-    <section id="createPanel">
-      <div class="pagehead"><div><h1>工程表を作成</h1><p>現場情報と工程の前後関係を登録します。</p></div><div class="project-code">NEW SCHEDULE / 01</div></div>
-      <div class="panel project-form"><div class="field"><label for="projectName">現場名</label><input id="projectName" value="木造住宅 新築工事"></div><div class="field"><label for="projectStart">工事開始日</label><input id="projectStart" type="date" value="2026-08-01"></div><div class="field"><label for="manager">管理担当者</label><input id="manager" value="現場監督"></div></div>
-      <section class="panel editor"><div class="editor-head"><h2 class="section-title"><span class="section-no">1</span>工程を登録</h2><button class="btn" id="addProcess">＋ 工程を追加</button></div><div class="process-head"><span>順番</span><span>工程名</span><span>工種・担当会社</span><span>所要日数</span><span>前提工程（自動）</span><span>稼働不可日</span><span>進捗</span><span></span></div><div id="processList"></div><div class="editor-actions"><p class="editor-note">左のハンドルをドラッグして並べ替えます。上の工程から順に日程へ反映されます。</p><div><button class="btn" id="resetBuilder">初期データ</button> <button class="btn dark" id="generate">工程表を生成</button></div></div></section>
-    </section>
-    <section id="ganttPanel" class="hidden">
-      <div class="pagehead"><div><h1 id="ganttTitle">工事工程表</h1><p id="projectMeta"></p></div><div class="project-code">MASTER SCHEDULE / 01</div></div>
-      <div class="gantt-tools"><div class="delay-strip"><strong>遅延を反映</strong><select id="taskSelect" aria-label="遅れが出た工程"></select><input id="delay" type="number" min="1" max="30" value="2" aria-label="遅れ日数"><span>日</span><button class="btn primary" id="simulate"><span class="button-label">変更を反映</span><span class="loading-label">再計算中…</span></button><button class="btn" id="backToEdit">工程を編集</button></div><div class="finish-box"><small>全体完了予定</small><b id="finish"></b></div></div>
-      <section class="schedule" id="scheduleBoard"><div class="schedule-head"><h2>全体工程</h2><div class="legend"><span><i class="ghost"></i>変更前</span><span><i class="solid"></i>変更後・影響あり</span></div></div><div class="timeline-scroll"><div id="timeline" class="timeline"></div></div></section>
-      <div id="summary" class="result" aria-live="polite"></div><section id="compare" class="comparison"><h2>変更前後の比較</h2><table><thead><tr><th>工程</th><th>変更前</th><th>変更後</th><th>影響</th></tr></thead><tbody id="changes"></tbody></table></section>
-    </section>
-  </main>
+  <div class="backdrop">
+    <main class="app-shell">
+      <header class="app-header">
+        <a class="logo" href="#" aria-label="snake site"><img src="snake-site.gif" alt="snake site"></a>
+        <nav class="view-tabs" aria-label="表示切り替え">
+          <button id="scheduleTab" class="tab active" data-view="schedule">予定表</button>
+          <button id="calendarTab" class="tab" data-view="calendar">カレンダー</button>
+          <span class="tab-indicator" aria-hidden="true"></span>
+        </nav>
+        <button class="icon-button" id="settingsButton" aria-label="現場情報を表示">•••</button>
+      </header>
+
+      <div class="view-stage">
+        <section id="scheduleView" class="view active-view" aria-labelledby="scheduleTitle">
+          <div class="view-title-row">
+            <div>
+              <p class="kicker">PROJECT SCHEDULE</p>
+              <h1 id="scheduleTitle">工程予定表</h1>
+            </div>
+            <button class="round-add" id="addProcess" aria-label="工程を追加">＋</button>
+          </div>
+
+          <section class="project-settings" id="projectSettings">
+            <label><span>現場名</span><input id="projectName" value="木造住宅 新築工事"></label>
+            <label><span>開始日</span><input id="projectStart" type="date" value="2026-08-01"></label>
+            <label><span>管理担当</span><input id="manager" value="現場監督"></label>
+          </section>
+
+          <div class="schedule-caption">
+            <span>上から順に施工</span>
+            <span class="drag-help">左の <b>⠿</b> を持って並べ替え</span>
+          </div>
+          <div id="processList" class="process-list"></div>
+
+          <div class="schedule-footer">
+            <button class="text-button" id="resetBuilder">初期データに戻す</button>
+            <button class="primary-button" id="openCalendar">カレンダーで確認 <span>→</span></button>
+          </div>
+        </section>
+
+        <section id="calendarView" class="view" hidden aria-labelledby="calendarTitle">
+          <div class="view-title-row calendar-title">
+            <div>
+              <p class="kicker" id="projectMeta">MASTER SCHEDULE</p>
+              <h1 id="calendarTitle">工程カレンダー</h1>
+            </div>
+            <div class="finish-chip"><small>完了予定</small><b id="finish">—</b></div>
+          </div>
+
+          <section class="delay-panel">
+            <div class="delay-fields">
+              <label><span>遅れが出た工程</span><select id="taskSelect"></select></label>
+              <label class="days-field"><span>遅れ</span><input id="delay" type="number" min="1" max="30" value="2"><em>日</em></label>
+            </div>
+            <button class="primary-button delay-button" id="simulate">
+              <span class="button-label">変更を反映</span>
+              <span class="loading-label">再計算中…</span>
+            </button>
+          </section>
+
+          <section class="timeline-card" id="scheduleBoard">
+            <div class="timeline-head">
+              <div><span class="status-dot"></span>全体工程</div>
+              <div class="legend"><span><i class="ghost-key"></i>変更前</span><span><i class="after-key"></i>変更後</span></div>
+            </div>
+            <div class="timeline-scroll"><div id="timeline" class="timeline"></div></div>
+          </section>
+
+          <div id="summary" class="result" aria-live="polite"></div>
+          <section id="compare" class="comparison">
+            <h2>変更前後の比較</h2>
+            <div class="table-scroll"><table><thead><tr><th>工程</th><th>変更前</th><th>変更後</th><th>影響</th></tr></thead><tbody id="changes"></tbody></table></div>
+          </section>
+        </section>
+      </div>
+    </main>
+  </div>
+
   <script>
-    const $=id=>document.getElementById(id), DAY=42, palette=['#2b8b62','#e89419','#17658a','#b3263e','#536e80','#7d5b9c','#367b83'];
-    const defaults=[{name:'土木工事',company:'土木業者',days:4,dep:'',blocked:'',status:'完了'},{name:'基礎工事',company:'基礎業者',days:3,dep:'0',blocked:'8/6',status:'進行中'},{name:'躯体工事',company:'大工・建方業者',days:7,dep:'1',blocked:'',status:'未着手'},{name:'電気配線',company:'電気業者',days:4,dep:'2',blocked:'',status:'未着手'},{name:'内装工事',company:'内装業者',days:5,dep:'3',blocked:'',status:'未着手'}];
-    let tasks=structuredClone(defaults),base=new Date('2026-08-01T00:00:00'),current=null;
-    const add=(date,n)=>{const x=new Date(date);x.setDate(x.getDate()+n);return x},fmt=date=>`${date.getMonth()+1}/${date.getDate()}`,esc=value=>String(value).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
-    function show(view){$('createPanel').classList.toggle('hidden',view!=='create');$('ganttPanel').classList.toggle('hidden',view!=='gantt');$('createTab').classList.toggle('active',view==='create');$('ganttTab').classList.toggle('active',view==='gantt')}
-    function normalizeOrder(){tasks.forEach((task,index)=>task.dep=index?String(index-1):'')}
-    function builderRow(task,index){const statuses=['未着手','進行中','完了','遅延'].map(s=>`<option ${s===task.status?'selected':''}>${s}</option>`).join(''),dependency=index?tasks[index-1].name:'なし（最初の工程）';return `<div class="process-row" data-index="${index}"><div class="order-cell"><button class="drag-handle" aria-label="${esc(task.name)}を並べ替え" title="ドラッグして並べ替え">↕</button><span class="order">${String(index+1).padStart(2,'0')}</span></div><input data-key="name" aria-label="工程名" value="${esc(task.name)}"><input data-key="company" aria-label="工種・担当会社" value="${esc(task.company)}"><input data-key="days" aria-label="所要日数" type="number" min="1" value="${task.days}"><div class="dependency-auto" title="${esc(dependency)}">${esc(dependency)}</div><input data-key="blocked" aria-label="稼働不可日" placeholder="8/6, 8/10" value="${esc(task.blocked)}"><select data-key="status" aria-label="進捗">${statuses}</select><button class="remove" aria-label="この工程を削除">×</button></div>`}
-    function renderBuilder(highlightLast=false){normalizeOrder();$('processList').innerHTML=tasks.map(builderRow).join('');document.querySelectorAll('.process-row').forEach(row=>{const index=Number(row.dataset.index);row.querySelectorAll('[data-key]').forEach(control=>control.addEventListener('change',()=>{tasks[index][control.dataset.key]=control.dataset.key==='days'?Math.max(1,Number(control.value)||1):control.value;renderBuilder()}));row.querySelector('.remove').addEventListener('click',()=>removeTask(index));row.querySelector('.drag-handle').addEventListener('pointerdown',event=>startReorder(event,row))});if(highlightLast){const last=$('processList').lastElementChild;last.classList.add('just-added');last.scrollIntoView({behavior:'smooth',block:'center'})}}
-    function animateReflow(list,before){requestAnimationFrame(()=>[...list.children].forEach(row=>{const oldTop=before.get(row);if(oldTop===undefined)return;const delta=oldTop-row.getBoundingClientRect().top;if(delta)row.animate([{transform:`translateY(${delta}px)`},{transform:'translateY(0)'}],{duration:220,easing:'cubic-bezier(.2,.8,.2,1)'})}))}
-    function startReorder(event,row){if(event.button!==undefined&&event.button!==0)return;event.preventDefault();const list=$('processList'),rect=row.getBoundingClientRect(),offset=event.clientY-rect.top,ghost=row.cloneNode(true);ghost.classList.add('drag-ghost');ghost.style.left=`${rect.left}px`;ghost.style.top=`${rect.top}px`;ghost.style.width=`${rect.width}px`;document.body.appendChild(ghost);row.classList.add('dragging');const move=e=>{ghost.style.top=`${e.clientY-offset}px`;const before=new Map([...list.children].map(item=>[item,item.getBoundingClientRect().top])),others=[...list.querySelectorAll('.process-row:not(.dragging)')],target=others.find(item=>e.clientY<item.getBoundingClientRect().top+item.offsetHeight/2);if(target&&target!==row.nextElementSibling)list.insertBefore(row,target);else if(!target&&row!==list.lastElementChild)list.appendChild(row);animateReflow(list,before);if(e.clientY<90)window.scrollBy({top:-12});else if(e.clientY>innerHeight-70)window.scrollBy({top:12})};const end=()=>{document.removeEventListener('pointermove',move);document.removeEventListener('pointerup',end);ghost.remove();row.classList.remove('dragging');const order=[...list.querySelectorAll('.process-row')].map(item=>Number(item.dataset.index)),previous=tasks;tasks=order.map(index=>previous[index]);normalizeOrder();renderBuilder()};document.addEventListener('pointermove',move);document.addEventListener('pointerup',end,{once:true})}
-    function removeTask(index){if(tasks.length===1)return;tasks.splice(index,1);normalizeOrder();renderBuilder()}
-    function schedule(delayId=-1,extra=0){const result=[];tasks.forEach((task,index)=>{const start=index?add(result[index-1].end,0):new Date(base),days=Number(task.days)+(index===delayId?extra:0);result.push({start,end:add(start,days),days,shift:0})});if(delayId>=0){const original=schedule();result.forEach((item,index)=>item.shift=Math.round((item.start-original[index].start)/864e5))}return result}
-    function generateChart(){if(!$('projectStart').value)return;base=new Date(`${$('projectStart').value}T00:00:00`);current=null;$('ganttTitle').textContent=$('projectName').value||'工事工程表';$('projectMeta').textContent=`開始 ${fmt(base)} ・ 管理 ${$('manager').value||'未設定'}`;$('taskSelect').innerHTML=tasks.map((task,index)=>`<option value="${index}">${esc(task.name)}（${esc(task.company)}）</option>`).join('');$('taskSelect').value=String(Math.min(1,tasks.length-1));$('summary').className='result';$('compare').className='comparison';renderTimeline(false);show('gantt')}
-    function taskLayout(index){const above=index%2===0,row=Math.floor(index/2);return above?{bar:28+row*67,meta:61+row*67}:{bar:320+row*67,meta:354+row*67}}
-    function renderTimeline(animate){const data=current?current.after:schedule(),before=current?current.before:null,lastEnd=Math.max(...data.map(x=>x.end.getTime())),total=Math.max(28,Math.ceil((lastEnd-base)/864e5)+3),width=total*DAY;let html=`<div class="month-label">${base.getFullYear()}年 ${base.getMonth()+1}月</div><div class="axis" style="width:${width}px">`;for(let i=0;i<total;i++){const date=add(base,i),week=['日','月','火','水','木','金','土'][date.getDay()];html+=`<div class="day ${date.getDay()===0||date.getDay()===6?'weekend':''}">${date.getDate()}<small>${week}</small></div>`}html+='</div>';
-      tasks.forEach((task,index)=>{const item=data[index],old=before&&before[index],start=Math.round((item.start-base)/864e5),oldStart=old?Math.round((old.start-base)/864e5):start,layout=taskLayout(index),color=palette[index%palette.length],changed=Boolean(current&&(index===current.id||item.shift>0)),barWidth=Math.max(item.days*DAY-5,34),oldWidth=old?Math.max(old.days*DAY-5,34):barWidth,markerTop=layout.bar<232?227:277,connTop=Math.min(layout.bar+15,257),connHeight=Math.abs(247-(layout.bar+15));if(changed&&old)html+=`<div class="oldbar" style="left:${oldStart*DAY+3}px;top:${layout.bar}px;width:${oldWidth}px"></div>`;html+=`<div class="connector" style="--color:${color};left:${start*DAY+11}px;top:${connTop}px;height:${connHeight}px"></div><div class="marker" style="--color:${color};left:${start*DAY+6}px;top:${markerTop}px"></div>`;const motion=animate&&changed?(item.shift>0?'shifted':'expanded'):'initial';html+=`<div class="taskbar ${motion} ${changed?'changed':''}" style="--color:${color};--shift:${item.shift*DAY}px;--old-width:${oldWidth}px;--new-width:${barWidth}px;--delay:${index*.06}s;left:${start*DAY+3}px;top:${layout.bar}px;width:${barWidth}px"><span class="barname">${esc(task.name)}</span><span class="duration">${item.days}日</span></div><div class="taskmeta ${changed?'changed':''}" style="left:${start*DAY+4}px;top:${layout.meta}px">${esc(task.company)}<small>${fmt(item.start)} — ${fmt(item.end)}</small></div>`});$('timeline').style.width=`${width}px`;$('timeline').innerHTML=html;$('finish').textContent=fmt(new Date(lastEnd))}
-    function simulate(){const id=Number($('taskSelect').value),days=Math.max(1,Number($('delay').value)||1),button=$('simulate');button.classList.add('processing');$('scheduleBoard').classList.add('updating');setTimeout(()=>{const before=schedule(),after=schedule(id,days);current={id,days,before,after};const affected=tasks.map((task,index)=>({task,index})).filter(({index})=>index!==id&&after[index].shift>0),finishShift=Math.round((Math.max(...after.map(x=>x.end))-Math.max(...before.map(x=>x.end)))/864e5);renderTimeline(true);$('summary').innerHTML=`<strong>日程変更案</strong>「${esc(tasks[id].name)}」の完了が${days}日遅れるため、${affected.length?affected.map(x=>esc(x.task.name)).join('、'):'後続工程なし'}の開始候補を再計算しました。全体の完了予定は<strong style="display:inline">${finishShift}日後ろ倒し</strong>です。`;$('summary').className='result show';$('changes').innerHTML=tasks.map((task,index)=>({task,index})).filter(({index})=>index===id||after[index].shift>0).map(({task,index})=>`<tr><td><b>${esc(task.name)}</b><br><small>${esc(task.company)}</small></td><td>${fmt(before[index].start)}〜${fmt(before[index].end)}</td><td>${fmt(after[index].start)}〜${fmt(after[index].end)}</td><td class="shift">${index===id?`所要日数 +${days}日`:`開始 +${after[index].shift}日`}</td></tr>`).join('');$('compare').className='comparison show';button.classList.remove('processing');setTimeout(()=>$('scheduleBoard').classList.remove('updating'),80)},420)}
-    $('createTab').addEventListener('click',()=>show('create'));$('ganttTab').addEventListener('click',generateChart);$('backToEdit').addEventListener('click',()=>show('create'));$('generate').addEventListener('click',generateChart);$('simulate').addEventListener('click',simulate);$('addProcess').addEventListener('click',()=>{tasks.push({name:'新しい工程',company:'担当会社',days:1,dep:tasks.length?String(tasks.length-1):'',blocked:'',status:'未着手'});renderBuilder(true)});$('resetBuilder').addEventListener('click',()=>{tasks=structuredClone(defaults);normalizeOrder();$('projectStart').value='2026-08-01';$('projectName').value='木造住宅 新築工事';$('manager').value='現場監督';renderBuilder()});normalizeOrder();renderBuilder();
+    const $=id=>document.getElementById(id);
+    const DAY=42;
+    const palette=['#00723e','#d48827','#356f8f','#a73d4d','#536f78','#7b5b78','#477b62'];
+    const defaults=[
+      {name:'土木工事',company:'土木業者',days:4,blocked:'',status:'完了'},
+      {name:'基礎工事',company:'基礎業者',days:3,blocked:'8/6',status:'進行中'},
+      {name:'躯体工事',company:'大工・建方業者',days:7,blocked:'',status:'未着手'},
+      {name:'電気配線',company:'電気業者',days:4,blocked:'',status:'未着手'},
+      {name:'内装工事',company:'内装業者',days:5,blocked:'',status:'未着手'}
+    ];
+    let tasks=structuredClone(defaults);
+    let base=new Date('2026-08-01T00:00:00');
+    let current=null;
+    let activeView='schedule';
+    let switching=false;
+    const add=(date,n)=>{const x=new Date(date);x.setDate(x.getDate()+n);return x};
+    const fmt=date=>`${date.getMonth()+1}/${date.getDate()}`;
+    const esc=value=>String(value).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+
+    function switchView(next){
+      if(next===activeView||switching)return;
+      switching=true;
+      if(next==='calendar')prepareCalendar();
+      const oldView=activeView==='schedule'?$('scheduleView'):$('calendarView');
+      const newView=next==='schedule'?$('scheduleView'):$('calendarView');
+      const forward=next==='calendar';
+      newView.hidden=false;
+      newView.className=`view ${forward?'enter-forward':'enter-back'}`;
+      oldView.className=`view ${forward?'leave-forward':'leave-back'}`;
+      document.querySelectorAll('.tab').forEach(tab=>tab.classList.toggle('active',tab.dataset.view===next));
+      setTimeout(()=>{
+        oldView.hidden=true;
+        oldView.className='view';
+        newView.className='view active-view';
+        activeView=next;
+        switching=false;
+        window.scrollTo({top:0,behavior:'smooth'});
+      },560);
+    }
+
+    function builderRow(task,index){
+      const statuses=['未着手','進行中','完了','遅延'].map(s=>`<option ${s===task.status?'selected':''}>${s}</option>`).join('');
+      const dependency=index?tasks[index-1].name:'開始工程';
+      return `<article class="process-row" data-index="${index}">
+        <div class="row-order"><button class="drag-handle" aria-label="${esc(task.name)}を並べ替え">⠿</button><span>${String(index+1).padStart(2,'0')}</span></div>
+        <label class="process-name"><small>工程名</small><input data-key="name" value="${esc(task.name)}"></label>
+        <label><small>担当会社</small><input data-key="company" value="${esc(task.company)}"></label>
+        <label class="small-field"><small>日数</small><input data-key="days" type="number" min="1" value="${task.days}"></label>
+        <div class="dependency"><small>前提工程</small><b>${esc(dependency)}</b></div>
+        <label><small>稼働不可日</small><input data-key="blocked" placeholder="8/6" value="${esc(task.blocked)}"></label>
+        <label><small>進捗</small><select data-key="status">${statuses}</select></label>
+        <button class="remove" aria-label="${esc(task.name)}を削除">×</button>
+      </article>`;
+    }
+
+    function renderBuilder(highlightLast=false){
+      $('processList').innerHTML=tasks.map(builderRow).join('');
+      document.querySelectorAll('.process-row').forEach(row=>{
+        const index=Number(row.dataset.index);
+        row.querySelectorAll('[data-key]').forEach(control=>control.addEventListener('change',()=>{
+          tasks[index][control.dataset.key]=control.dataset.key==='days'?Math.max(1,Number(control.value)||1):control.value;
+          renderBuilder();
+        }));
+        row.querySelector('.remove').addEventListener('click',()=>removeTask(index));
+        row.querySelector('.drag-handle').addEventListener('pointerdown',event=>startReorder(event,row));
+      });
+      if(highlightLast){
+        const last=$('processList').lastElementChild;
+        last.classList.add('just-added');
+        last.scrollIntoView({behavior:'smooth',block:'center'});
+      }
+    }
+
+    function animateReflow(list,before){
+      requestAnimationFrame(()=>[...list.children].forEach(row=>{
+        const oldTop=before.get(row);
+        if(oldTop===undefined)return;
+        const delta=oldTop-row.getBoundingClientRect().top;
+        if(delta)row.animate([{transform:`translateY(${delta}px)`},{transform:'translateY(0)'}],{duration:260,easing:'cubic-bezier(.2,.8,.2,1)'});
+      }));
+    }
+
+    function startReorder(event,row){
+      if(event.button!==undefined&&event.button!==0)return;
+      event.preventDefault();
+      const list=$('processList'),rect=row.getBoundingClientRect(),offset=event.clientY-rect.top,ghost=row.cloneNode(true);
+      ghost.classList.add('drag-ghost');
+      Object.assign(ghost.style,{left:`${rect.left}px`,top:`${rect.top}px`,width:`${rect.width}px`});
+      document.body.appendChild(ghost);
+      row.classList.add('dragging');
+      const move=e=>{
+        ghost.style.top=`${e.clientY-offset}px`;
+        const before=new Map([...list.children].map(item=>[item,item.getBoundingClientRect().top]));
+        const others=[...list.querySelectorAll('.process-row:not(.dragging)')];
+        const target=others.find(item=>e.clientY<item.getBoundingClientRect().top+item.offsetHeight/2);
+        if(target&&target!==row.nextElementSibling)list.insertBefore(row,target);
+        else if(!target&&row!==list.lastElementChild)list.appendChild(row);
+        animateReflow(list,before);
+        if(e.clientY<90)window.scrollBy({top:-12});
+        else if(e.clientY>innerHeight-70)window.scrollBy({top:12});
+      };
+      const end=()=>{
+        document.removeEventListener('pointermove',move);
+        document.removeEventListener('pointerup',end);
+        document.removeEventListener('pointercancel',end);
+        ghost.remove();
+        row.classList.remove('dragging');
+        const oldTasks=tasks;
+        tasks=[...list.querySelectorAll('.process-row')].map(item=>oldTasks[Number(item.dataset.index)]);
+        renderBuilder();
+      };
+      document.addEventListener('pointermove',move);
+      document.addEventListener('pointerup',end,{once:true});
+      document.addEventListener('pointercancel',end,{once:true});
+    }
+
+    function removeTask(index){
+      if(tasks.length===1)return;
+      tasks.splice(index,1);
+      renderBuilder();
+    }
+
+    function schedule(delayId=-1,extra=0){
+      const result=[];
+      tasks.forEach((task,index)=>{
+        const start=index?add(result[index-1].end,0):new Date(base);
+        const days=Number(task.days)+(index===delayId?extra:0);
+        result.push({start,end:add(start,days),days,shift:0});
+      });
+      if(delayId>=0){
+        const original=schedule();
+        result.forEach((item,index)=>item.shift=Math.round((item.start-original[index].start)/864e5));
+      }
+      return result;
+    }
+
+    function prepareCalendar(){
+      base=new Date(`${$('projectStart').value}T00:00:00`);
+      current=null;
+      $('calendarTitle').textContent=$('projectName').value||'工程カレンダー';
+      $('projectMeta').textContent=`${fmt(base)} 開始 ・ ${$('manager').value||'担当未設定'}`;
+      $('taskSelect').innerHTML=tasks.map((task,index)=>`<option value="${index}">${esc(task.name)}（${esc(task.company)}）</option>`).join('');
+      $('taskSelect').value=String(Math.min(1,tasks.length-1));
+      $('summary').className='result';
+      $('compare').className='comparison';
+      renderTimeline(false);
+    }
+
+    function taskLayout(index){
+      const above=index%2===0,row=Math.floor(index/2);
+      return above?{bar:28+row*67,meta:62+row*67}:{bar:320+row*67,meta:355+row*67};
+    }
+
+    function renderTimeline(animate){
+      const data=current?current.after:schedule(),before=current?current.before:null;
+      const lastEnd=Math.max(...data.map(item=>item.end.getTime()));
+      const total=Math.max(28,Math.ceil((lastEnd-base)/864e5)+3),width=total*DAY;
+      let html=`<div class="month-label">${base.getFullYear()}年 ${base.getMonth()+1}月</div><div class="axis" style="width:${width}px">`;
+      for(let i=0;i<total;i++){
+        const date=add(base,i),week=['日','月','火','水','木','金','土'][date.getDay()];
+        html+=`<div class="day ${date.getDay()===0||date.getDay()===6?'weekend':''}">${date.getDate()}<small>${week}</small></div>`;
+      }
+      html+='</div>';
+      tasks.forEach((task,index)=>{
+        const item=data[index],old=before&&before[index];
+        const start=Math.round((item.start-base)/864e5),oldStart=old?Math.round((old.start-base)/864e5):start;
+        const layout=taskLayout(index),color=palette[index%palette.length];
+        const changed=Boolean(current&&(index===current.id||item.shift>0));
+        const barWidth=Math.max(item.days*DAY-5,46),oldWidth=old?Math.max(old.days*DAY-5,46):barWidth;
+        const markerTop=layout.bar<232?227:277,connTop=Math.min(layout.bar+15,257),connHeight=Math.abs(247-(layout.bar+15));
+        const startBoundary=start*DAY,endBoundary=(start+item.days)*DAY;
+        if(changed&&old)html+=`<div class="oldbar" style="left:${oldStart*DAY+3}px;top:${layout.bar}px;width:${oldWidth}px"></div>`;
+        html+=`<div class="connector start-connector" style="--color:${color};left:${startBoundary}px;top:${connTop}px;height:${connHeight}px"></div><div class="marker start-marker" style="--color:${color};left:${startBoundary}px;top:${markerTop}px"></div><div class="connector end-connector" style="--color:${color};left:${endBoundary}px;top:${connTop}px;height:${connHeight}px"></div><div class="marker end-marker" style="--color:${color};left:${endBoundary}px;top:${markerTop}px"></div>`;
+        const motion=animate&&changed?(item.shift>0?'shifted':'expanded'):'initial';
+        html+=`<div class="taskbar ${motion} ${changed?'changed':''}" style="--color:${color};--shift:${item.shift*DAY}px;--old-width:${oldWidth}px;--new-width:${barWidth}px;--delay:${index*.06}s;left:${start*DAY+3}px;top:${layout.bar}px;width:${barWidth}px"><span>${esc(task.name)}</span><em>${item.days}日</em></div><div class="taskmeta ${changed?'changed':''}" style="left:${start*DAY+4}px;top:${layout.meta}px">${esc(task.company)}<small>${fmt(item.start)} — ${fmt(item.end)}</small></div>`;
+      });
+      $('timeline').style.width=`${width}px`;
+      $('timeline').innerHTML=html;
+      $('finish').textContent=fmt(new Date(lastEnd));
+    }
+
+    function simulate(){
+      const id=Number($('taskSelect').value),days=Math.max(1,Number($('delay').value)||1),button=$('simulate');
+      button.classList.add('processing');
+      $('scheduleBoard').classList.add('updating');
+      setTimeout(()=>{
+        const before=schedule(),after=schedule(id,days);
+        current={id,days,before,after};
+        const affected=tasks.map((task,index)=>({task,index})).filter(({index})=>index!==id&&after[index].shift>0);
+        const finishShift=Math.round((Math.max(...after.map(item=>item.end))-Math.max(...before.map(item=>item.end)))/864e5);
+        renderTimeline(true);
+        $('summary').innerHTML=`<strong>日程変更案</strong>「${esc(tasks[id].name)}」の完了が${days}日遅れるため、${affected.length?affected.map(item=>esc(item.task.name)).join('、'):'後続工程なし'}の開始候補を再計算しました。全体の完了予定は<b>${finishShift}日後ろ倒し</b>です。`;
+        $('summary').className='result show';
+        $('changes').innerHTML=tasks.map((task,index)=>({task,index})).filter(({index})=>index===id||after[index].shift>0).map(({task,index})=>`<tr><td><b>${esc(task.name)}</b><br><small>${esc(task.company)}</small></td><td>${fmt(before[index].start)}〜${fmt(before[index].end)}</td><td>${fmt(after[index].start)}〜${fmt(after[index].end)}</td><td class="shift">${index===id?`所要日数 +${days}日`:`開始 +${after[index].shift}日`}</td></tr>`).join('');
+        $('compare').className='comparison show';
+        button.classList.remove('processing');
+        setTimeout(()=>$('scheduleBoard').classList.remove('updating'),80);
+      },420);
+    }
+
+    document.querySelectorAll('.tab').forEach(tab=>tab.addEventListener('click',()=>switchView(tab.dataset.view)));
+    $('openCalendar').addEventListener('click',()=>switchView('calendar'));
+    $('settingsButton').addEventListener('click',()=>{$('projectSettings').classList.toggle('compact-hidden');$('settingsButton').classList.toggle('selected')});
+    $('addProcess').addEventListener('click',()=>{tasks.push({name:'新しい工程',company:'担当会社',days:1,blocked:'',status:'未着手'});renderBuilder(true)});
+    $('resetBuilder').addEventListener('click',()=>{tasks=structuredClone(defaults);$('projectStart').value='2026-08-01';$('projectName').value='木造住宅 新築工事';$('manager').value='現場監督';renderBuilder()});
+    $('simulate').addEventListener('click',simulate);
+    renderBuilder();
   </script>
 </body>
 </html>
