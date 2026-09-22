@@ -9,10 +9,55 @@
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M5 5v22M3 22h18' stroke='%23000' stroke-width='3'/%3E%3Cpath d='M9 12h13c4 0 4 5 8 5' fill='none' stroke='%2300703c' stroke-width='3'/%3E%3C/svg%3E">
 </head>
 <body>
-  <div class="backdrop">
+  <section class="account-gate" id="accountGate">
+    <div class="account-panel">
+      <img src="snake-site.gif" alt="snake site" class="account-logo">
+      <p class="kicker">CONSTRUCTION WORKSPACE</p>
+      <h1 id="authTitle">工程を、チームで進める。</h1>
+      <p class="account-copy">現場ごとに工程表を保存し、担当会社と共有できる検証版です。</p>
+      <form id="authForm" class="auth-form">
+        <label id="nameField"><span>表示名</span><input id="authName" autocomplete="name" placeholder="例：宮地 陽大"></label>
+        <label><span>メールアドレス</span><input id="authEmail" type="email" autocomplete="email" required placeholder="name@example.com"></label>
+        <label><span>パスワード</span><input id="authPassword" type="password" minlength="6" required placeholder="6文字以上"></label>
+        <p id="authError" class="auth-error" role="alert"></p>
+        <button class="primary-button auth-submit" id="authSubmit" type="submit">アカウントを作成</button>
+      </form>
+      <button class="auth-switch" id="authSwitch" type="button">すでにアカウントをお持ちの方</button>
+      <button class="demo-button" id="demoLogin" type="button">デモアカウントで試す</button>
+      <p class="prototype-note">プロトタイプのため、アカウントと案件はこの端末内だけに保存されます。</p>
+    </div>
+  </section>
+
+  <section class="workspace" id="workspaceView" hidden>
+    <header class="workspace-header">
+      <img src="snake-site.gif" alt="snake site">
+      <button class="user-chip" id="accountMenu"><span id="userInitial">S</span><b id="userName">現場監督</b></button>
+    </header>
+    <main class="workspace-main">
+      <div class="workspace-title">
+        <div><p class="kicker">MY PROJECTS</p><h1>案件一覧</h1><p>参加している現場の工程表</p></div>
+        <button class="primary-button" id="newProject">＋ 新しい案件</button>
+      </div>
+      <div class="project-grid" id="projectGrid"></div>
+      <button class="logout-button" id="logoutButton">ログアウト</button>
+    </main>
+  </section>
+
+  <dialog class="member-dialog" id="memberDialog">
+    <form method="dialog" class="dialog-card" id="memberForm">
+      <div class="dialog-head"><div><p class="kicker">PROJECT MEMBERS</p><h2>メンバー管理</h2></div><button value="cancel" aria-label="閉じる">×</button></div>
+      <div id="memberList" class="member-list"></div>
+      <label><span>招待するメールアドレス</span><input id="inviteEmail" type="email" placeholder="partner@example.com"></label>
+      <label><span>権限</span><select id="inviteRole"><option value="editor">編集者</option><option value="viewer">閲覧者</option></select></label>
+      <p class="dialog-note">同じ端末で、このメールアドレスのアカウントを作成すると案件が表示されます。</p>
+      <button class="primary-button" id="inviteMember" type="button">メンバーを追加</button>
+    </form>
+  </dialog>
+
+  <div class="backdrop" id="appRoot" hidden>
     <main class="app-shell">
       <header class="app-header">
-        <a class="logo" href="#" aria-label="snake site"><img src="snake-site.gif" alt="snake site"></a>
+        <button class="logo" id="projectsButton" aria-label="案件一覧に戻る"><img src="snake-site.gif" alt="snake site"></button>
         <nav class="view-tabs" aria-label="表示切り替え">
           <button id="scheduleTab" class="tab active" data-view="schedule">予定表</button>
           <button id="calendarTab" class="tab" data-view="calendar">カレンダー</button>
@@ -109,9 +154,171 @@
     let current=null;
     let activeView='schedule';
     let switching=false;
+    const STORAGE={accounts:'snake_accounts_v1',session:'snake_session_v1',projects:'snake_projects_v1'};
+    let currentAccount=null;
+    let currentProjectId=null;
+    let memberProjectId=null;
+    let authMode='register';
+    let viewerMode=false;
     const add=(date,n)=>{const x=new Date(date);x.setDate(x.getDate()+n);return x};
     const fmt=date=>`${date.getMonth()+1}/${date.getDate()}`;
     const esc=value=>String(value).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+    const clone=value=>JSON.parse(JSON.stringify(value));
+    const readStore=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key))??fallback}catch(error){return fallback}};
+    const writeStore=(key,value)=>localStorage.setItem(key,JSON.stringify(value));
+    const uid=()=>crypto.randomUUID?crypto.randomUUID():`${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+    async function hashPassword(value){
+      const data=new TextEncoder().encode(value);
+      const digest=await crypto.subtle.digest('SHA-256',data);
+      return [...new Uint8Array(digest)].map(byte=>byte.toString(16).padStart(2,'0')).join('');
+    }
+
+    function makeProject(ownerId,name='木造住宅 新築工事'){
+      return {id:uid(),ownerId,name,start:'2026-08-01',manager:currentAccount?.name||'現場監督',tasks:clone(defaults),members:[],updatedAt:new Date().toISOString()};
+    }
+
+    function setAuthMode(mode){
+      authMode=mode;
+      const registering=mode==='register';
+      $('nameField').hidden=!registering;
+      $('authName').required=registering;
+      $('authTitle').textContent=registering?'工程を、チームで進める。':'おかえりなさい';
+      $('authSubmit').textContent=registering?'アカウントを作成':'ログイン';
+      $('authSwitch').textContent=registering?'すでにアカウントをお持ちの方':'新しいアカウントを作る';
+      $('authError').textContent='';
+    }
+
+    function accessibleProjects(){
+      if(!currentAccount)return [];
+      return readStore(STORAGE.projects,[]).filter(project=>project.ownerId===currentAccount.id||(project.members||[]).some(member=>member.email===currentAccount.email));
+    }
+
+    function roleFor(project){
+      if(project.ownerId===currentAccount?.id)return 'owner';
+      return (project.members||[]).find(member=>member.email===currentAccount?.email)?.role||'viewer';
+    }
+
+    function renderProjects(){
+      const projects=accessibleProjects().sort((a,b)=>String(b.updatedAt).localeCompare(String(a.updatedAt)));
+      $('projectGrid').innerHTML=projects.length?projects.map(project=>{
+        const role=roleFor(project),canManage=role==='owner';
+        return `<article class="project-card" data-id="${esc(project.id)}">
+          <div class="project-card-top"><span class="project-role ${role}">${role==='owner'?'管理者':role==='editor'?'編集者':'閲覧者'}</span><time>${new Date(project.updatedAt).toLocaleDateString('ja-JP')}</time></div>
+          <h2>${esc(project.name)}</h2><p>${esc(project.manager||'担当未設定')} ・ ${project.tasks.length}工程</p>
+          <div class="project-progress"><i style="width:${Math.round(project.tasks.filter(task=>task.status==='完了').length/project.tasks.length*100)||0}%"></i></div>
+          <div class="project-actions"><button class="open-project">工程表を開く <span>→</span></button>${canManage?'<button class="members-project" aria-label="メンバー管理">共有</button>':''}</div>
+        </article>`;
+      }).join(''):`<div class="empty-projects"><b>参加中の案件はありません</b><p>「新しい案件」から最初の工程表を作成できます。</p></div>`;
+      $('projectGrid').querySelectorAll('.project-card').forEach(card=>{
+        const id=card.dataset.id;
+        card.querySelector('.open-project').addEventListener('click',()=>openProject(id));
+        card.querySelector('.members-project')?.addEventListener('click',()=>openMembers(id));
+      });
+    }
+
+    function enterWorkspace(account){
+      currentAccount=account;
+      currentProjectId=null;
+      $('accountGate').hidden=true;
+      $('appRoot').hidden=true;
+      $('workspaceView').hidden=false;
+      $('userName').textContent=account.name;
+      $('userInitial').textContent=(account.name||account.email).trim().charAt(0).toUpperCase();
+      renderProjects();
+    }
+
+    function createProject(){
+      const projects=readStore(STORAGE.projects,[]);
+      const number=projects.filter(project=>project.ownerId===currentAccount.id).length+1;
+      const project=makeProject(currentAccount.id,number===1?'木造住宅 新築工事':`新しい建設案件 ${number}`);
+      projects.push(project);
+      writeStore(STORAGE.projects,projects);
+      openProject(project.id);
+    }
+
+    function openProject(id){
+      const project=readStore(STORAGE.projects,[]).find(item=>item.id===id);
+      if(!project)return;
+      currentProjectId=id;
+      viewerMode=roleFor(project)==='viewer';
+      tasks=clone(project.tasks?.length?project.tasks:defaults);
+      $('projectName').value=project.name||'現場工程表';
+      $('projectStart').value=project.start||'2026-08-01';
+      $('manager').value=project.manager||'';
+      base=new Date(`${$('projectStart').value}T00:00:00`);
+      current=null;
+      $('workspaceView').hidden=true;
+      $('accountGate').hidden=true;
+      $('appRoot').hidden=false;
+      document.body.classList.toggle('viewer-mode',viewerMode);
+      ['projectName','projectStart','manager'].forEach(field=>$(field).disabled=viewerMode);
+      if(activeView!=='schedule'){
+        $('calendarView').hidden=true;$('calendarView').className='view';
+        $('scheduleView').hidden=false;$('scheduleView').className='view active-view';
+        activeView='schedule';
+        document.querySelectorAll('.tab').forEach(tab=>tab.classList.toggle('active',tab.dataset.view==='schedule'));
+      }
+      renderBuilder();
+      if(viewerMode)showShareToast('閲覧権限で開いています');
+    }
+
+    function saveCurrentProject(){
+      if(!currentProjectId||viewerMode)return;
+      const projects=readStore(STORAGE.projects,[]);
+      const project=projects.find(item=>item.id===currentProjectId);
+      if(!project)return;
+      project.name=$('projectName').value||'名称未設定の案件';
+      project.start=$('projectStart').value||'2026-08-01';
+      project.manager=$('manager').value;
+      project.tasks=clone(tasks);
+      project.updatedAt=new Date().toISOString();
+      writeStore(STORAGE.projects,projects);
+    }
+
+    function showWorkspace(){
+      saveCurrentProject();
+      document.body.classList.remove('viewer-mode');
+      $('appRoot').hidden=true;
+      $('workspaceView').hidden=false;
+      currentProjectId=null;
+      renderProjects();
+    }
+
+    function openMembers(id){
+      memberProjectId=id;
+      renderMembers();
+      $('memberDialog').showModal();
+    }
+
+    function renderMembers(){
+      const project=readStore(STORAGE.projects,[]).find(item=>item.id===memberProjectId);
+      if(!project)return;
+      const owner=readStore(STORAGE.accounts,[]).find(account=>account.id===project.ownerId);
+      const rows=[{email:owner?.email||'管理者',role:'owner'},...(project.members||[])];
+      $('memberList').innerHTML=rows.map((member,index)=>`<div class="member-row"><span>${esc(member.email)}</span><b>${member.role==='owner'?'管理者':member.role==='editor'?'編集者':'閲覧者'}</b>${index?`<button type="button" data-email="${esc(member.email)}" aria-label="削除">×</button>`:'<i>OWNER</i>'}</div>`).join('');
+      $('memberList').querySelectorAll('[data-email]').forEach(button=>button.addEventListener('click',()=>{
+        const projects=readStore(STORAGE.projects,[]),target=projects.find(item=>item.id===memberProjectId);
+        target.members=(target.members||[]).filter(member=>member.email!==button.dataset.email);
+        target.updatedAt=new Date().toISOString();
+        writeStore(STORAGE.projects,projects);
+        renderMembers();renderProjects();
+      }));
+    }
+
+    function addMember(){
+      const email=$('inviteEmail').value.trim().toLowerCase();
+      if(!/^\S+@\S+\.\S+$/.test(email)){showShareToast('メールアドレスを確認してください');return}
+      const projects=readStore(STORAGE.projects,[]),project=projects.find(item=>item.id===memberProjectId);
+      if(!project)return;
+      project.members=project.members||[];
+      if(project.members.some(member=>member.email===email)){showShareToast('すでに追加されています');return}
+      project.members.push({email,role:$('inviteRole').value});
+      project.updatedAt=new Date().toISOString();
+      writeStore(STORAGE.projects,projects);
+      $('inviteEmail').value='';
+      renderMembers();renderProjects();showShareToast('メンバーを追加しました');
+    }
 
     function sharedPlanUrl(){
       const payload={
@@ -127,11 +334,11 @@
     }
 
     function loadSharedPlan(){
-      if(!location.hash.startsWith('#plan='))return;
+      if(!location.hash.startsWith('#plan='))return false;
       try{
         const encoded=decodeURIComponent(location.hash.slice(6));
         const payload=JSON.parse(decodeURIComponent(escape(atob(encoded))));
-        if(!payload||!Array.isArray(payload.tasks)||!payload.tasks.length)return;
+        if(!payload||!Array.isArray(payload.tasks)||!payload.tasks.length)return false;
         tasks=payload.tasks.map(task=>({
           name:String(task.name||'新しい工程'),
           company:String(task.company||'担当会社'),
@@ -142,8 +349,10 @@
         $('projectName').value=String(payload.name||'共有された工程表');
         $('projectStart').value=/^\\d{4}-\\d{2}-\\d{2}$/.test(payload.start||'')?payload.start:'2026-08-01';
         $('manager').value=String(payload.manager||'');
+        return true;
       }catch(error){
         console.warn('共有リンクを読み込めませんでした',error);
+        return false;
       }
     }
 
@@ -227,6 +436,7 @@
         row.querySelectorAll('[data-key]').forEach(control=>control.addEventListener('change',()=>{
           tasks[index][control.dataset.key]=control.dataset.key==='days'?Math.max(1,Number(control.value)||1):control.value;
           renderBuilder();
+          saveCurrentProject();
         }));
         row.querySelector('.remove').addEventListener('click',()=>removeTask(index));
         row.querySelector('.drag-handle').addEventListener('pointerdown',event=>startReorder(event,row));
@@ -236,6 +446,7 @@
         last.classList.add('just-added');
         last.scrollIntoView({behavior:'smooth',block:'center'});
       }
+      if(viewerMode)$('processList').querySelectorAll('input,select,button').forEach(control=>control.disabled=true);
     }
 
     function animateReflow(list,before){
@@ -275,6 +486,7 @@
         const oldTasks=tasks;
         tasks=[...list.querySelectorAll('.process-row')].map(item=>oldTasks[Number(item.dataset.index)]);
         renderBuilder();
+        saveCurrentProject();
       };
       document.addEventListener('pointermove',move);
       document.addEventListener('pointerup',end,{once:true});
@@ -285,6 +497,7 @@
       if(tasks.length===1)return;
       tasks.splice(index,1);
       renderBuilder();
+      saveCurrentProject();
     }
 
     function schedule(delayId=-1,extra=0){
@@ -365,15 +578,71 @@
       },420);
     }
 
+    async function submitAuth(event){
+      event.preventDefault();
+      const email=$('authEmail').value.trim().toLowerCase(),password=$('authPassword').value;
+      const accounts=readStore(STORAGE.accounts,[]),passwordHash=await hashPassword(password);
+      if(authMode==='register'){
+        const name=$('authName').value.trim();
+        if(!name){$('authError').textContent='表示名を入力してください。';return}
+        if(accounts.some(account=>account.email===email)){$('authError').textContent='このメールアドレスは登録済みです。';return}
+        const account={id:uid(),name,email,passwordHash,createdAt:new Date().toISOString()};
+        accounts.push(account);writeStore(STORAGE.accounts,accounts);localStorage.setItem(STORAGE.session,account.id);
+        currentAccount=account;
+        const projects=readStore(STORAGE.projects,[]);projects.push(makeProject(account.id));writeStore(STORAGE.projects,projects);
+        enterWorkspace(account);
+        return;
+      }
+      const account=accounts.find(item=>item.email===email&&item.passwordHash===passwordHash);
+      if(!account){$('authError').textContent='メールアドレスまたはパスワードが違います。';return}
+      localStorage.setItem(STORAGE.session,account.id);enterWorkspace(account);
+    }
+
+    async function loginDemo(){
+      const accounts=readStore(STORAGE.accounts,[]);
+      let account=accounts.find(item=>item.email==='demo@snake.local');
+      if(!account){
+        account={id:uid(),name:'デモ現場監督',email:'demo@snake.local',passwordHash:await hashPassword('snake-demo'),createdAt:new Date().toISOString()};
+        accounts.push(account);writeStore(STORAGE.accounts,accounts);
+        const projects=readStore(STORAGE.projects,[]);projects.push(makeProject(account.id));writeStore(STORAGE.projects,projects);
+      }
+      localStorage.setItem(STORAGE.session,account.id);enterWorkspace(account);
+    }
+
+    function bootApp(){
+      if(location.hash.startsWith('#plan=')&&loadSharedPlan()){
+        viewerMode=true;
+        currentProjectId=null;
+        document.body.classList.add('viewer-mode');
+        ['projectName','projectStart','manager'].forEach(field=>$(field).disabled=true);
+        $('accountGate').hidden=true;$('workspaceView').hidden=true;$('appRoot').hidden=false;
+        renderBuilder();
+        showShareToast('共有された工程表を閲覧しています');
+        return;
+      }
+      const sessionId=localStorage.getItem(STORAGE.session);
+      const account=readStore(STORAGE.accounts,[]).find(item=>item.id===sessionId);
+      if(account)enterWorkspace(account);
+      else{$('accountGate').hidden=false;$('workspaceView').hidden=true;$('appRoot').hidden=true;setAuthMode('register')}
+    }
+
     document.querySelectorAll('.tab').forEach(tab=>tab.addEventListener('click',()=>switchView(tab.dataset.view)));
     $('openCalendar').addEventListener('click',()=>switchView('calendar'));
     $('shareButton').addEventListener('click',shareSchedule);
     $('settingsButton').addEventListener('click',()=>{$('projectSettings').classList.toggle('compact-hidden');$('settingsButton').classList.toggle('selected')});
-    $('addProcess').addEventListener('click',()=>{tasks.push({name:'新しい工程',company:'担当会社',days:1,blocked:'',status:'未着手'});renderBuilder(true)});
-    $('resetBuilder').addEventListener('click',()=>{tasks=structuredClone(defaults);$('projectStart').value='2026-08-01';$('projectName').value='木造住宅 新築工事';$('manager').value='現場監督';renderBuilder()});
+    $('addProcess').addEventListener('click',()=>{tasks.push({name:'新しい工程',company:'担当会社',days:1,blocked:'',status:'未着手'});renderBuilder(true);saveCurrentProject()});
+    $('resetBuilder').addEventListener('click',()=>{tasks=structuredClone(defaults);$('projectStart').value='2026-08-01';$('projectName').value='木造住宅 新築工事';$('manager').value=currentAccount?.name||'現場監督';renderBuilder();saveCurrentProject()});
     $('simulate').addEventListener('click',simulate);
-    loadSharedPlan();
-    renderBuilder();
+    $('authForm').addEventListener('submit',submitAuth);
+    $('authSwitch').addEventListener('click',()=>setAuthMode(authMode==='register'?'login':'register'));
+    $('demoLogin').addEventListener('click',loginDemo);
+    $('newProject').addEventListener('click',createProject);
+    $('accountMenu').addEventListener('click',()=>showShareToast(currentAccount?.email||''));
+    $('logoutButton').addEventListener('click',()=>{localStorage.removeItem(STORAGE.session);currentAccount=null;$('workspaceView').hidden=true;$('accountGate').hidden=false;setAuthMode('login')});
+    $('projectsButton').addEventListener('click',()=>{if(currentAccount)showWorkspace();else{location.hash='';document.body.classList.remove('viewer-mode');$('appRoot').hidden=true;$('accountGate').hidden=false;setAuthMode('login')}});
+    $('inviteMember').addEventListener('click',addMember);
+    ['projectName','projectStart','manager'].forEach(id=>$(id).addEventListener('change',saveCurrentProject));
+    bootApp();
   </script>
 </body>
 </html>
