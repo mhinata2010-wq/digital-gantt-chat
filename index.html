@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=snake-redesign-20260923">
+  <link rel="stylesheet" href="style.css?v=quiet-workspace-20260923">
   <link rel="icon" type="image/gif" href="snake-site.gif">
   <link rel="apple-touch-icon" href="snake-site.gif">
 </head>
@@ -17,7 +17,6 @@
     <header class="account-header">
       <a class="brand-lockup" href="#accountGate" aria-label="snake site トップへ">
         <img src="snake-site.gif" alt="snake site" class="account-logo">
-        <span>工程をつなぐ</span>
       </a>
       <div class="account-product"><b>現場工程表</b><span>beta</span></div>
     </header>
@@ -94,7 +93,7 @@
   <div class="backdrop" id="appRoot" hidden>
     <main class="app-shell">
       <header class="app-header">
-        <button class="logo" id="projectsButton" aria-label="案件一覧に戻る"><img src="snake-site.gif" alt="snake site"></button>
+        <button class="projects-back" id="projectsButton" aria-label="案件一覧に戻る">← 案件一覧</button>
         <nav class="view-tabs" aria-label="表示切り替え">
           <button id="scheduleTab" class="tab active" data-view="schedule">予定表</button>
           <button id="calendarTab" class="tab" data-view="calendar">カレンダー</button>
@@ -159,7 +158,13 @@
           <section class="timeline-card" id="scheduleBoard">
             <div class="timeline-head">
               <div><span class="status-dot"></span>全体工程</div>
-              <div class="legend"><span><i class="ghost-key"></i>変更前</span><span><i class="after-key"></i>変更後</span></div>
+              <div class="timeline-actions">
+                <div class="legend"><span><i class="ghost-key"></i>変更前</span><span><i class="after-key"></i>変更後</span></div>
+                <button class="print-button" id="printPdf" type="button" title="ガントチャートを印刷・PDF保存">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 8V3h10v5M7 17H5a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M7 14h10v7H7zM17 11h.01"/></svg>
+                  <span>PDF保存</span>
+                </button>
+              </div>
             </div>
             <div class="timeline-scroll"><div id="timeline" class="timeline"></div></div>
           </section>
@@ -671,6 +676,11 @@
     $('addProcess').addEventListener('click',()=>{tasks.push({name:'新しい工程',company:'担当会社',days:1,blocked:'',status:'未着手'});renderBuilder(true);saveCurrentProject()});
     $('resetBuilder').addEventListener('click',()=>{tasks=structuredClone(defaults);$('projectStart').value='2026-08-01';$('projectName').value='木造住宅 新築工事';$('manager').value=currentAccount?.name||'現場監督';renderBuilder();saveCurrentProject()});
     $('simulate').addEventListener('click',simulate);
+    $('printPdf').addEventListener('click',()=>{
+      document.body.classList.add('printing-schedule');
+      window.print();
+    });
+    window.addEventListener('afterprint',()=>document.body.classList.remove('printing-schedule'));
     $('authForm').addEventListener('submit',submitAuth);
     $('authSwitch').addEventListener('click',()=>setAuthMode(authMode==='register'?'login':'register'));
     $('demoLogin').addEventListener('click',loginDemo);
