@@ -250,12 +250,16 @@
           <div class="project-card-top"><span class="project-role ${role}">${role==='owner'?'管理者':role==='editor'?'編集者':'閲覧者'}</span><time>${new Date(project.updatedAt).toLocaleDateString('ja-JP')}</time></div>
           <h2>${esc(project.name)}</h2><p>${esc(project.manager||'担当未設定')} ・ ${project.tasks.length}工程</p>
           <div class="project-progress"><i style="width:${Math.round(project.tasks.filter(task=>task.status==='完了').length/project.tasks.length*100)||0}%"></i></div>
-          <div class="project-actions"><button class="open-project">工程表を開く <span>→</span></button>${canManage?'<button class="members-project" aria-label="メンバー管理">共有</button>':''}</div>
+          <div class="project-actions">${canManage?'<button class="members-project" aria-label="メンバー管理">共有</button>':''}</div>
         </article>`;
       }).join(''):`<div class="empty-projects"><b>参加中の案件はありません</b><p>「新しい案件」から最初の工程表を作成できます。</p></div>`;
       $('projectGrid').querySelectorAll('.project-card').forEach(card=>{
         const id=card.dataset.id;
-        card.querySelector('.open-project').addEventListener('click',()=>openProject(id));
+        card.tabIndex=0;
+        card.setAttribute('role','link');
+        card.setAttribute('aria-label',`${card.querySelector('h2').textContent}の工程表を開く`);
+        card.addEventListener('click',event=>{if(!event.target.closest('button,a'))openProject(id)});
+        card.addEventListener('keydown',event=>{if((event.key==='Enter'||event.key===' ')&&event.target===card){event.preventDefault();openProject(id)}});
         card.querySelector('.members-project')?.addEventListener('click',()=>openMembers(id));
       });
     }
@@ -546,15 +550,34 @@
     function schedule(delayId=-1,extra=0){
       const result=[];
       tasks.forEach((task,index)=>{
-        const start=index?add(result[index-1].end,0):new Date(base);
         const days=Number(task.days)+(index===delayId?extra:0);
-        result.push({start,end:add(start,days),days,shift:0});
+        let start=index?new Date(result[index-1].end):new Date(base);
+        const blocked=parseBlockedDates(task.blocked);
+        while(blocked.has(dateKey(start)))start=add(start,1);
+        let end=new Date(start),worked=0;
+        while(worked<days){
+          if(!blocked.has(dateKey(end)))worked++;
+          if(worked<days)end=add(end,1);
+        }
+        result.push({start,end:add(end,1),days,shift:0});
       });
       if(delayId>=0){
         const original=schedule();
         result.forEach((item,index)=>item.shift=Math.round((item.start-original[index].start)/864e5));
       }
       return result;
+    }
+
+    function dateKey(date){return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`}
+
+    function parseBlockedDates(value){
+      const blocked=new Set();
+      String(value||'').split(/[,、\s]+/).filter(Boolean).forEach(token=>{
+        let match=token.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+        if(match)blocked.add(dateKey(new Date(Number(match[1]),Number(match[2])-1,Number(match[3]))));
+        else if((match=token.match(/^(\d{1,2})\/(\d{1,2})$/)))blocked.add(dateKey(new Date(base.getFullYear(),Number(match[1])-1,Number(match[2]))));
+      });
+      return blocked;
     }
 
     function prepareCalendar(){
@@ -698,6 +721,10 @@
     $('logoutButton').addEventListener('click',()=>{localStorage.removeItem(STORAGE.session);currentAccount=null;$('workspaceView').hidden=true;$('accountGate').hidden=false;setAuthMode('login')});
     $('projectsButton').addEventListener('click',()=>{if(currentAccount)showWorkspace();else{location.hash='';document.body.classList.remove('viewer-mode');$('appRoot').hidden=true;$('accountGate').hidden=false;setAuthMode('login')}});
     $('inviteMember').addEventListener('click',addMember);
+    window.addEventListener('scroll',()=>{
+      const header=$('appRoot').hidden?null:$('appRoot').querySelector('.app-header');
+      header?.classList.toggle('scrolled',window.scrollY>8);
+    },{passive:true});
     ['projectName','projectStart','manager'].forEach(id=>$(id).addEventListener('change',saveCurrentProject));
     bootApp();
   </script>
