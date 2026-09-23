@@ -15,49 +15,52 @@
 <body>
   <section class="account-gate" id="accountGate">
     <header class="account-header">
-      <img src="snake-site.gif" alt="snake site" class="account-logo">
-      <div class="account-product"><b>工程管理</b><span>試作版</span></div>
+      <a class="brand-lockup" href="#accountGate" aria-label="snake site トップへ">
+        <img src="snake-site.gif" alt="snake site" class="account-logo">
+        <span>工程をつなぐ</span>
+      </a>
+      <div class="account-product"><b>現場工程表</b><span>beta</span></div>
     </header>
     <div class="account-layout">
       <section class="site-intro" aria-label="サービス概要">
-        <p class="site-number">現場工程表</p>
-        <h1>工事の流れを<br>見える形に。</h1>
-        <p class="site-copy">工程を施工順に並べ、予定と担当会社をひとつの画面で確認できます。遅れが出たときは、後続工程への影響を自動で計算します。</p>
-
-        <div class="site-board" aria-hidden="true">
-          <div class="board-head"><span>木造住宅 新築工事</span><time>8月1日 — 8月14日</time></div>
-          <div class="board-row"><b>土木</b><i style="--start:0;--span:4;--tone:#0b7545"></i><small>完了</small></div>
-          <div class="board-row"><b>基礎</b><i style="--start:4;--span:3;--tone:#c78326"></i><small>進行中</small></div>
-          <div class="board-row"><b>躯体</b><i style="--start:7;--span:7;--tone:#2e6885"></i><small>予定</small></div>
-          <div class="board-scale"><span>8/1</span><span>8/7</span><span>8/14</span></div>
+        <div class="intro-copy-block">
+          <p class="site-number"><span></span>CONSTRUCTION SCHEDULE</p>
+          <h1>工事の流れを、<br><em>ひと目で。</em></h1>
+          <p class="site-copy">工程の前後関係を、現場の全員が同じ一枚で理解する。遅れが出れば、次の手までつながります。</p>
         </div>
-
-        <dl class="site-points">
-          <div><dt>01</dt><dd>工程を上から並べて登録</dd></div>
-          <div><dt>02</dt><dd>遅延後の日程候補を再計算</dd></div>
-          <div><dt>03</dt><dd>協力会社へリンクで共有</dd></div>
-        </dl>
+        <div class="snake-route" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        <div class="site-board" aria-label="遅延時の工程変更イメージ">
+          <div class="board-head"><span>木造住宅 新築工事</span><time>8月1日 — 8月14日</time><b>遅延を反映</b></div>
+          <div class="board-row"><b>土木</b><i style="--start:0;--span:4;--tone:#00723e"></i><small>完了</small></div>
+          <div class="board-row delayed"><b>基礎</b><i style="--start:4;--span:4;--tone:#d07b32"></i><small>+ 1日</small></div>
+          <div class="board-row shifted"><b>躯体</b><i style="--start:8;--span:6;--tone:#00723e"></i><small>連動</small></div>
+          <div class="board-scale"><span>8/1</span><span>8/7</span><span>8/14</span></div>
+          <p class="board-message"><b>基礎工事の遅れを反映。</b> 躯体工事の開始候補を1日後ろへ変更しました。</p>
+        </div>
+        <div class="intro-foot"><span>工程を並べる</span><i></i><span>影響を確かめる</span><i></i><span>関係者と共有する</span></div>
       </section>
 
       <main class="account-panel">
         <div class="account-panel-head">
-          <p>アカウント</p>
+          <p><span class="head-line"></span>はじめる</p>
           <h2 id="authTitle">利用をはじめる</h2>
-          <span id="authDescription">案件を保存するためのアカウントを作成します。</span>
+          <span id="authDescription">現場の工程表を、チームで確認できます。</span>
         </div>
         <form id="authForm" class="auth-form">
           <label id="nameField"><span>表示名</span><input id="authName" autocomplete="name" placeholder="例：宮地 陽大"></label>
           <label><span>メールアドレス</span><input id="authEmail" type="email" autocomplete="email" required placeholder="name@example.com"></label>
-          <label><span>パスワード</span><input id="authPassword" type="password" minlength="6" required placeholder="6文字以上"></label>
+          <label><span>パスワード</span><span class="password-field"><input id="authPassword" type="password" minlength="6" required placeholder="6文字以上"><button id="passwordToggle" type="button" aria-label="パスワードを表示する">表示</button></span></label>
           <p id="authError" class="auth-error" role="alert"></p>
           <button class="primary-button auth-submit" id="authSubmit" type="submit">アカウントを作成 <span>→</span></button>
         </form>
         <div class="account-options">
           <button class="auth-switch" id="authSwitch" type="button">すでにアカウントをお持ちの方</button>
-          <span>または</span>
           <button class="demo-button" id="demoLogin" type="button">登録せずにデモを見る</button>
         </div>
-        <p class="prototype-note"><b>検証版</b>　入力した情報はこの端末内だけに保存されます。普段使っているパスワードは使用しないでください。</p>
+        <div class="trust-panel">
+          <p><b>このデモについて</b>　入力した情報はこの端末内だけに保存されます。普段使っているパスワードは使用しないでください。</p>
+          <button id="forgotPassword" type="button">パスワードを忘れた場合</button>
+        </div>
       </main>
     </div>
   </section>
@@ -218,8 +221,8 @@
       $('nameField').hidden=!registering;
       $('authName').required=registering;
       $('authTitle').textContent=registering?'利用をはじめる':'ログイン';
-      $('authDescription').textContent=registering?'案件を保存するためのアカウントを作成します。':'登録したメールアドレスとパスワードを入力してください。';
-      $('authSubmit').textContent=registering?'アカウントを作成':'ログイン';
+      $('authDescription').textContent=registering?'現場の工程表を、チームで確認できます。':'登録したメールアドレスとパスワードを入力してください。';
+      $('authSubmit').innerHTML=registering?'アカウントを作成 <span>→</span>':'ログイン <span>→</span>';
       $('authSwitch').textContent=registering?'すでにアカウントをお持ちの方':'新しいアカウントを作る';
       $('authError').textContent='';
     }
@@ -671,6 +674,15 @@
     $('authForm').addEventListener('submit',submitAuth);
     $('authSwitch').addEventListener('click',()=>setAuthMode(authMode==='register'?'login':'register'));
     $('demoLogin').addEventListener('click',loginDemo);
+    $('passwordToggle').addEventListener('click',()=>{
+      const input=$('authPassword'),showing=input.type==='text';
+      input.type=showing?'password':'text';
+      $('passwordToggle').textContent=showing?'表示':'非表示';
+      $('passwordToggle').setAttribute('aria-label',showing?'パスワードを表示する':'パスワードを隠す');
+    });
+    $('forgotPassword').addEventListener('click',()=>{
+      $('authError').textContent='この検証版では、端末内に保存されたアカウントのみを使用します。新しいアカウントを作成するか、デモをお試しください。';
+    });
     $('newProject').addEventListener('click',createProject);
     $('accountMenu').addEventListener('click',()=>showShareToast(currentAccount?.email||''));
     $('logoutButton').addEventListener('click',()=>{localStorage.removeItem(STORAGE.session);currentAccount=null;$('workspaceView').hidden=true;$('accountGate').hidden=false;setAuthMode('login')});
