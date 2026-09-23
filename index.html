@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=quiet-workspace-20260923">
+  <link rel="stylesheet" href="style.css?v=blocked-days-20260923-2">
   <link rel="icon" type="image/gif" href="snake-site.gif">
   <link rel="apple-touch-icon" href="snake-site.gif">
 </head>
@@ -554,12 +554,12 @@
         let start=index?new Date(result[index-1].end):new Date(base);
         const blocked=parseBlockedDates(task.blocked);
         while(blocked.has(dateKey(start)))start=add(start,1);
-        let end=new Date(start),worked=0;
+        let end=new Date(start),worked=0;const workDates=[];
         while(worked<days){
-          if(!blocked.has(dateKey(end)))worked++;
+          if(!blocked.has(dateKey(end))){worked++;workDates.push(new Date(end));}
           if(worked<days)end=add(end,1);
         }
-        result.push({start,end:add(end,1),days,shift:0});
+        result.push({start,end:add(end,1),days,workDates,shift:0});
       });
       if(delayId>=0){
         const original=schedule();
@@ -614,11 +614,15 @@
         const changed=Boolean(current&&(index===current.id||item.shift>0));
         const barWidth=Math.max(item.days*DAY-5,46),oldWidth=old?Math.max(old.days*DAY-5,46):barWidth;
         const markerTop=layout.bar<232?227:277,connTop=Math.min(layout.bar+15,257),connHeight=Math.abs(247-(layout.bar+15));
-        const startBoundary=start*DAY,endBoundary=(start+item.days)*DAY;
-        if(changed&&old)html+=`<div class="oldbar" style="left:${oldStart*DAY+3}px;top:${layout.bar}px;width:${oldWidth}px"></div>`;
+        const endBoundary=Math.round((item.end-base)/864e5)*DAY;
+        if(changed&&old)old.workDates.forEach(date=>{const offset=Math.round((date-base)/864e5);html+=`<div class="oldbar" style="left:${offset*DAY+3}px;top:${layout.bar}px;width:${DAY-5}px"></div>`});
         html+=`<div class="connector start-connector" style="--color:${color};left:${startBoundary}px;top:${connTop}px;height:${connHeight}px"></div><div class="marker start-marker" style="--color:${color};left:${startBoundary}px;top:${markerTop}px"></div><div class="connector end-connector" style="--color:${color};left:${endBoundary}px;top:${connTop}px;height:${connHeight}px"></div><div class="marker end-marker" style="--color:${color};left:${endBoundary}px;top:${markerTop}px"></div>`;
         const motion=animate&&changed?(item.shift>0?'shifted':'expanded'):'initial';
-        html+=`<div class="taskbar ${motion} ${changed?'changed':''}" style="--color:${color};--shift:${item.shift*DAY}px;--old-width:${oldWidth}px;--new-width:${barWidth}px;--delay:${index*.06}s;left:${start*DAY+3}px;top:${layout.bar}px;width:${barWidth}px"><span>${esc(task.name)}</span><em>${item.days}日</em></div><div class="taskmeta ${changed?'changed':''}" style="left:${start*DAY+4}px;top:${layout.meta}px">${esc(task.company)}<small>${fmt(item.start)} — ${fmt(item.end)}</small></div>`;
+        item.workDates.forEach((date,segmentIndex)=>{
+          const offset=Math.round((date-base)/864e5),first=segmentIndex===0,last=segmentIndex===item.workDates.length-1;
+          html+=`<div class="taskbar ${motion} ${changed?'changed':''} ${first?'segment-first':''} ${last?'segment-last':''}" style="--color:${color};--shift:${item.shift*DAY}px;--delay:${index*.06}s;left:${offset*DAY+3}px;top:${layout.bar}px;width:${DAY-5}px">${first?`<span>${esc(task.name)}</span>`:''}${last?`<em>${item.days}日</em>`:''}</div>`;
+        });
+        html+=`<div class="taskmeta ${changed?'changed':''}" style="left:${start*DAY+4}px;top:${layout.meta}px">${esc(task.company)}<small>${fmt(item.start)} — ${fmt(item.end)}</small></div>`;
       });
       $('timeline').style.width=`${width}px`;
       $('timeline').innerHTML=html;
