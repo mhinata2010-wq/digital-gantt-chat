@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=calendar-fixed-20260924">
+  <link rel="stylesheet" href="style.css?v=timeline-print-20260924">
   <link rel="icon" type="image/gif" href="snake-site.gif">
   <link rel="apple-touch-icon" href="snake-site.gif">
 </head>
@@ -144,22 +144,22 @@
             <div class="finish-chip"><small>完了予定</small><b id="finish">—</b></div>
           </div>
 
-          <section class="delay-panel">
+          <details class="delay-disclosure"><summary>遅延の影響を試算する <span>工程と日数を入力して候補を確認</span></summary><section class="delay-panel">
             <div class="delay-fields">
               <label><span>遅れが出た工程</span><select id="taskSelect"></select></label>
               <label class="days-field"><span>遅れ</span><input id="delay" type="number" min="1" max="30" value="2"><em>日</em></label>
             </div>
             <button class="primary-button delay-button" id="simulate">
-              <span class="button-label">変更を反映</span>
+              <span class="button-label">日程案を試算</span>
               <span class="loading-label">再計算中…</span>
             </button>
-          </section>
+          </section></details>
 
           <section class="timeline-card" id="scheduleBoard">
             <div class="timeline-head">
-              <div><span class="status-dot"></span>全体工程</div>
+              <div><span class="status-dot"></span>全体工程 <small id="todayNote" class="today-note"></small></div>
               <div class="timeline-actions">
-                <div class="legend"><span><i class="ghost-key"></i>変更前</span><span><i class="after-key"></i>変更後</span></div>
+                <div class="legend"><span><i class="complete-key"></i>完了</span><span><i class="progress-key"></i>進行中</span><span><i class="planned-key"></i>未着手</span><span><i class="blocked-key"></i>稼働不可</span></div>
                 <button class="print-button" id="printPdf" type="button" title="ガントチャートを印刷・PDF保存">
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 8V3h10v5M7 17H5a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M7 14h10v7H7zM17 11h.01"/></svg>
                   <span>PDF保存</span>
@@ -589,6 +589,8 @@
       $('taskSelect').value=String(Math.min(1,tasks.length-1));
       $('summary').className='result';
       $('compare').className='comparison';
+      $('delay').value='2';
+      document.querySelector('.delay-disclosure').open=false;
       renderTimeline(false);
     }
 
@@ -601,12 +603,16 @@
       const data=current?current.after:schedule(),before=current?current.before:null;
       const lastEnd=Math.max(...data.map(item=>item.end.getTime()));
       const total=Math.max(28,Math.ceil((lastEnd-base)/864e5)+3),width=total*DAY;
+      $('timeline').style.setProperty('--print-scale-x',String(Math.min(1,1050/width)));
+      const today=new Date(),todayIndex=Math.floor((new Date(today.getFullYear(),today.getMonth(),today.getDate())-base)/864e5);
+      $('todayNote').textContent=todayIndex>=0&&todayIndex<total?'赤い縦線が今日':`今日 ${fmt(today)} は表示期間外`;
       let html=`<div class="month-label">${base.getFullYear()}年 ${base.getMonth()+1}月</div><div class="axis" style="width:${width}px">`;
       for(let i=0;i<total;i++){
         const date=add(base,i),week=['日','月','火','水','木','金','土'][date.getDay()];
         html+=`<div class="day ${date.getDay()===0||date.getDay()===6?'weekend':''}">${date.getDate()}<small>${week}</small></div>`;
       }
       html+='</div>';
+      if(todayIndex>=0&&todayIndex<total)html+=`<div class="today-line" style="left:${todayIndex*DAY+DAY/2}px"><span>今日 ${fmt(today)}</span></div>`;
       tasks.forEach((task,index)=>{
         const item=data[index],old=before&&before[index];
         const start=Math.round((item.start-base)/864e5),oldStart=old?Math.round((old.start-base)/864e5):start;
@@ -618,10 +624,14 @@
         if(changed&&old)old.workDates.forEach(date=>{const offset=Math.round((date-base)/864e5);html+=`<div class="oldbar" style="left:${offset*DAY+3}px;top:${layout.bar}px;width:${DAY-5}px"></div>`});
         html+=`<div class="connector start-connector" style="--color:${color};left:${startBoundary}px;top:${connTop}px;height:${connHeight}px"></div><div class="marker start-marker" style="--color:${color};left:${startBoundary}px;top:${markerTop}px"></div><div class="connector end-connector" style="--color:${color};left:${endBoundary}px;top:${connTop}px;height:${connHeight}px"></div><div class="marker end-marker" style="--color:${color};left:${endBoundary}px;top:${markerTop}px"></div>`;
         const motion=animate&&changed?(item.shift>0?'shifted':'expanded'):'initial';
-        item.workDates.forEach((date,segmentIndex)=>{
-          const offset=Math.round((date-base)/864e5),first=segmentIndex===0,last=segmentIndex===item.workDates.length-1;
-          html+=`<div class="taskbar ${motion} ${changed?'changed':''} ${first?'segment-first':''} ${last?'segment-last':''}" style="--color:${color};--shift:${item.shift*DAY}px;--delay:${index*.06}s;left:${offset*DAY+3}px;top:${layout.bar}px;width:${DAY-5}px">${first?`<span>${esc(task.name)}</span>`:''}${last?`<em>${item.days}日</em>`:''}</div>`;
-        });
+        const status=task.status==='完了'?'complete':task.status==='進行中'?'in-progress':task.status==='遅延'?'late':'planned';
+        const lastWork=Math.round((item.workDates.at(-1)-base)/864e5);
+        html+=`<div class="taskbar ${motion} ${changed?'changed':''} ${status}" style="--color:${color};--shift:${item.shift*DAY}px;--delay:${index*.06}s;left:${start*DAY+3}px;top:${layout.bar}px;width:${(lastWork-start+1)*DAY-5}px"><span>${esc(task.name)}</span><em>${item.days}日</em></div>`;
+        const worked=new Set(item.workDates.map(dateKey));
+        for(let day=start;day<=lastWork;day++){
+          const date=add(base,day);
+          if(!worked.has(dateKey(date)))html+=`<div class="unavailable-day" aria-label="${fmt(date)}は稼働不可" title="${fmt(date)} 稼働不可" style="left:${day*DAY+3}px;top:${layout.bar}px;width:${DAY-5}px"></div>`;
+        }
         html+=`<div class="taskmeta ${changed?'changed':''}" style="left:${start*DAY+4}px;top:${layout.meta}px">${esc(task.company)}<small>${fmt(item.start)} — ${fmt(item.end)}</small></div>`;
       });
       $('timeline').style.width=`${width}px`;
