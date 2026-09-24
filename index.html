@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=blocked-days-20260923-2">
+  <link rel="stylesheet" href="style.css?v=calendar-fixed-20260924">
   <link rel="icon" type="image/gif" href="snake-site.gif">
   <link rel="apple-touch-icon" href="snake-site.gif">
 </head>
@@ -246,7 +246,7 @@
       const projects=accessibleProjects().sort((a,b)=>String(b.updatedAt).localeCompare(String(a.updatedAt)));
       $('projectGrid').innerHTML=projects.length?projects.map(project=>{
         const role=roleFor(project),canManage=role==='owner';
-        return `<article class="project-card" data-id="${esc(project.id)}">
+        return `<article class="project-card" data-id="${esc(project.id)}" tabindex="0" role="link" aria-label="${esc(project.name)}の工程表を開く">
           <div class="project-card-top"><span class="project-role ${role}">${role==='owner'?'管理者':role==='editor'?'編集者':'閲覧者'}</span><time>${new Date(project.updatedAt).toLocaleDateString('ja-JP')}</time></div>
           <h2>${esc(project.name)}</h2><p>${esc(project.manager||'担当未設定')} ・ ${project.tasks.length}工程</p>
           <div class="project-progress"><i style="width:${Math.round(project.tasks.filter(task=>task.status==='完了').length/project.tasks.length*100)||0}%"></i></div>
@@ -255,9 +255,6 @@
       }).join(''):`<div class="empty-projects"><b>参加中の案件はありません</b><p>「新しい案件」から最初の工程表を作成できます。</p></div>`;
       $('projectGrid').querySelectorAll('.project-card').forEach(card=>{
         const id=card.dataset.id;
-        card.tabIndex=0;
-        card.setAttribute('role','link');
-        card.setAttribute('aria-label',`${card.querySelector('h2').textContent}の工程表を開く`);
         card.addEventListener('click',event=>{if(!event.target.closest('button,a'))openProject(id)});
         card.addEventListener('keydown',event=>{if((event.key==='Enter'||event.key===' ')&&event.target===card){event.preventDefault();openProject(id)}});
         card.querySelector('.members-project')?.addEventListener('click',()=>openMembers(id));
@@ -441,24 +438,27 @@
     }
 
     function switchView(next){
-      if(next===activeView||switching)return;
-      switching=true;
+      if(next===activeView)return;
       if(next==='calendar')prepareCalendar();
       const oldView=activeView==='schedule'?$('scheduleView'):$('calendarView');
       const newView=next==='schedule'?$('scheduleView'):$('calendarView');
       const forward=next==='calendar';
+      switching=true;
+      oldView.hidden=false;
       newView.hidden=false;
       newView.className=`view ${forward?'enter-forward':'enter-back'}`;
       oldView.className=`view ${forward?'leave-forward':'leave-back'}`;
       document.querySelectorAll('.tab').forEach(tab=>tab.classList.toggle('active',tab.dataset.view===next));
-      setTimeout(()=>{
+      activeView=next;
+      const finish=()=>{
         oldView.hidden=true;
         oldView.className='view';
         newView.className='view active-view';
-        activeView=next;
         switching=false;
-        window.scrollTo({top:0,behavior:'smooth'});
-      },560);
+      };
+      window.scrollTo({top:0,behavior:'smooth'});
+      newView.addEventListener('animationend',finish,{once:true});
+      window.setTimeout(finish,700);
     }
 
     function builderRow(task,index){
@@ -614,7 +614,7 @@
         const changed=Boolean(current&&(index===current.id||item.shift>0));
         const barWidth=Math.max(item.days*DAY-5,46),oldWidth=old?Math.max(old.days*DAY-5,46):barWidth;
         const markerTop=layout.bar<232?227:277,connTop=Math.min(layout.bar+15,257),connHeight=Math.abs(247-(layout.bar+15));
-        const endBoundary=Math.round((item.end-base)/864e5)*DAY;
+        const startBoundary=start*DAY,endBoundary=Math.round((item.end-base)/864e5)*DAY;
         if(changed&&old)old.workDates.forEach(date=>{const offset=Math.round((date-base)/864e5);html+=`<div class="oldbar" style="left:${offset*DAY+3}px;top:${layout.bar}px;width:${DAY-5}px"></div>`});
         html+=`<div class="connector start-connector" style="--color:${color};left:${startBoundary}px;top:${connTop}px;height:${connHeight}px"></div><div class="marker start-marker" style="--color:${color};left:${startBoundary}px;top:${markerTop}px"></div><div class="connector end-connector" style="--color:${color};left:${endBoundary}px;top:${connTop}px;height:${connHeight}px"></div><div class="marker end-marker" style="--color:${color};left:${endBoundary}px;top:${markerTop}px"></div>`;
         const motion=animate&&changed?(item.shift>0?'shifted':'expanded'):'initial';
