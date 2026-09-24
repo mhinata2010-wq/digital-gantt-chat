@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=timeline-print-20260924">
+  <link rel="stylesheet" href="style.css?v=network-prototype-20260924">
   <link rel="icon" type="image/gif" href="snake-site.gif">
   <link rel="apple-touch-icon" href="snake-site.gif">
 </head>
@@ -97,6 +97,7 @@
         <nav class="view-tabs" aria-label="表示切り替え">
           <button id="scheduleTab" class="tab active" data-view="schedule">予定表</button>
           <button id="calendarTab" class="tab" data-view="calendar">カレンダー</button>
+          <button id="networkTab" class="tab" data-view="network">ネットワーク</button>
           <span class="tab-indicator" aria-hidden="true"></span>
         </nav>
         <div class="header-actions">
@@ -175,6 +176,12 @@
             <div class="table-scroll"><table><thead><tr><th>工程</th><th>変更前</th><th>変更後</th><th>影響</th></tr></thead><tbody id="changes"></tbody></table></div>
           </section>
         </section>
+        <section id="networkView" class="view" hidden aria-labelledby="networkTitle">
+          <div class="view-title-row"><div><h1 id="networkTitle">ネットワーク工程表</h1><p class="network-intro">予定表で入力した工程と前提関係から自動作成しました。矢印は「前の工程が終わると開始できる」関係です。</p></div></div>
+          <div class="network-toolbar"><span id="networkSummary"></span><button id="networkPrint" class="print-button" type="button">PDF保存</button></div>
+          <div class="network-scroll"><svg id="networkDiagram" role="img" aria-label="工程の依存関係図"></svg></div>
+          <p class="network-note">関係が違う場合は、予定表の「前提工程」から変更してください。変換結果は確認用で、日程の確定は行いません。</p>
+        </section>
       </div>
     </main>
   </div>
@@ -209,6 +216,11 @@
     const readStore=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key))??fallback}catch(error){return fallback}};
     const writeStore=(key,value)=>localStorage.setItem(key,JSON.stringify(value));
     const uid=()=>crypto.randomUUID?crypto.randomUUID():`${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    function normalizeTasks(list){
+      const copy=clone(list);
+      copy.forEach((task,index)=>{task.id ||=uid();if(!Array.isArray(task.dependsOn))task.dependsOn=index?[copy[index-1].id]:[]});
+      return copy;
+    }
 
     async function hashPassword(value){
       const data=new TextEncoder().encode(value);
@@ -286,7 +298,7 @@
       if(!project)return;
       currentProjectId=id;
       viewerMode=roleFor(project)==='viewer';
-      tasks=clone(project.tasks?.length?project.tasks:defaults);
+      tasks=normalizeTasks(project.tasks?.length?project.tasks:defaults);
       $('projectName').value=project.name||'現場工程表';
       $('projectStart').value=project.start||'2026-08-01';
       $('manager').value=project.manager||'';
@@ -298,7 +310,7 @@
       document.body.classList.toggle('viewer-mode',viewerMode);
       ['projectName','projectStart','manager'].forEach(field=>$(field).disabled=viewerMode);
       if(activeView!=='schedule'){
-        $('calendarView').hidden=true;$('calendarView').className='view';
+        ['calendarView','networkView'].forEach(id=>{$(id).hidden=true;$(id).className='view'});
         $('scheduleView').hidden=false;$('scheduleView').className='view active-view';
         activeView='schedule';
         document.querySelectorAll('.tab').forEach(tab=>tab.classList.toggle('active',tab.dataset.view==='schedule'));
@@ -384,6 +396,8 @@
         const payload=JSON.parse(decodeURIComponent(escape(atob(encoded))));
         if(!payload||!Array.isArray(payload.tasks)||!payload.tasks.length)return false;
         tasks=payload.tasks.map(task=>({
+          id:String(task.id||uid()),
+          dependsOn:Array.isArray(task.dependsOn)?task.dependsOn.map(String):undefined,
           name:String(task.name||'新しい工程'),
           company:String(task.company||'担当会社'),
           days:Math.max(1,Number(task.days)||1),
@@ -440,9 +454,10 @@
     function switchView(next){
       if(next===activeView)return;
       if(next==='calendar')prepareCalendar();
-      const oldView=activeView==='schedule'?$('scheduleView'):$('calendarView');
-      const newView=next==='schedule'?$('scheduleView'):$('calendarView');
-      const forward=next==='calendar';
+      if(next==='network')renderNetwork();
+      const oldView=$(`${activeView}View`);
+      const newView=$(`${next}View`);
+      const forward=['schedule','calendar','network'].indexOf(next)>['schedule','calendar','network'].indexOf(activeView);
       switching=true;
       oldView.hidden=false;
       newView.hidden=false;
@@ -450,7 +465,10 @@
       oldView.className=`view ${forward?'leave-forward':'leave-back'}`;
       document.querySelectorAll('.tab').forEach(tab=>tab.classList.toggle('active',tab.dataset.view===next));
       activeView=next;
+      let finished=false;
       const finish=()=>{
+        if(finished)return;
+        finished=true;
         oldView.hidden=true;
         oldView.className='view';
         newView.className='view active-view';
@@ -463,13 +481,14 @@
 
     function builderRow(task,index){
       const statuses=['未着手','進行中','完了','遅延'].map(s=>`<option ${s===task.status?'selected':''}>${s}</option>`).join('');
-      const dependency=index?tasks[index-1].name:'開始工程';
+      const dependencies=tasks.slice(0,index).filter(candidate=>task.dependsOn.includes(candidate.id));
+      const dependency=dependencies.map(item=>item.name).join('・')||'なし（並行開始）';
       return `<article class="process-row" data-index="${index}">
         <div class="row-order"><button class="drag-handle" aria-label="${esc(task.name)}を並べ替え">⠿</button><span>${String(index+1).padStart(2,'0')}</span></div>
         <label class="process-name"><small>工程名</small><input data-key="name" value="${esc(task.name)}"></label>
         <label><small>担当会社</small><input data-key="company" value="${esc(task.company)}"></label>
         <label class="small-field"><small>日数</small><input data-key="days" type="number" min="1" value="${task.days}"></label>
-        <div class="dependency"><small>前提工程</small><b>${esc(dependency)}</b></div>
+        <details class="dependency dependency-editor"><summary><small>前提工程</small><b>${esc(dependency)}</b></summary><div class="dependency-options">${tasks.slice(0,index).map(candidate=>`<label><input class="dependency-check" type="checkbox" value="${esc(candidate.id)}" ${task.dependsOn.includes(candidate.id)?'checked':''}>${esc(candidate.name)}</label>`).join('')||'<span>最初の工程には前提がありません</span>'}</div></details>
         <label><small>稼働不可日</small><input data-key="blocked" placeholder="8/6" value="${esc(task.blocked)}"></label>
         <label><small>進捗</small><select data-key="status">${statuses}</select></label>
         <button class="remove" aria-label="${esc(task.name)}を削除">×</button>
@@ -477,6 +496,7 @@
     }
 
     function renderBuilder(highlightLast=false){
+      if(tasks.some(task=>!task.id||!Array.isArray(task.dependsOn)))tasks=normalizeTasks(tasks);
       $('processList').innerHTML=tasks.map(builderRow).join('');
       document.querySelectorAll('.process-row').forEach(row=>{
         const index=Number(row.dataset.index);
@@ -486,6 +506,10 @@
           saveCurrentProject();
         }));
         row.querySelector('.remove').addEventListener('click',()=>removeTask(index));
+        row.querySelectorAll('.dependency-check').forEach(control=>control.addEventListener('change',()=>{
+          tasks[index].dependsOn=[...row.querySelectorAll('.dependency-check:checked')].map(input=>input.value);
+          saveCurrentProject();renderBuilder();
+        }));
         row.querySelector('.drag-handle').addEventListener('pointerdown',event=>startReorder(event,row));
       });
       if(highlightLast){
@@ -532,6 +556,7 @@
         row.classList.remove('dragging');
         const oldTasks=tasks;
         tasks=[...list.querySelectorAll('.process-row')].map(item=>oldTasks[Number(item.dataset.index)]);
+        tasks.forEach((task,index)=>task.dependsOn=task.dependsOn.filter(id=>tasks.slice(0,index).some(candidate=>candidate.id===id)));
         renderBuilder();
         saveCurrentProject();
       };
@@ -542,7 +567,8 @@
 
     function removeTask(index){
       if(tasks.length===1)return;
-      tasks.splice(index,1);
+      const [removed]=tasks.splice(index,1);
+      tasks.forEach(task=>task.dependsOn=task.dependsOn.filter(id=>id!==removed.id));
       renderBuilder();
       saveCurrentProject();
     }
@@ -551,7 +577,8 @@
       const result=[];
       tasks.forEach((task,index)=>{
         const days=Number(task.days)+(index===delayId?extra:0);
-        let start=index?new Date(result[index-1].end):new Date(base);
+        const prerequisites=(task.dependsOn||[]).map(id=>tasks.findIndex(candidate=>candidate.id===id)).filter(predecessor=>predecessor>=0&&predecessor<index);
+        let start=prerequisites.length?new Date(Math.max(...prerequisites.map(predecessor=>result[predecessor].end.getTime()))):new Date(base);
         const blocked=parseBlockedDates(task.blocked);
         while(blocked.has(dateKey(start)))start=add(start,1);
         let end=new Date(start),worked=0;const workDates=[];
@@ -597,6 +624,32 @@
     function taskLayout(index){
       const above=index%2===0,row=Math.floor(index/2);
       return above?{bar:28+row*67,meta:62+row*67}:{bar:320+row*67,meta:355+row*67};
+    }
+
+    function renderNetwork(){
+      base=new Date(`${$('projectStart').value}T00:00:00`);
+      const plan=schedule(),levels=[],placements=[];
+      tasks.forEach((task,index)=>{
+        const parents=(task.dependsOn||[]).map(id=>tasks.findIndex(item=>item.id===id)).filter(parent=>parent>=0&&parent<index);
+        const depth=parents.length?Math.max(...parents.map(parent=>levels[parent]))+1:0;
+        levels.push(depth);
+        const row=levels.slice(0,index).filter(level=>level===depth).length;
+        placements.push({x:40+depth*244,y:64+row*142});
+      });
+      const width=Math.max(800,Math.max(...placements.map(point=>point.x))+225),height=Math.max(360,Math.max(...placements.map(point=>point.y))+150);
+      let content='<defs><marker id="networkArrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8" fill="none" stroke="#688175" stroke-width="1.5"/></marker></defs>';
+      tasks.forEach((task,index)=>(task.dependsOn||[]).forEach(id=>{
+        const parent=tasks.findIndex(item=>item.id===id);
+        if(parent<0||parent>=index)return;
+        const a=placements[parent],b=placements[index],middle=(a.x+200+b.x)/2;
+        content+=`<path class="network-edge" d="M${a.x+200} ${a.y+49} H${middle} V${b.y+49} H${b.x-10}" marker-end="url(#networkArrow)"/>`;
+      }));
+      tasks.forEach((task,index)=>{
+        const {x,y}=placements[index],item=plan[index],color=palette[index%palette.length];
+        content+=`<g class="network-node" transform="translate(${x} ${y})"><rect width="200" height="98" rx="9"/><rect width="5" height="98" rx="2" fill="${color}"/><text x="17" y="29" class="node-name">${esc(task.name)}</text><text x="17" y="52" class="node-company">${esc(task.company)}</text><text x="17" y="76" class="node-date">${fmt(item.start)} → ${fmt(item.end)}　${item.days}日</text></g>`;
+      });
+      const svg=$('networkDiagram');svg.setAttribute('viewBox',`0 0 ${width} ${height}`);svg.style.width=`${width}px`;svg.style.height=`${height}px`;svg.innerHTML=content;
+      $('networkSummary').textContent=`${tasks.length}工程 ・ ${fmt(base)}開始 ・ ${fmt(new Date(Math.max(...plan.map(item=>item.end))))}完了予定`;
     }
 
     function renderTimeline(animate){
@@ -710,14 +763,15 @@
     $('openCalendar').addEventListener('click',()=>switchView('calendar'));
     $('shareButton').addEventListener('click',shareSchedule);
     $('settingsButton').addEventListener('click',()=>{$('projectSettings').classList.toggle('compact-hidden');$('settingsButton').classList.toggle('selected')});
-    $('addProcess').addEventListener('click',()=>{tasks.push({name:'新しい工程',company:'担当会社',days:1,blocked:'',status:'未着手'});renderBuilder(true);saveCurrentProject()});
-    $('resetBuilder').addEventListener('click',()=>{tasks=structuredClone(defaults);$('projectStart').value='2026-08-01';$('projectName').value='木造住宅 新築工事';$('manager').value=currentAccount?.name||'現場監督';renderBuilder();saveCurrentProject()});
+    $('addProcess').addEventListener('click',()=>{tasks.push({id:uid(),dependsOn:tasks.length?[tasks.at(-1).id]:[],name:'新しい工程',company:'担当会社',days:1,blocked:'',status:'未着手'});renderBuilder(true);saveCurrentProject()});
+    $('resetBuilder').addEventListener('click',()=>{tasks=normalizeTasks(defaults);$('projectStart').value='2026-08-01';$('projectName').value='木造住宅 新築工事';$('manager').value=currentAccount?.name||'現場監督';renderBuilder();saveCurrentProject()});
+    $('networkPrint').addEventListener('click',()=>{document.body.classList.add('printing-network');window.print()});
     $('simulate').addEventListener('click',simulate);
     $('printPdf').addEventListener('click',()=>{
       document.body.classList.add('printing-schedule');
       window.print();
     });
-    window.addEventListener('afterprint',()=>document.body.classList.remove('printing-schedule'));
+    window.addEventListener('afterprint',()=>document.body.classList.remove('printing-schedule','printing-network'));
     $('authForm').addEventListener('submit',submitAuth);
     $('authSwitch').addEventListener('click',()=>setAuthMode(authMode==='register'?'login':'register'));
     $('demoLogin').addEventListener('click',loginDemo);
