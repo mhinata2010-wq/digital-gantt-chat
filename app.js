@@ -8,6 +8,22 @@ const formatDate=value=>value?new Intl.DateTimeFormat('ja-JP',{month:'numeric',d
 const formatDateTime=value=>new Intl.DateTimeFormat('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(value));
 const todayISO=()=>{const value=new Date(),pad=number=>String(number).padStart(2,'0');return `${value.getFullYear()}-${pad(value.getMonth()+1)}-${pad(value.getDate())}`};
 const roleLabel={owner:'責任者',editor:'編集者',viewer:'閲覧者'};
+const STANDARD_TASK_TEMPLATE=[
+  {key:'A',trade:'基礎',name:'基礎掘削・地業',duration_days:4,after:[]},
+  {key:'B',trade:'基礎',name:'配筋・型枠工事',duration_days:4,after:['A']},
+  {key:'C',trade:'基礎',name:'基礎コンクリート',duration_days:3,after:['B']},
+  {key:'D',trade:'木工事',name:'土台・床組み',duration_days:2,after:['C']},
+  {key:'E',trade:'木工事',name:'建方・上棟',duration_days:3,after:['D']},
+  {key:'F',trade:'屋根',name:'屋根工事',duration_days:4,after:['E']},
+  {key:'G',trade:'外装',name:'外壁工事',duration_days:7,after:['E']},
+  {key:'H',trade:'設備',name:'電気・給排水配管',duration_days:5,after:['E']},
+  {key:'I',trade:'内装',name:'断熱・内装下地',duration_days:6,after:['F','G','H']},
+  {key:'J',trade:'内装',name:'内装仕上げ',duration_days:7,after:['I']},
+  {key:'K',trade:'設備',name:'住宅設備・器具取付',duration_days:4,after:['J']},
+  {key:'L',trade:'外構',name:'外構工事',duration_days:5,after:['G']},
+  {key:'M',trade:'検査',name:'完了検査・手直し',duration_days:3,after:['K','L']},
+  {key:'N',trade:'完成',name:'引渡し・完成',duration_days:1,after:['M']}
+];
 const GANTT_MIN_UNIT=20,GANTT_DEFAULT_UNIT=24,GANTT_MAX_UNIT=48;
 function savedGanttUnit(){try{const stored=localStorage.getItem('snake-gantt-day-width');if(stored===null)return GANTT_DEFAULT_UNIT;const value=Number(stored);return Number.isFinite(value)?Math.max(GANTT_MIN_UNIT,Math.min(GANTT_MAX_UNIT,value)):GANTT_DEFAULT_UNIT}catch{return GANTT_DEFAULT_UNIT}}
 let authMode='login',profile=null,projects=[],currentProject=null,tasks=[],activeView='gantt',stopRealtime=null,reloadTimer=null,pendingImpact=null,toastTimer=null,ganttUnit=savedGanttUnit();
@@ -247,6 +263,15 @@ async function addQuickTask(event){
   }catch(error){showError(error,'#quickTaskMessage');await refreshCurrentProject(true)}finally{setBusy(button,false)}
 }
 
+async function addStandardTemplate(projectId,button){
+  const created=new Map();
+  for(let index=0;index<STANDARD_TASK_TEMPLATE.length;index++){
+    const item=STANDARD_TASK_TEMPLATE[index];button.textContent=`工程を作成中 ${index+1}/${STANDARD_TASK_TEMPLATE.length}`;
+    const task=await createTask(projectId,{position:index,code:item.key,trade:item.trade,name:item.name,company:'',duration_days:item.duration_days,status:'未着手',dependencies:item.after.map(key=>created.get(key)),blocked_dates:[],notes:'標準工程テンプレート'});
+    created.set(item.key,task.id);
+  }
+}
+
 function taskValues(form){
   return {position:form.elements.id.value?(tasks.find(item=>item.id===form.elements.id.value)?.position??0):tasks.length,
     code:form.elements.code.value.trim().toUpperCase(),trade:form.elements.trade.value.trim(),name:form.elements.name.value.trim(),company:form.elements.company.value.trim(),
@@ -331,7 +356,7 @@ $('#resetPassword').addEventListener('click',async()=>{const email=$('#authEmail
 $('#logoutButton').addEventListener('click',async()=>{await signOut();stopRealtime?.();location.hash='';$('#application').hidden=true;$('#authView').hidden=false;setAuthMode('login')});
 $('#backButton').addEventListener('click',showProjects);$('#brandLink').addEventListener('click',event=>{event.preventDefault();showProjects()});
 $('#newProjectButton').addEventListener('click',()=>{const form=$('#projectForm');form.reset();form.elements.start_date.value=new Date().toISOString().slice(0,10);$('#projectDialog').showModal()});
-$('#projectForm').addEventListener('submit',async event=>{event.preventDefault();const form=event.currentTarget,button=form.querySelector('[type="submit"]'),data=new FormData(form);setBusy(button,true);try{const id=await createProject(data.get('name'),data.get('start_date'));$('#projectDialog').close();await openProject(id)}catch(error){showError(error)}finally{setBusy(button,false)}});
+$('#projectForm').addEventListener('submit',async event=>{event.preventDefault();const form=event.currentTarget,button=form.querySelector('[type="submit"]'),data=new FormData(form);setBusy(button,true,'案件を作成中…');try{const id=await createProject(data.get('name'),data.get('start_date'));if(data.has('use_template'))await addStandardTemplate(id,button);$('#projectDialog').close();await openProject(id);if(data.has('use_template'))toast('標準工程を作成しました。日数や順序は自由に編集できます。')}catch(error){showError(error)}finally{setBusy(button,false)}});
 $('#projectGrid').addEventListener('click',event=>{const card=event.target.closest('[data-project-id]');if(card)openProject(card.dataset.projectId)});$('#projectGrid').addEventListener('keydown',event=>{if(['Enter',' '].includes(event.key)){const card=event.target.closest('[data-project-id]');if(card){event.preventDefault();openProject(card.dataset.projectId)}}});
 document.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>switchView(button.dataset.view)));
 $('#addTaskButton').addEventListener('click',()=>openTaskEditor());$('#ganttAddTaskButton').addEventListener('click',()=>openTaskEditor());$('#taskForm').addEventListener('submit',saveTask);$('#deleteTaskButton').addEventListener('click',removeCurrentTask);

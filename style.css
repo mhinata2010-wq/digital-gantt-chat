@@ -333,3 +333,20 @@
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;animation-delay:0s!important}
 }
+
+.template-choice{
+  display:grid!important;
+  grid-template-columns:22px 1fr;
+  align-items:start;
+  gap:12px!important;
+  border:1px solid #bdd2c8;
+  border-radius:10px;
+  padding:15px;
+  background:#f2f8f5;
+  cursor:pointer;
+}
+.template-choice input{width:19px;height:19px;margin:2px 0 0;accent-color:var(--green)}
+.template-choice b,.template-choice small{display:block}
+.template-choice b{color:var(--green-dark);font-size:.84rem}
+.template-choice small{margin-top:5px;color:var(--muted);font-size:.7rem;font-weight:600;line-height:1.55}
+.template-choice:has(input:focus-visible){box-shadow:0 0 0 3px rgba(23,107,77,.14)}

@@ -7,7 +7,7 @@
   <meta name="description" content="関係者で安全に共有・共同編集できる建設工程表">
   <title>現場工程表｜snake site</title>
   <link rel="icon" href="snake-site.gif">
-  <link rel="stylesheet" href="style.css?v=collaboration-7">
+  <link rel="stylesheet" href="style.css?v=collaboration-8">
 </head>
 <body>
   <div id="setupNotice" class="setup-notice" hidden>
@@ -133,6 +133,10 @@
       <div class="dialog-head"><div><p class="eyebrow">NEW PROJECT</p><h2>新しい案件</h2></div><button class="icon-button close-dialog" type="button">×</button></div>
       <label><span>案件名</span><input name="name" required maxlength="120" placeholder="〇〇邸 新築工事"></label>
       <label><span>着工日</span><input name="start_date" type="date" required></label>
+      <label class="template-choice">
+        <input name="use_template" type="checkbox" checked>
+        <span><b>標準工程テンプレートを使う</b><small>基礎工事から完成まで、先行関係付きの工程を自動で作ります。</small></span>
+      </label>
       <div class="dialog-actions"><button class="button quiet close-dialog" type="button">キャンセル</button><button class="button primary" type="submit">案件を作成</button></div>
     </form>
   </dialog>
@@ -194,6 +198,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js?v=supabase-20260928-2"></script>
-  <script type="module" src="app.js?v=collaboration-9"></script>
+  <script type="module" src="app.js?v=collaboration-10"></script>
 </body>
 </html>
