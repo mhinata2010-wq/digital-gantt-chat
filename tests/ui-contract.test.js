@@ -5,7 +5,7 @@ import {readFile} from 'node:fs/promises';
 const root=new URL('../',import.meta.url);
 
 test('field UI keeps one task creation entry and one shared editor',async()=>{
-  const [html,app]=await Promise.all([readFile(new URL('index.html',root),'utf8'),readFile(new URL('app.js',root),'utf8')]);
+  const [html,app,css]=await Promise.all([readFile(new URL('index.html',root),'utf8'),readFile(new URL('app.js',root),'utf8'),readFile(new URL('style.css',root),'utf8')]);
   assert.equal((html.match(/id="addTaskButton"/g)||[]).length,1);
   assert.doesNotMatch(html,/quickTaskForm|ganttAddTaskButton/);
   assert.match(html,/data-view="today"/);
@@ -14,6 +14,7 @@ test('field UI keeps one task creation entry and one shared editor',async()=>{
   assert.match(html,/data-view="tasks"/);
   assert.match(app,/function openTaskEditor\(task=null\)/);
   assert.match(app,/data-edit-task/);
+  assert.match(css,/\.gantt-row>\.gantt-label\{[\s\S]*?background:#fff/);
 });
 
 test('database policies and optimistic locking protect shared editing',async()=>{
