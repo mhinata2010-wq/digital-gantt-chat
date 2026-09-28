@@ -31,6 +31,39 @@
   scrollbar-gutter:stable;
   touch-action:pan-x pan-y;
 }
+.gantt-inner .gantt-track{
+  background:repeating-linear-gradient(to right,transparent 0,transparent calc(var(--gantt-unit) - 1px),#edf0ee var(--gantt-unit));
+}
+.gantt-month{padding-right:18px!important}
+.gantt-scale-handle{
+  position:absolute;
+  z-index:5;
+  top:0;
+  right:-10px;
+  width:20px;
+  height:48px;
+  border:0;
+  border-radius:0;
+  background:linear-gradient(to right,transparent 9px,#b9c4be 9px,#b9c4be 11px,transparent 11px);
+  cursor:ew-resize;
+  touch-action:none;
+}
+.gantt-scale-handle::after{
+  position:absolute;
+  top:17px;
+  left:6px;
+  width:8px;
+  height:14px;
+  border-radius:5px;
+  background:#fff;
+  box-shadow:0 0 0 1px #aab7b0;
+  content:"";
+}
+.gantt-scale-handle:hover,.gantt-scale-handle:focus-visible,.gantt-scale-handle.dragging{
+  outline:0;
+  background:linear-gradient(to right,transparent 8px,var(--green) 8px,var(--green) 12px,transparent 12px);
+}
+.gantt-scale-handle.dragging::after{background:var(--green-soft);box-shadow:0 0 0 2px var(--green)}
 .gantt-task{
   position:absolute;
   top:13px;

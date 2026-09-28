@@ -7,7 +7,8 @@ const esc=value=>String(value??'').replace(/[&<>'"]/g,char=>({'&':'&amp;','<':'&
 const formatDate=value=>value?new Intl.DateTimeFormat('ja-JP',{month:'numeric',day:'numeric'}).format(new Date(`${value}T12:00:00`)):'—';
 const formatDateTime=value=>new Intl.DateTimeFormat('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(value));
 const roleLabel={owner:'責任者',editor:'編集者',viewer:'閲覧者'};
-let authMode='login',profile=null,projects=[],currentProject=null,tasks=[],activeView='gantt',stopRealtime=null,reloadTimer=null,pendingImpact=null,toastTimer=null;
+function savedGanttUnit(){try{const stored=localStorage.getItem('snake-gantt-day-width');if(stored===null)return 24;const value=Number(stored);return Number.isFinite(value)?Math.max(14,Math.min(80,value)):24}catch{return 24}}
+let authMode='login',profile=null,projects=[],currentProject=null,tasks=[],activeView='gantt',stopRealtime=null,reloadTimer=null,pendingImpact=null,toastTimer=null,ganttUnit=savedGanttUnit();
 
 function toast(message){const node=$('#toast');node.textContent=message;node.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>node.classList.remove('show'),3200)}
 function setConnection(state,label){const node=$('#connectionState');node.dataset.state=state;node.textContent=label}
@@ -153,11 +154,32 @@ function renderScheduleViews(){
 }
 
 function renderGantt(result){
-  const dates=dateRange(currentProject,result,10),unit=24,width=dates.length*unit,isWorkday=workdayChecker(currentProject),months=[];
-  for(let index=0;index<dates.length;){const month=dates[index].slice(0,7);let end=index;while(end<dates.length&&dates[end].startsWith(month))end++;months.push(`<span style="left:${index*unit}px;width:${(end-index)*unit}px">${Number(month.slice(5))}月 <small>${month.slice(0,4)}</small></span>`);index=end}
-  const shades=dates.map((date,index)=>isWorkday(date)?'':`<i class="off" style="left:${index*unit}px;width:${unit}px"></i>`).join('');
-  const rows=tasks.map(task=>{const node=result.nodes.get(task.id),start=dates.indexOf(node.startDate),end=dates.indexOf(node.endDate),barWidth=Math.max((end-start+1)*unit-4,42),editable=canEdit();return `<div class="gantt-row"><div class="gantt-label"><b>${esc(task.code)} ${esc(task.name)}</b><small>${esc(task.company||'担当未設定')} ・ ${formatDate(node.startDate)}〜${formatDate(node.endDate)}</small></div><div class="gantt-track" style="width:${width}px">${shades}<div class="gantt-task" data-gantt-task="${task.id}" data-duration="${task.duration_days}" style="left:${start*unit+2}px;width:${barWidth}px"><button class="gantt-bar ${node.tf===0?'critical':''} ${task.status==='完了'?'complete':''}" data-edit-task="${task.id}" type="button" ${editable?'':'disabled'}><span>${task.status==='完了'?'✓ ':''}${esc(task.name)}</span><small>${task.duration_days}日</small></button>${editable?`<button class="gantt-resize-handle" data-resize-task="${task.id}" type="button" role="slider" aria-label="${esc(task.name)}の所要日数" aria-valuemin="1" aria-valuemax="365" aria-valuenow="${task.duration_days}"><i></i></button>`:''}</div></div></div>`}).join('');
-  $('#ganttChart').innerHTML=`<div class="gantt-inner"><div class="gantt-head"><div class="gantt-label">工程 / 担当</div><div class="gantt-months" style="width:${width}px">${months.join('')}</div></div>${rows}</div>`;
+  const dates=dateRange(currentProject,result,10),unit=ganttUnit,width=dates.length*unit,isWorkday=workdayChecker(currentProject),months=[];
+  for(let index=0;index<dates.length;){const month=dates[index].slice(0,7);let end=index;while(end<dates.length&&dates[end].startsWith(month))end++;months.push(`<span class="gantt-month" data-month-start="${index}" data-month-end="${end}" style="left:${index*unit}px;width:${(end-index)*unit}px">${Number(month.slice(5))}月 <small>${month.slice(0,4)}</small><button class="gantt-scale-handle" data-scale-boundary="${end}" type="button" role="slider" aria-label="カレンダーを拡大・縮小" aria-valuemin="14" aria-valuemax="80" aria-valuenow="${Math.round(unit)}"></button></span>`);index=end}
+  const shades=dates.map((date,index)=>isWorkday(date)?'':`<i class="off" data-day-index="${index}" style="left:${index*unit}px;width:${unit}px"></i>`).join('');
+  const rows=tasks.map(task=>{const node=result.nodes.get(task.id),start=dates.indexOf(node.startDate),end=dates.indexOf(node.endDate),barWidth=Math.max((end-start+1)*unit-4,42),editable=canEdit();return `<div class="gantt-row"><div class="gantt-label"><b>${esc(task.code)} ${esc(task.name)}</b><small>${esc(task.company||'担当未設定')} ・ ${formatDate(node.startDate)}〜${formatDate(node.endDate)}</small></div><div class="gantt-track" style="width:${width}px">${shades}<div class="gantt-task" data-gantt-task="${task.id}" data-duration="${task.duration_days}" data-start-index="${start}" data-end-index="${end}" style="left:${start*unit+2}px;width:${barWidth}px"><button class="gantt-bar ${node.tf===0?'critical':''} ${task.status==='完了'?'complete':''}" data-edit-task="${task.id}" type="button" ${editable?'':'disabled'}><span>${task.status==='完了'?'✓ ':''}${esc(task.name)}</span><small>${task.duration_days}日</small></button>${editable?`<button class="gantt-resize-handle" data-resize-task="${task.id}" type="button" role="slider" aria-label="${esc(task.name)}の所要日数" aria-valuemin="1" aria-valuemax="365" aria-valuenow="${task.duration_days}"><i></i></button>`:''}</div></div></div>`}).join('');
+  $('#ganttChart').innerHTML=`<div class="gantt-inner" data-total-days="${dates.length}" style="--gantt-unit:${unit}px"><div class="gantt-head"><div class="gantt-label">工程 / 担当</div><div class="gantt-months" style="width:${width}px">${months.join('')}</div></div>${rows}</div>`;
+}
+
+function applyGanttScale(value){
+  ganttUnit=Math.max(14,Math.min(80,value));const inner=$('#ganttChart .gantt-inner');if(!inner)return;
+  const total=Number(inner.dataset.totalDays),width=total*ganttUnit;inner.style.setProperty('--gantt-unit',`${ganttUnit}px`);
+  inner.querySelector('.gantt-months').style.width=`${width}px`;
+  inner.querySelectorAll('.gantt-month').forEach(month=>{const start=Number(month.dataset.monthStart),end=Number(month.dataset.monthEnd);month.style.left=`${start*ganttUnit}px`;month.style.width=`${(end-start)*ganttUnit}px`});
+  inner.querySelectorAll('.gantt-track').forEach(track=>track.style.width=`${width}px`);
+  inner.querySelectorAll('.off[data-day-index]').forEach(day=>{const index=Number(day.dataset.dayIndex);day.style.left=`${index*ganttUnit}px`;day.style.width=`${ganttUnit}px`});
+  inner.querySelectorAll('.gantt-task').forEach(task=>{const start=Number(task.dataset.startIndex),end=Number(task.dataset.endIndex);task.style.left=`${start*ganttUnit+2}px`;task.style.width=`${Math.max((end-start+1)*ganttUnit-4,42)}px`});
+  inner.querySelectorAll('[data-scale-boundary]').forEach(handle=>handle.setAttribute('aria-valuenow',Math.round(ganttUnit)));
+}
+
+function beginGanttScale(event){
+  const handle=event.target.closest('[data-scale-boundary]');if(!handle)return;
+  event.preventDefault();event.stopPropagation();
+  const boundary=Math.max(1,Number(handle.dataset.scaleBoundary)),startX=event.clientX,startUnit=ganttUnit;handle.classList.add('dragging');handle.setPointerCapture?.(event.pointerId);
+  const move=moveEvent=>applyGanttScale(startUnit+(moveEvent.clientX-startX)/boundary);
+  const finish=upEvent=>{handle.removeEventListener('pointermove',move);handle.removeEventListener('pointerup',finish);handle.removeEventListener('pointercancel',cancel);handle.releasePointerCapture?.(upEvent.pointerId);handle.classList.remove('dragging');try{localStorage.setItem('snake-gantt-day-width',String(ganttUnit))}catch{}toast(`カレンダー幅を${Math.round(ganttUnit)}px／日に変更しました`)};
+  const cancel=cancelEvent=>{handle.removeEventListener('pointermove',move);handle.removeEventListener('pointerup',finish);handle.removeEventListener('pointercancel',cancel);handle.releasePointerCapture?.(cancelEvent.pointerId);applyGanttScale(startUnit)};
+  handle.addEventListener('pointermove',move);handle.addEventListener('pointerup',finish);handle.addEventListener('pointercancel',cancel);
 }
 
 async function resizeTaskDuration(taskId,duration,preview=null){
@@ -169,7 +191,7 @@ async function resizeTaskDuration(taskId,duration,preview=null){
 function beginGanttResize(event){
   const handle=event.target.closest('[data-resize-task]');if(!handle||!canEdit())return;
   event.preventDefault();event.stopPropagation();
-  const task=tasks.find(item=>item.id===handle.dataset.resizeTask),wrapper=handle.closest('.gantt-task'),bar=wrapper.querySelector('.gantt-bar'),startX=event.clientX,startWidth=wrapper.getBoundingClientRect().width,startDuration=task.duration_days,unit=24;
+  const task=tasks.find(item=>item.id===handle.dataset.resizeTask),wrapper=handle.closest('.gantt-task'),bar=wrapper.querySelector('.gantt-bar'),startX=event.clientX,startWidth=wrapper.getBoundingClientRect().width,startDuration=task.duration_days,unit=ganttUnit;
   let nextDuration=startDuration,moved=false;wrapper.classList.add('resizing');handle.setPointerCapture?.(event.pointerId);
   const move=moveEvent=>{const delta=Math.round((moveEvent.clientX-startX)/unit);nextDuration=Math.max(1,Math.min(365,startDuration+delta));moved=moved||Math.abs(moveEvent.clientX-startX)>4;wrapper.style.width=`${Math.max(42,startWidth+(nextDuration-startDuration)*unit)}px`;bar.querySelector('small').textContent=`${nextDuration}日`;handle.setAttribute('aria-valuenow',nextDuration)};
   const finish=upEvent=>{handle.removeEventListener('pointermove',move);handle.removeEventListener('pointerup',finish);handle.removeEventListener('pointercancel',cancel);handle.releasePointerCapture?.(upEvent.pointerId);wrapper.classList.remove('resizing');if(moved&&nextDuration!==startDuration)resizeTaskDuration(task.id,nextDuration,wrapper);else renderScheduleViews()};
@@ -293,8 +315,9 @@ $('#addTaskButton').addEventListener('click',()=>openTaskEditor());$('#ganttAddT
 $('#taskForm').addEventListener('click',event=>{const step=event.target.closest('[data-duration-step]');if(!step)return;const input=event.currentTarget.elements.duration_days;input.value=Math.max(1,Math.min(365,Number(input.value||1)+Number(step.dataset.durationStep)))});
 $('#taskList').addEventListener('click',event=>{const row=event.target.closest('[data-task-id]');if(row)openTaskEditor(tasks.find(task=>task.id===row.dataset.taskId))});$('#taskList').addEventListener('keydown',event=>{if(event.key==='Enter'){const row=event.target.closest('[data-task-id]');if(row)openTaskEditor(tasks.find(task=>task.id===row.dataset.taskId))}});
 $('#ganttChart').addEventListener('click',event=>{const button=event.target.closest('[data-edit-task]');if(button)openTaskEditor(tasks.find(task=>task.id===button.dataset.editTask))});
+$('#ganttChart').addEventListener('pointerdown',beginGanttScale);
 $('#ganttChart').addEventListener('pointerdown',beginGanttResize);
-$('#ganttChart').addEventListener('keydown',event=>{const handle=event.target.closest('[data-resize-task]');if(!handle||!['ArrowLeft','ArrowRight'].includes(event.key))return;event.preventDefault();const task=tasks.find(item=>item.id===handle.dataset.resizeTask);resizeTaskDuration(task.id,task.duration_days+(event.key==='ArrowRight'?1:-1),handle.closest('.gantt-task'))});
+$('#ganttChart').addEventListener('keydown',event=>{const scale=event.target.closest('[data-scale-boundary]');if(scale&&['ArrowLeft','ArrowRight'].includes(event.key)){event.preventDefault();applyGanttScale(ganttUnit+(event.key==='ArrowRight'?2:-2));try{localStorage.setItem('snake-gantt-day-width',String(ganttUnit))}catch{}return}const handle=event.target.closest('[data-resize-task]');if(!handle||!['ArrowLeft','ArrowRight'].includes(event.key))return;event.preventDefault();const task=tasks.find(item=>item.id===handle.dataset.resizeTask);resizeTaskDuration(task.id,task.duration_days+(event.key==='ArrowRight'?1:-1),handle.closest('.gantt-task'))});
 $('#saveProjectButton').addEventListener('click',saveProjectSettings);$('#membersButton').addEventListener('click',openMembers);$('#inviteForm').addEventListener('submit',invite);
 $('#memberList').addEventListener('change',async event=>{const select=event.target.closest('[data-member-role]');if(!select)return;try{await changeMemberRole(select.closest('[data-member-id]').dataset.memberId,select.value);toast('権限を変更しました');await renderMembers()}catch(error){showError(error);await renderMembers()}});
 $('#memberList').addEventListener('click',async event=>{const button=event.target.closest('[data-remove-member]');if(!button)return;try{await removeMember(button.closest('[data-member-id]').dataset.memberId);toast('メンバーを削除しました');await renderMembers()}catch(error){showError(error)}});
