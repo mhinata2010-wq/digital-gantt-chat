@@ -7,7 +7,7 @@
   <meta name="description" content="関係者で安全に共有・共同編集できる建設工程表">
   <title>現場工程表｜snake site</title>
   <link rel="icon" href="snake-site.gif">
-  <link rel="stylesheet" href="style.css?v=collaboration-8">
+  <link rel="stylesheet" href="style.css?v=field-ui-2">
 </head>
 <body>
   <div id="setupNotice" class="setup-notice" hidden>
@@ -67,43 +67,43 @@
           <p id="projectMeta">—</p>
         </div>
         <div class="project-actions">
+          <button class="button primary" id="addTaskButton" type="button">＋ 工程</button>
           <button class="button secondary" id="membersButton" type="button">メンバーを招待</button>
           <button class="button quiet" id="historyButton" type="button">変更履歴</button>
         </div>
       </div>
 
       <nav class="view-tabs" aria-label="工程表の表示切替">
-        <button type="button" data-view="gantt" aria-current="page">ガントチャート</button>
+        <button type="button" data-view="today" aria-current="page">今日</button>
+        <button type="button" data-view="gantt">工程表</button>
         <button type="button" data-view="network">ネットワーク図</button>
-        <button type="button" data-view="tasks">工程を編集</button>
+        <button type="button" data-view="tasks">工程一覧</button>
       </nav>
 
-      <section id="ganttView" class="content-view">
+      <section id="todayView" class="content-view">
+        <div class="today-heading">
+          <div><p class="eyebrow">TODAY</p><h2>今日の現場</h2><p id="todayDateLabel">—</p></div>
+          <div id="todayProgress" class="today-progress"></div>
+        </div>
+        <div id="fieldDashboard" class="field-dashboard"></div>
+      </section>
+
+      <section id="ganttView" class="content-view" hidden>
         <div class="section-heading">
           <div><p class="eyebrow">MASTER SCHEDULE</p><h2>工程カレンダー</h2><p>同じ工程データを日程軸で確認します。</p></div>
           <div class="inline-actions">
-            <button class="button quiet" id="ganttAddTaskButton" type="button">詳細設定で作る</button>
             <button class="button secondary" id="impactButton" type="button">変更の影響を見る</button>
             <button class="button quiet" id="printButton" type="button">印刷・PDF</button>
           </div>
         </div>
         <div id="scheduleSummary" class="summary-grid"></div>
-        <form id="quickTaskForm" class="quick-task-form">
-          <div class="quick-task-intro"><b>工程をかんたん追加</b><small>最低限の入力だけで、続けて工程を作れます。</small></div>
-          <label class="quick-task-name"><span>工程名</span><input name="name" required maxlength="160" placeholder="例：基礎工事"></label>
-          <label><span>担当会社</span><input name="company" maxlength="160" placeholder="あとからでも設定できます"></label>
-          <label class="quick-duration"><span>日数</span><span class="duration-stepper"><button type="button" data-quick-duration-step="-1" aria-label="日数を1日減らす">−</button><input name="duration_days" type="number" min="1" max="365" value="1" required><button type="button" data-quick-duration-step="1" aria-label="日数を1日増やす">＋</button></span></label>
-          <label><span>開始位置</span><select name="after"><option value="">着工日から</option></select></label>
-          <button class="button primary quick-add-button" type="submit">＋ 追加</button>
-          <p id="quickTaskMessage" class="form-message" role="alert"></p>
-        </form>
-        <div class="gantt-gesture-help" id="ganttGestureHelp"><span>↔ 表をスワイプして移動</span><span>月の右端をドラッグして拡大・縮小</span><span>工程バーをタップして編集</span><span>バー右端をドラッグして日数変更</span><button id="resetGanttScale" type="button">表示幅を標準に戻す</button></div>
+        <div class="gantt-gesture-help" id="ganttGestureHelp"><span>↔ 横にスワイプ</span><span>工程をタップして詳細</span><span class="edit-only">✓ で完了報告</span><span class="edit-only">右端をドラッグして日数変更</span><button id="resetGanttScale" type="button">表示幅を戻す</button></div>
         <div id="ganttChart" class="gantt-shell"></div>
       </section>
 
       <section id="networkView" class="content-view" hidden>
         <div class="section-heading">
-          <div><p class="eyebrow">DEPENDENCIES</p><h2>ネットワーク図</h2><p>赤色は全体工期に影響する工程、数字は実働日です。</p></div>
+          <div><p class="eyebrow">DEPENDENCIES</p><h2>ネットワーク図</h2><p>工程をタップして編集できます。赤色は全体工期に影響する工程です。</p></div>
           <span class="legend"><i class="critical"></i>クリティカル <i></i>余裕あり</span>
         </div>
         <div class="network-shell"><svg id="networkDiagram" role="img" aria-label="工程の依存関係"></svg></div>
@@ -112,8 +112,7 @@
 
       <section id="tasksView" class="content-view" hidden>
         <div class="section-heading">
-          <div><p class="eyebrow">TASKS</p><h2>工程を編集</h2><p>工程名、会社、所要日数、前提工程を設定します。</p></div>
-          <button class="button primary" id="addTaskButton" type="button">＋ 工程を作る</button>
+          <div><p class="eyebrow">TASKS</p><h2>工程一覧</h2><p>工程をタップすると、他の表示と同じ詳細画面が開きます。</p></div>
         </div>
         <div class="project-settings" id="projectSettings">
           <label><span>案件名</span><input id="projectNameInput" maxlength="120"></label>
@@ -162,18 +161,19 @@
         </details>
       </div>
       <p id="taskFormMessage" class="form-message" role="alert"></p>
-      <div class="dialog-actions"><button class="button danger" id="deleteTaskButton" type="button">削除</button><span class="spacer"></span><button class="button quiet close-dialog" type="button">キャンセル</button><button class="button primary" type="submit">保存</button></div>
+      <div class="dialog-actions"><button class="button danger" id="deleteTaskButton" type="button">削除</button><span class="spacer"></span><button class="button quiet close-dialog" type="button">閉じる</button><button class="button primary" id="taskSaveButton" type="submit">保存</button></div>
     </form>
   </dialog>
 
   <dialog id="membersDialog" class="dialog">
     <div class="dialog-head"><div><p class="eyebrow">MEMBERS</p><h2>メンバーを招待</h2></div><button class="icon-button close-dialog" type="button">×</button></div>
+    <div class="role-guide"><span><b>責任者</b>設定・招待・日程確定</span><span><b>編集者</b>工程の編集・完了報告</span><span><b>閲覧者</b>最新工程の確認のみ</span></div>
     <form id="inviteForm" class="invite-form">
       <label><span>メールアドレス</span><input name="email" type="email" required></label>
       <label><span>権限</span><select name="role"><option value="editor">編集できる人</option><option value="viewer">閲覧する人</option></select></label>
       <button class="button primary" type="submit">招待を追加</button>
     </form>
-    <p class="help-text">相手が同じメールアドレスで登録・ログインすると、自動的に案件へ参加します。</p>
+    <p class="help-text">相手が同じメールアドレスで登録・ログインすると、自動的に案件へ参加します。案件URLだけでは閲覧できません。</p>
     <p id="inviteMessage" class="form-message" role="alert"></p>
     <div id="memberList" class="member-list"></div>
   </dialog>
@@ -198,6 +198,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js?v=supabase-20260928-2"></script>
-  <script type="module" src="app.js?v=collaboration-10"></script>
+  <script type="module" src="app.js?v=field-ui-2"></script>
 </body>
 </html>
