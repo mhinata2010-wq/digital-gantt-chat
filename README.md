@@ -1,10 +1,42 @@
 # digital-gantt-chat
-デジタルガントチャート
 
-## ネットワーク工程表の試作
+一つの案件・一つの工程データを、ガントチャートとネットワーク図の二つの表示で共有する建設工程表です。
 
-`feature/network-schedule` ブランチの [network.html](network.html) は、提供された「ネットワーク工程表.xlsm」の作業リスト、工期条件、日程計算、ネットワーク図を参考に作り直した独立した試作です。既存のトップ画面はそのまま残し、案件一覧から開けます。`python3 -m http.server 8000` で起動し、`http://localhost:8000/network.html` を開いてください。
+## 構成
 
-初期例は13工程と先行関係 A→F、F→G/H/I、G/H/I→J、J→K/L、K/L→M を含みます。循環・重複・存在しない先行工程は保存時に拒否します。土日と登録休日、各社の稼働不可日を飛ばし、前進・後退計算で EST/EFT/LST/LFT、TF/FF、クリティカルパスを求めます。遅延の入力は変更案の比較だけで、元の予定は動かしません。工事名・作業・休日・完了状態はブラウザ内に保存します。
+- フロントエンド: Vanilla HTML / CSS / JavaScript（GitHub Pagesで配信可能）
+- 認証: Supabase Auth（メールアドレス＋パスワード）
+- データ: Supabase Postgres
+- 権限: Postgres Row Level Security（案件単位の責任者・編集者・閲覧者）
+- 同期: Supabase Realtime
+- 競合対策: `projects.revision` / `tasks.version` を使った楽観的ロック
+- 履歴: DBトリガーによる案件・工程・メンバー変更の監査ログ
 
-この画面は元の Excel マクロを実行・変換するものではなく、出来高曲線や施工図・検査予定もまだ含みません。現場用の別端末共有とサーバー保存もこのブランチには含めていません。既存の `main` および `feature/field-share` とは別に検証できます。
+## 重要な設計
+
+`tasks`テーブルだけが工程の正本です。ガントチャートとネットワーク図は、どちらも同じレコードを`computeSchedule()`へ渡して描画します。別画面用の工程データは作りません。
+
+ブラウザにはSupabaseのセッションだけを保持します。アプリ独自のパスワードやパスワードハッシュは`localStorage`へ保存しません。公開可能なSupabase publishable keyだけをフロントエンドで使い、実際のアクセス可否はデータベースのRLSが判定します。`service_role`キーをブラウザへ置かないでください。
+
+## 開発・テスト
+
+```sh
+npm test
+npm run check
+python3 -m http.server 4173
+```
+
+ブラウザで `http://localhost:4173` を開きます。共同編集を動かすには先に [SETUP.md](SETUP.md) のバックエンド設定が必要です。
+
+## 既存データの移行
+
+ログインしたメールアドレスに一致する旧ローカルアカウントの所有案件（`snake_projects_v1`）と、旧ネットワーク工程表（`snake_network_schedule_v1`）を検出します。「データを移行」を押すと共有DBへコピーします。移行後も元の`localStorage`は削除しません。
+
+旧アプリのパスワードハッシュは安全上移行しません。Supabase Authで同じメールアドレスのアカウントを作成し直してください。
+
+## ブランチ
+
+- `main`: 既存のガントチャート
+- `feature/field-share`: 調査時点では`main`と同一
+- `feature/network-schedule`: 独立したネットワーク工程表
+- `feature/collaborative-schedule`: 共同編集と統合表示（この実装）
