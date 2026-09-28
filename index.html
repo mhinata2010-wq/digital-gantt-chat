@@ -7,7 +7,7 @@
   <meta name="description" content="関係者で安全に共有・共同編集できる建設工程表">
   <title>現場工程表｜snake site</title>
   <link rel="icon" href="snake-site.gif">
-  <link rel="stylesheet" href="style.css?v=collaboration-5">
+  <link rel="stylesheet" href="style.css?v=collaboration-6">
 </head>
 <body>
   <div id="setupNotice" class="setup-notice" hidden>
@@ -97,7 +97,7 @@
           <button class="button primary quick-add-button" type="submit">＋ 追加</button>
           <p id="quickTaskMessage" class="form-message" role="alert"></p>
         </form>
-        <div class="gantt-gesture-help" id="ganttGestureHelp"><span>↔ 表をスワイプして移動</span><span>月の右端をドラッグして拡大・縮小</span><span>工程バーをタップして編集</span><span>バー右端をドラッグして日数変更</span></div>
+        <div class="gantt-gesture-help" id="ganttGestureHelp"><span>↔ 表をスワイプして移動</span><span>月の右端をドラッグして拡大・縮小</span><span>工程バーをタップして編集</span><span>バー右端をドラッグして日数変更</span><button id="resetGanttScale" type="button">表示幅を標準に戻す</button></div>
         <div id="ganttChart" class="gantt-shell"></div>
       </section>
 
@@ -194,6 +194,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js?v=supabase-20260928-2"></script>
-  <script type="module" src="app.js?v=collaboration-7"></script>
+  <script type="module" src="app.js?v=collaboration-8"></script>
 </body>
 </html>
