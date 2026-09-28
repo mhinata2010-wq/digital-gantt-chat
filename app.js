@@ -73,9 +73,9 @@ async function showProjects(){
 }
 
 function renderProjects(){
-  $('#projectGrid').innerHTML=projects.length?projects.map(project=>{
+  $('#projectGrid').innerHTML=projects.length?projects.map((project,index)=>{
     const total=project.task_count||0,done=project.completed_count||0,percent=total?Math.round(done/total*100):0;
-    return `<article class="project-card" data-project-id="${project.id}" tabindex="0" role="button" aria-label="${esc(project.name)}を開く">
+    return `<article class="project-card" data-project-id="${project.id}" tabindex="0" role="button" aria-label="${esc(project.name)}を開く" style="--item-delay:${Math.min(index*45,360)}ms">
       <div class="project-card-top"><span class="role-pill ${project.current_role}">${roleLabel[project.current_role]}</span><time>${formatDateTime(project.updated_at)}</time></div>
       <h2>${esc(project.name)}</h2><p>${esc(project.manager||'責任者未設定')}</p>
       <div class="progress"><i style="width:${percent}%"></i></div><div class="project-card-foot"><span>${total}工程</span><span>${done}/${total} 完了</span></div>
@@ -143,6 +143,7 @@ function switchView(view,scroll=true){
   activeView=view;
   document.querySelectorAll('[data-view]').forEach(button=>button.setAttribute('aria-current',button.dataset.view===view?'page':'false'));
   for(const name of ['gantt','network','tasks'])$(`#${name}View`).hidden=name!==view;
+  const target=$(`#${view}View`);target.classList.remove('view-enter');void target.offsetWidth;target.classList.add('view-enter');
   if(scroll)window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -168,7 +169,7 @@ function renderGantt(result){
   for(let index=0;index<dates.length;){const month=dates[index].slice(0,7);let end=index;while(end<dates.length&&dates[end].startsWith(month))end++;months.push(`<span class="gantt-month" data-month-start="${index}" data-month-end="${end}" style="left:${index*unit}px;width:${(end-index)*unit}px">${Number(month.slice(5))}月 <small>${month.slice(0,4)}</small><button class="gantt-scale-handle" data-scale-boundary="${end}" type="button" role="slider" aria-label="カレンダーを拡大・縮小" aria-valuemin="${GANTT_MIN_UNIT}" aria-valuemax="${GANTT_MAX_UNIT}" aria-valuenow="${Math.round(unit)}"></button></span>`);index=end}
   const dayLabels=dates.map((date,index)=>{const day=Number(date.slice(8)),weekday=weekdays[new Date(`${date}T12:00:00`).getDay()];return `<span class="gantt-day ${!isWorkday(date)?'holiday':''} ${date===today?'today':''}" data-header-day-index="${index}" style="left:${index*unit}px;width:${unit}px"><b>${day}</b><small>${weekday}</small></span>`}).join('');
   const shades=dates.map((date,index)=>isWorkday(date)?'':`<i class="off" data-day-index="${index}" style="left:${index*unit}px;width:${unit}px"></i>`).join('');
-  const rows=tasks.map(task=>{const node=result.nodes.get(task.id),start=dates.indexOf(node.startDate),end=dates.indexOf(node.endDate),barWidth=Math.max((end-start+1)*unit-4,42),editable=canEdit();return `<div class="gantt-row"><div class="gantt-label"><b>${esc(task.code)} ${esc(task.name)}</b><small>${esc(task.company||'担当未設定')} ・ ${formatDate(node.startDate)}〜${formatDate(node.endDate)}</small></div><div class="gantt-track" style="width:${width}px">${shades}<div class="gantt-task" data-gantt-task="${task.id}" data-duration="${task.duration_days}" data-start-index="${start}" data-end-index="${end}" style="left:${start*unit+2}px;width:${barWidth}px"><button class="gantt-bar ${node.tf===0?'critical':''} ${task.status==='完了'?'complete':''}" data-edit-task="${task.id}" type="button" ${editable?'':'disabled'}><span>${task.status==='完了'?'✓ ':''}${esc(task.name)}</span><small>${task.duration_days}日</small></button>${editable?`<button class="gantt-resize-handle" data-resize-task="${task.id}" type="button" role="slider" aria-label="${esc(task.name)}の所要日数" aria-valuemin="1" aria-valuemax="365" aria-valuenow="${task.duration_days}"><i></i></button>`:''}</div></div></div>`}).join('');
+  const rows=tasks.map((task,index)=>{const node=result.nodes.get(task.id),start=dates.indexOf(node.startDate),end=dates.indexOf(node.endDate),barWidth=Math.max((end-start+1)*unit-4,42),editable=canEdit();return `<div class="gantt-row" style="--row-delay:${Math.min(index*32,280)}ms"><div class="gantt-label"><b>${esc(task.code)} ${esc(task.name)}</b><small>${esc(task.company||'担当未設定')} ・ ${formatDate(node.startDate)}〜${formatDate(node.endDate)}</small></div><div class="gantt-track" style="width:${width}px">${shades}<div class="gantt-task" data-gantt-task="${task.id}" data-duration="${task.duration_days}" data-start-index="${start}" data-end-index="${end}" style="left:${start*unit+2}px;width:${barWidth}px"><button class="gantt-bar ${node.tf===0?'critical':''} ${task.status==='完了'?'complete':''}" data-edit-task="${task.id}" type="button" ${editable?'':'disabled'}><span>${task.status==='完了'?'✓ ':''}${esc(task.name)}</span><small>${task.duration_days}日</small></button>${editable?`<button class="gantt-resize-handle" data-resize-task="${task.id}" type="button" role="slider" aria-label="${esc(task.name)}の所要日数" aria-valuemin="1" aria-valuemax="365" aria-valuenow="${task.duration_days}"><i></i></button>`:''}</div></div></div>`}).join('');
   $('#ganttChart').innerHTML=`<div class="gantt-inner" data-total-days="${dates.length}" style="--gantt-unit:${unit}px"><div class="gantt-head"><div class="gantt-label">工程 / 担当</div><div class="gantt-months" style="width:${width}px">${months.join('')}${dayLabels}</div></div>${rows}</div>`;
 }
 

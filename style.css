@@ -302,3 +302,34 @@
   .task-drawer .dialog-head{top:-20px;margin:-20px -16px 16px;padding:20px 14px 13px}
   .task-drawer .dialog-actions{bottom:-20px;margin:18px -16px -20px;padding:13px 14px calc(14px + env(safe-area-inset-bottom))}
 }
+
+/* Calm motion feedback for navigation, data loading and schedule editing. */
+.view-enter{animation:view-enter .28s cubic-bezier(.2,.75,.25,1) both}
+.project-card{animation:card-enter .38s cubic-bezier(.2,.75,.25,1) both;animation-delay:var(--item-delay,0ms)}
+.project-card .progress i{transform-origin:left;animation:progress-enter .55s cubic-bezier(.2,.75,.25,1) both;animation-delay:calc(120ms + var(--item-delay,0ms))}
+.summary-grid>div{animation:metric-enter .32s ease-out both}
+.summary-grid>div:nth-child(2){animation-delay:35ms}
+.summary-grid>div:nth-child(3){animation-delay:70ms}
+.summary-grid>div:nth-child(4){animation-delay:105ms}
+.gantt-row{animation:row-enter .32s cubic-bezier(.2,.75,.25,1) both;animation-delay:var(--row-delay,0ms)}
+.gantt-task .gantt-bar{animation:bar-enter .42s cubic-bezier(.2,.75,.25,1) both;animation-delay:var(--row-delay,0ms)}
+.gantt-task.resizing .gantt-bar,.gantt-task.saving .gantt-bar{animation:none}
+.network-shell .edge{stroke-dasharray:700;stroke-dashoffset:700;animation:edge-draw .52s ease-out forwards}
+.network-shell .node{animation:node-enter .34s cubic-bezier(.2,.75,.25,1) both}
+.connection-state[data-state="connecting"]::before{animation:connection-pulse 1s ease-in-out infinite}
+.button:active:not(:disabled),.view-tabs button:active{transform:scale(.97)}
+.quick-task-form:focus-within{box-shadow:0 0 0 3px rgba(23,107,77,.08)}
+
+@keyframes view-enter{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+@keyframes card-enter{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes progress-enter{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes metric-enter{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+@keyframes row-enter{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+@keyframes bar-enter{from{opacity:0;clip-path:inset(0 100% 0 0)}to{opacity:1;clip-path:inset(0)}}
+@keyframes edge-draw{to{stroke-dashoffset:0}}
+@keyframes node-enter{from{opacity:0}to{opacity:1}}
+@keyframes connection-pulse{50%{transform:scale(1.45);box-shadow:0 0 0 5px rgba(23,107,77,.12)}}
+
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;animation-delay:0s!important}
+}
