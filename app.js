@@ -122,7 +122,7 @@ function renderProject(){
   const role=currentProject.current_role,editable=canEdit(),owner=isOwner();
   $('#projectTitle').textContent=currentProject.name;$('#projectMeta').textContent=`${formatDate(currentProject.start_date)} 着工 ・ ${tasks.length}工程`;
   $('#projectRole').className=`role-pill ${role}`;$('#projectRole').textContent=roleLabel[role];
-  $('#membersButton').hidden=!owner;$('#addTaskButton').hidden=!editable;$('#impactButton').hidden=!editable;
+  $('#membersButton').hidden=!owner;$('#addTaskButton').hidden=!editable;$('#ganttAddTaskButton').hidden=!editable;$('#impactButton').hidden=!editable;$('#ganttGestureHelp').hidden=!editable;
   $('#projectSettings').hidden=!owner;$('#projectNameInput').value=currentProject.name;$('#managerInput').value=currentProject.manager||'';
   $('#startDateInput').value=currentProject.start_date;$('#deadlineInput').value=currentProject.deadline||'';$('#holidaysInput').value=(currentProject.holidays||[]).join(', ');
   switchView(activeView,false);renderScheduleViews();renderTaskList();
@@ -156,8 +156,25 @@ function renderGantt(result){
   const dates=dateRange(currentProject,result,10),unit=24,width=dates.length*unit,isWorkday=workdayChecker(currentProject),months=[];
   for(let index=0;index<dates.length;){const month=dates[index].slice(0,7);let end=index;while(end<dates.length&&dates[end].startsWith(month))end++;months.push(`<span style="left:${index*unit}px;width:${(end-index)*unit}px">${Number(month.slice(5))}月 <small>${month.slice(0,4)}</small></span>`);index=end}
   const shades=dates.map((date,index)=>isWorkday(date)?'':`<i class="off" style="left:${index*unit}px;width:${unit}px"></i>`).join('');
-  const rows=tasks.map(task=>{const node=result.nodes.get(task.id),start=dates.indexOf(node.startDate),end=dates.indexOf(node.endDate);return `<div class="gantt-row"><div class="gantt-label"><b>${esc(task.code)} ${esc(task.name)}</b><small>${esc(task.company||'担当未設定')} ・ ${formatDate(node.startDate)}〜${formatDate(node.endDate)}</small></div><div class="gantt-track" style="width:${width}px">${shades}<button class="gantt-bar ${node.tf===0?'critical':''} ${task.status==='完了'?'complete':''}" data-toggle-task="${task.id}" style="left:${start*unit+2}px;width:${Math.max((end-start+1)*unit-4,42)}px" ${canEdit()?'':'disabled'}>${task.status==='完了'?'✓ ':''}${esc(task.name)}</button></div></div>`}).join('');
+  const rows=tasks.map(task=>{const node=result.nodes.get(task.id),start=dates.indexOf(node.startDate),end=dates.indexOf(node.endDate),barWidth=Math.max((end-start+1)*unit-4,42),editable=canEdit();return `<div class="gantt-row"><div class="gantt-label"><b>${esc(task.code)} ${esc(task.name)}</b><small>${esc(task.company||'担当未設定')} ・ ${formatDate(node.startDate)}〜${formatDate(node.endDate)}</small></div><div class="gantt-track" style="width:${width}px">${shades}<div class="gantt-task" data-gantt-task="${task.id}" data-duration="${task.duration_days}" style="left:${start*unit+2}px;width:${barWidth}px"><button class="gantt-bar ${node.tf===0?'critical':''} ${task.status==='完了'?'complete':''}" data-edit-task="${task.id}" type="button" ${editable?'':'disabled'}><span>${task.status==='完了'?'✓ ':''}${esc(task.name)}</span><small>${task.duration_days}日</small></button>${editable?`<button class="gantt-resize-handle" data-resize-task="${task.id}" type="button" role="slider" aria-label="${esc(task.name)}の所要日数" aria-valuemin="1" aria-valuemax="365" aria-valuenow="${task.duration_days}"><i></i></button>`:''}</div></div></div>`}).join('');
   $('#ganttChart').innerHTML=`<div class="gantt-inner"><div class="gantt-head"><div class="gantt-label">工程 / 担当</div><div class="gantt-months" style="width:${width}px">${months.join('')}</div></div>${rows}</div>`;
+}
+
+async function resizeTaskDuration(taskId,duration,preview=null){
+  const task=tasks.find(item=>item.id===taskId),next=Math.max(1,Math.min(365,Number(duration)));if(!task||!canEdit()||next===task.duration_days){renderScheduleViews();return}
+  preview?.classList.add('saving');setConnection('connecting','日数を保存中');
+  try{await updateTask(task,{duration_days:next});toast(`${task.name}を${next}日に変更しました`);await refreshCurrentProject(true)}catch(error){showError(error);await refreshCurrentProject(true)}
+}
+
+function beginGanttResize(event){
+  const handle=event.target.closest('[data-resize-task]');if(!handle||!canEdit())return;
+  event.preventDefault();event.stopPropagation();
+  const task=tasks.find(item=>item.id===handle.dataset.resizeTask),wrapper=handle.closest('.gantt-task'),bar=wrapper.querySelector('.gantt-bar'),startX=event.clientX,startWidth=wrapper.getBoundingClientRect().width,startDuration=task.duration_days,unit=24;
+  let nextDuration=startDuration,moved=false;wrapper.classList.add('resizing');handle.setPointerCapture?.(event.pointerId);
+  const move=moveEvent=>{const delta=Math.round((moveEvent.clientX-startX)/unit);nextDuration=Math.max(1,Math.min(365,startDuration+delta));moved=moved||Math.abs(moveEvent.clientX-startX)>4;wrapper.style.width=`${Math.max(42,startWidth+(nextDuration-startDuration)*unit)}px`;bar.querySelector('small').textContent=`${nextDuration}日`;handle.setAttribute('aria-valuenow',nextDuration)};
+  const finish=upEvent=>{handle.removeEventListener('pointermove',move);handle.removeEventListener('pointerup',finish);handle.removeEventListener('pointercancel',cancel);handle.releasePointerCapture?.(upEvent.pointerId);wrapper.classList.remove('resizing');if(moved&&nextDuration!==startDuration)resizeTaskDuration(task.id,nextDuration,wrapper);else renderScheduleViews()};
+  const cancel=cancelEvent=>{handle.removeEventListener('pointermove',move);handle.removeEventListener('pointerup',finish);handle.removeEventListener('pointercancel',cancel);handle.releasePointerCapture?.(cancelEvent.pointerId);renderScheduleViews()};
+  handle.addEventListener('pointermove',move);handle.addEventListener('pointerup',finish);handle.addEventListener('pointercancel',cancel);
 }
 
 function renderNetwork(result){
@@ -272,9 +289,12 @@ $('#newProjectButton').addEventListener('click',()=>{const form=$('#projectForm'
 $('#projectForm').addEventListener('submit',async event=>{event.preventDefault();const form=event.currentTarget,button=form.querySelector('[type="submit"]'),data=new FormData(form);setBusy(button,true);try{const id=await createProject(data.get('name'),data.get('start_date'));$('#projectDialog').close();await openProject(id)}catch(error){showError(error)}finally{setBusy(button,false)}});
 $('#projectGrid').addEventListener('click',event=>{const card=event.target.closest('[data-project-id]');if(card)openProject(card.dataset.projectId)});$('#projectGrid').addEventListener('keydown',event=>{if(['Enter',' '].includes(event.key)){const card=event.target.closest('[data-project-id]');if(card){event.preventDefault();openProject(card.dataset.projectId)}}});
 document.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>switchView(button.dataset.view)));
-$('#addTaskButton').addEventListener('click',()=>openTaskEditor());$('#taskForm').addEventListener('submit',saveTask);$('#deleteTaskButton').addEventListener('click',removeCurrentTask);
+$('#addTaskButton').addEventListener('click',()=>openTaskEditor());$('#ganttAddTaskButton').addEventListener('click',()=>openTaskEditor());$('#taskForm').addEventListener('submit',saveTask);$('#deleteTaskButton').addEventListener('click',removeCurrentTask);
+$('#taskForm').addEventListener('click',event=>{const step=event.target.closest('[data-duration-step]');if(!step)return;const input=event.currentTarget.elements.duration_days;input.value=Math.max(1,Math.min(365,Number(input.value||1)+Number(step.dataset.durationStep)))});
 $('#taskList').addEventListener('click',event=>{const row=event.target.closest('[data-task-id]');if(row)openTaskEditor(tasks.find(task=>task.id===row.dataset.taskId))});$('#taskList').addEventListener('keydown',event=>{if(event.key==='Enter'){const row=event.target.closest('[data-task-id]');if(row)openTaskEditor(tasks.find(task=>task.id===row.dataset.taskId))}});
-$('#ganttChart').addEventListener('click',event=>{const button=event.target.closest('[data-toggle-task]');if(button)toggleTask(button.dataset.toggleTask)});
+$('#ganttChart').addEventListener('click',event=>{const button=event.target.closest('[data-edit-task]');if(button)openTaskEditor(tasks.find(task=>task.id===button.dataset.editTask))});
+$('#ganttChart').addEventListener('pointerdown',beginGanttResize);
+$('#ganttChart').addEventListener('keydown',event=>{const handle=event.target.closest('[data-resize-task]');if(!handle||!['ArrowLeft','ArrowRight'].includes(event.key))return;event.preventDefault();const task=tasks.find(item=>item.id===handle.dataset.resizeTask);resizeTaskDuration(task.id,task.duration_days+(event.key==='ArrowRight'?1:-1),handle.closest('.gantt-task'))});
 $('#saveProjectButton').addEventListener('click',saveProjectSettings);$('#membersButton').addEventListener('click',openMembers);$('#inviteForm').addEventListener('submit',invite);
 $('#memberList').addEventListener('change',async event=>{const select=event.target.closest('[data-member-role]');if(!select)return;try{await changeMemberRole(select.closest('[data-member-id]').dataset.memberId,select.value);toast('権限を変更しました');await renderMembers()}catch(error){showError(error);await renderMembers()}});
 $('#memberList').addEventListener('click',async event=>{const button=event.target.closest('[data-remove-member]');if(!button)return;try{await removeMember(button.closest('[data-member-id]').dataset.memberId);toast('メンバーを削除しました');await renderMembers()}catch(error){showError(error)}});

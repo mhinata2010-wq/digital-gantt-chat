@@ -14,3 +14,171 @@
 .auth-brand img{display:block;width:100%;height:auto}
 .auth-card>p{margin:10px 0 30px;color:var(--muted);font-size:.88rem}
 @media(max-width:620px){.auth-layout{padding:18px 12px}.auth-panel{padding:0}.auth-card{padding:30px 23px}}
+
+/* Touch-first Gantt editing. Keep the schedule visible while editing. */
+.gantt-gesture-help{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px 18px;
+  margin:-8px 0 12px;
+  color:var(--muted);
+  font-size:.69rem;
+  font-weight:700;
+}
+.gantt-shell{
+  overscroll-behavior-inline:contain;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-gutter:stable;
+  touch-action:pan-x pan-y;
+}
+.gantt-task{
+  position:absolute;
+  top:13px;
+  height:38px;
+  min-width:42px;
+}
+.gantt-task .gantt-bar{
+  position:static;
+  width:100%;
+  height:38px;
+  overflow:hidden;
+  border-radius:7px;
+  padding:0 31px 0 10px;
+  box-shadow:0 3px 8px #173f3530;
+}
+.gantt-task .gantt-bar span{
+  display:block;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.gantt-task .gantt-bar small{display:none}
+.gantt-resize-handle{
+  position:absolute;
+  z-index:2;
+  top:0;
+  right:-5px;
+  width:30px;
+  height:38px;
+  border:0;
+  border-radius:0 7px 7px 0;
+  background:transparent;
+  cursor:ew-resize;
+  touch-action:none;
+}
+.gantt-resize-handle::before{
+  position:absolute;
+  inset:-8px -5px;
+  content:"";
+}
+.gantt-resize-handle i,.gantt-resize-handle i::after{
+  position:absolute;
+  top:11px;
+  width:2px;
+  height:16px;
+  border-radius:2px;
+  background:#fff9;
+  content:"";
+}
+.gantt-resize-handle i{right:12px}
+.gantt-resize-handle i::after{top:0;left:5px}
+.gantt-task.resizing{z-index:8}
+.gantt-task.resizing .gantt-bar{
+  filter:brightness(1.08);
+  box-shadow:0 0 0 3px #fff,0 0 0 6px #176b4d55;
+}
+.gantt-task.resizing .gantt-bar small{
+  display:block;
+  position:absolute;
+  top:-26px;
+  right:0;
+  padding:4px 7px;
+  border-radius:5px;
+  background:#18211e;
+  color:#fff;
+  font-size:.65rem;
+  text-decoration:none;
+}
+.gantt-task.saving{opacity:.62}
+.duration-stepper{
+  display:grid;
+  grid-template-columns:44px 1fr 44px;
+  border:1px solid #cbd5cf;
+  border-radius:9px;
+  overflow:hidden;
+  background:#fff;
+}
+.duration-stepper input{
+  border:0;
+  border-inline:1px solid #dce3df;
+  border-radius:0;
+  text-align:center;
+}
+.duration-stepper button{
+  border:0;
+  background:#f2f6f3;
+  color:var(--green);
+  font-size:1.25rem;
+  font-weight:900;
+  touch-action:manipulation;
+}
+.duration-stepper button:active{background:var(--green-soft)}
+.task-drawer{
+  width:min(500px,calc(100% - 44px));
+  height:100dvh;
+  max-height:100dvh;
+  margin:0 0 0 auto;
+  border-radius:16px 0 0 16px;
+  padding:26px;
+  transform:translateX(20px);
+  animation:drawer-in .2s ease-out forwards;
+}
+.task-drawer::backdrop{
+  background:#10291f2e;
+  backdrop-filter:none;
+}
+.task-drawer .form-grid{
+  grid-template-columns:1fr;
+  gap:13px;
+}
+.task-drawer .form-grid .wide{grid-column:auto}
+.task-drawer .dialog-head{
+  position:sticky;
+  z-index:3;
+  top:-26px;
+  margin:-26px -26px 20px;
+  padding:24px 22px 15px;
+  border-bottom:1px solid var(--line);
+  background:#fff;
+}
+.task-drawer .dialog-actions{
+  position:sticky;
+  z-index:3;
+  bottom:-26px;
+  margin:20px -26px -26px;
+  padding:15px 22px 20px;
+  border-top:1px solid var(--line);
+  background:#fff;
+}
+.task-drawer textarea{min-height:74px}
+.task-drawer select[multiple]{min-height:112px}
+@keyframes drawer-in{to{transform:none}}
+
+@media(max-width:620px){
+  .inline-actions{display:grid;grid-template-columns:1fr 1fr}
+  .inline-actions #ganttAddTaskButton{grid-column:1/-1}
+  .inline-actions .button{padding-inline:8px}
+  .gantt-head,.gantt-row{grid-template-columns:140px auto}
+  .gantt-label{width:140px;padding-inline:10px}
+  .gantt-gesture-help{display:grid;grid-template-columns:1fr;margin-top:0}
+  .task-drawer{
+    width:100%;
+    height:88dvh;
+    max-height:88dvh;
+    margin:auto 0 0;
+    border-radius:18px 18px 0 0;
+    padding:20px 16px;
+    transform:translateY(20px);
+  }
+  .task-drawer .dialog-head{top:-20px;margin:-20px -16px 16px;padding:20px 14px 13px}
+  .task-drawer .dialog-actions{bottom:-20px;margin:18px -16px -20px;padding:13px 14px calc(14px + env(safe-area-inset-bottom))}
+}
