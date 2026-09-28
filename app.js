@@ -248,6 +248,8 @@ async function applyImpact(){
 async function boot(){
   setAuthMode('login');
   if(!configured){$('#setupNotice').hidden=false;$('#authView').hidden=false;$('#authForm').querySelectorAll('input,button').forEach(node=>node.disabled=true);return}
+  $('#setupNotice').hidden=true;
+  $('#authView').querySelectorAll('input,button').forEach(node=>node.disabled=false);
   try{const current=await session();if(current)await enterApplication();else $('#authView').hidden=false}catch(error){$('#authView').hidden=false;showError(error,'#authMessage')}
 }
 
