@@ -11,6 +11,15 @@ GitHub Pagesは静的ファイルの配信だけを担当します。認証・�
    - Redirect URLs: 実際のGitHub Pages URLとローカルの `http://localhost:4173/**`
 4. Authentication → Providers → Emailでメール認証を有効にします。本番ではメール確認を有効にしてください。
 
+### snake site名義の確認メール
+
+Authentication → Email Templates → Confirm sign up を開き、次を設定します。
+
+- Subject: `【snake site】メールアドレスの確認`
+- Body: `supabase/email-templates/confirmation.html` の内容
+
+標準SMTPの差出人は `Supabase Auth` のままです。差出人名とFromアドレスもsnake site名義にする場合は、Authentication → SMTP Settingsで独自SMTPを設定し、Sender nameを `snake site` にします。独自SMTPは共同利用の本番公開前に必須です。
+
 ## 2. 公開キーを設定する
 
 Project Settings → APIで次を確認し、`config.js`に設定します。
