@@ -7,7 +7,7 @@
   <meta name="description" content="関係者で安全に共有・共同編集できる建設工程表">
   <title>現場工程表｜snake site</title>
   <link rel="icon" href="snake-site.gif">
-  <link rel="stylesheet" href="style.css?v=collaboration-1">
+  <link rel="stylesheet" href="style.css?v=collaboration-2">
 </head>
 <body>
   <div id="setupNotice" class="setup-notice" hidden>
@@ -17,20 +17,9 @@
   </div>
 
   <main id="authView" class="auth-layout" hidden>
-    <section class="auth-intro">
-      <a class="brand brand-light" href="./"><img src="snake-site.gif" alt=""><span>snake site</span></a>
-      <p class="eyebrow">SHARED CONSTRUCTION SCHEDULE</p>
-      <h1>工程を一つに。<br>判断を速く。</h1>
-      <p>ガントチャートとネットワーク図を、同じ工程データから表示。関係者ごとの権限で、安全に共同編集できます。</p>
-      <ol>
-        <li><b>1</b><span>責任者が案件と工程を作成</span></li>
-        <li><b>2</b><span>メールアドレスで関係者を招待</span></li>
-        <li><b>3</b><span>変更をリアルタイムに共有</span></li>
-      </ol>
-    </section>
     <section class="auth-panel">
       <div class="auth-card">
-        <p class="eyebrow">ACCOUNT</p>
+        <a class="auth-brand" href="./"><img src="snake-site.gif" alt="snake site"></a>
         <h2 id="authTitle">ログイン</h2>
         <p id="authDescription">参加している案件を開きます。</p>
         <form id="authForm">
@@ -188,7 +177,7 @@
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js"></script>
-  <script type="module" src="app.js"></script>
+  <script src="config.js?v=supabase-20260928-2"></script>
+  <script type="module" src="app.js?v=collaboration-2"></script>
 </body>
 </html>
