@@ -13,12 +13,20 @@ GitHub Pagesは静的ファイルの配信だけを担当します。認証・�
 
 ### snake site名義の確認メール
 
-Authentication → Email Templates → Confirm sign up を開き、次を設定します。
+Hosted Supabaseでは、標準メール送信のままでは件名と本文を編集できません。先に Authentication → SMTP Settings → Set up SMTP で独自SMTPを設定します。
+
+SMTP事業者から発行された次の値を入力します。SupabaseのデータベースパスワードやAPIキーは入力しません。
+
+- Sender email: 独自ドメインの送信元メールアドレス
+- Sender name: `snake site`
+- Host / Port / Username / Password: SMTP事業者から発行された値
+
+SMTP設定を保存した後、Authentication → Email Templates → Confirm sign up を開き、次を設定します。
 
 - Subject: `【snake site】メールアドレスの確認`
 - Body: `supabase/email-templates/confirmation.html` の内容
 
-標準SMTPの差出人は `Supabase Auth` のままです。差出人名とFromアドレスもsnake site名義にする場合は、Authentication → SMTP Settingsで独自SMTPを設定し、Sender nameを `snake site` にします。独自SMTPは共同利用の本番公開前に必須です。
+独自SMTPは、件名・本文の編集、snake site名義の差出人表示、招待した関係者への安定したメール配信に必要です。
 
 ## 2. 公開キーを設定する
 
