@@ -11,9 +11,20 @@ let authMode='login',profile=null,projects=[],currentProject=null,tasks=[],activ
 
 function toast(message){const node=$('#toast');node.textContent=message;node.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>node.classList.remove('show'),3200)}
 function setConnection(state,label){const node=$('#connectionState');node.dataset.state=state;node.textContent=label}
+function friendlyErrorMessage(error){
+  const message=error?.message||'';
+  if(error?.status===429||error?.code==='over_email_send_rate_limit'||/only request this after/i.test(message)){
+    return '確認メールの送信回数制限に達しました。すでに登録済みの場合は受信メール（迷惑メールも含む）の確認リンクを開いてください。届いていない場合は、しばらく待ってからもう一度お試しください。';
+  }
+  if(/user already registered/i.test(message))return 'このメールアドレスは登録済みです。「すでにアカウントをお持ちの方」からログインしてください。';
+  if(/password should be at least/i.test(message))return 'パスワードは6文字以上で入力してください。';
+  if(/invalid login credentials/i.test(message))return 'メールアドレスまたはパスワードが正しくありません。確認メールをまだ開いていない場合は、先にメール内のリンクを開いてください。';
+  if(/email not confirmed/i.test(message))return 'メールアドレスの確認が完了していません。受信メール内の確認リンクを開いてください。';
+  return message||'処理に失敗しました。';
+}
 function showError(error,target='#toast'){
   console.error(error);
-  const message=error?.message||'処理に失敗しました。';
+  const message=friendlyErrorMessage(error);
   if(target==='#toast')toast(message);else $(target).textContent=message;
 }
 function setBusy(button,busy,label='処理中…'){if(!button)return;button.disabled=busy;if(busy){button.dataset.label=button.textContent;button.textContent=label}else if(button.dataset.label){button.textContent=button.dataset.label;delete button.dataset.label}}
