@@ -31,6 +31,8 @@ function showError(error,target='#toast'){
 function setBusy(button,busy,label='処理中…'){if(!button)return;button.disabled=busy;if(busy){button.dataset.label=button.textContent;button.textContent=label}else if(button.dataset.label){button.textContent=button.dataset.label;delete button.dataset.label}}
 function canEdit(){return ['owner','editor'].includes(currentProject?.current_role)}
 function isOwner(){return currentProject?.current_role==='owner'}
+function taskCodeAt(index){let value=index+1,code='';while(value>0){value--;code=String.fromCharCode(65+value%26)+code;value=Math.floor(value/26)}return code}
+function nextTaskCode(){const used=new Set(tasks.map(task=>String(task.code).toUpperCase()));let index=0,code='A';while(used.has(code)){index++;code=taskCodeAt(index)}return code}
 
 function setAuthMode(mode){
   authMode=mode;const register=mode==='register';
@@ -123,10 +125,16 @@ function renderProject(){
   const role=currentProject.current_role,editable=canEdit(),owner=isOwner();
   $('#projectTitle').textContent=currentProject.name;$('#projectMeta').textContent=`${formatDate(currentProject.start_date)} 着工 ・ ${tasks.length}工程`;
   $('#projectRole').className=`role-pill ${role}`;$('#projectRole').textContent=roleLabel[role];
-  $('#membersButton').hidden=!owner;$('#addTaskButton').hidden=!editable;$('#ganttAddTaskButton').hidden=!editable;$('#impactButton').hidden=!editable;$('#ganttGestureHelp').hidden=!editable;
+  $('#membersButton').hidden=!owner;$('#addTaskButton').hidden=!editable;$('#ganttAddTaskButton').hidden=!editable;$('#quickTaskForm').hidden=!editable;$('#impactButton').hidden=!editable;$('#ganttGestureHelp').hidden=!editable;
   $('#projectSettings').hidden=!owner;$('#projectNameInput').value=currentProject.name;$('#managerInput').value=currentProject.manager||'';
   $('#startDateInput').value=currentProject.start_date;$('#deadlineInput').value=currentProject.deadline||'';$('#holidaysInput').value=(currentProject.holidays||[]).join(', ');
-  switchView(activeView,false);renderScheduleViews();renderTaskList();
+  renderQuickTaskForm();switchView(activeView,false);renderScheduleViews();renderTaskList();
+}
+
+function renderQuickTaskForm(){
+  const select=$('#quickTaskForm').elements.after,current=select.value;
+  select.innerHTML=`<option value="">着工日から開始</option>${tasks.map(task=>`<option value="${task.id}">${esc(task.code)} ${esc(task.name)} の後</option>`).join('')}`;
+  select.value=tasks.some(task=>task.id===current)?current:(tasks.at(-1)?.id||'');
 }
 
 function switchView(view,scroll=true){
@@ -145,7 +153,7 @@ function scheduleResult(delay){
 
 function renderScheduleViews(){
   if(!tasks.length){
-    $('#scheduleSummary').innerHTML='';$('#ganttChart').innerHTML='<div class="empty-state"><b>工程がまだありません</b><span>「工程を編集」から最初の工程を作成してください。</span></div>';$('#networkDiagram').innerHTML='';return;
+    $('#scheduleSummary').innerHTML='';$('#ganttChart').innerHTML='<div class="empty-state"><b>工程がまだありません</b><span>上の「工程をかんたん追加」から最初の工程を作成してください。</span></div>';$('#networkDiagram').innerHTML='';return;
   }
   const result=scheduleResult();if(!result)return;
   const margin=projectMargin(currentProject,result),critical=[...result.nodes.values()].filter(node=>node.tf===0).length,done=tasks.filter(task=>task.status==='完了').length;
@@ -218,10 +226,20 @@ function renderTaskList(){
 function openTaskEditor(task=null){
   if(!canEdit())return;const form=$('#taskForm');form.reset();$('#taskFormMessage').textContent='';
   $('#taskDialogTitle').textContent=task?'工程を編集':'工程を作る';form.elements.id.value=task?.id||'';form.elements.version.value=task?.version||'';
-  for(const field of ['code','trade','name','company','duration_days','status','notes'])form.elements[field].value=task?.[field]??(field==='duration_days'?1:field==='status'?'未着手':'');
+  for(const field of ['code','trade','name','company','duration_days','status','notes'])form.elements[field].value=task?.[field]??(field==='code'?nextTaskCode():field==='duration_days'?1:field==='status'?'未着手':'');
   form.elements.blocked_dates.value=(task?.blocked_dates||[]).join(', ');
   form.elements.dependencies.innerHTML=tasks.filter(item=>item.id!==task?.id).map(item=>`<option value="${item.id}" ${(task?.dependencies||[]).includes(item.id)?'selected':''}>${esc(item.code)} ${esc(item.name)}</option>`).join('');
   $('#deleteTaskButton').hidden=!task;$('#taskDialog').showModal();
+}
+
+async function addQuickTask(event){
+  event.preventDefault();const form=event.currentTarget,button=form.querySelector('[type="submit"]'),data=new FormData(form),name=String(data.get('name')).trim();
+  if(!name)return;$('#quickTaskMessage').textContent='';setBusy(button,true,'追加中…');
+  try{
+    const after=String(data.get('after')||''),position=Math.max(-1,...tasks.map(task=>Number(task.position)||0))+1;
+    await createTask(currentProject.id,{position,code:nextTaskCode(),trade:'',name,company:String(data.get('company')).trim(),duration_days:Math.max(1,Math.min(365,Number(data.get('duration_days'))||1)),status:'未着手',dependencies:after?[after]:[],blocked_dates:[],notes:''});
+    const company=form.elements.company.value;form.reset();form.elements.company.value=company;form.elements.duration_days.value=1;toast(`「${name}」を追加しました`);await refreshCurrentProject(true);form.elements.name.focus();
+  }catch(error){showError(error,'#quickTaskMessage');await refreshCurrentProject(true)}finally{setBusy(button,false)}
 }
 
 function taskValues(form){
@@ -313,6 +331,7 @@ $('#projectGrid').addEventListener('click',event=>{const card=event.target.close
 document.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>switchView(button.dataset.view)));
 $('#addTaskButton').addEventListener('click',()=>openTaskEditor());$('#ganttAddTaskButton').addEventListener('click',()=>openTaskEditor());$('#taskForm').addEventListener('submit',saveTask);$('#deleteTaskButton').addEventListener('click',removeCurrentTask);
 $('#taskForm').addEventListener('click',event=>{const step=event.target.closest('[data-duration-step]');if(!step)return;const input=event.currentTarget.elements.duration_days;input.value=Math.max(1,Math.min(365,Number(input.value||1)+Number(step.dataset.durationStep)))});
+$('#quickTaskForm').addEventListener('submit',addQuickTask);$('#quickTaskForm').addEventListener('click',event=>{const step=event.target.closest('[data-quick-duration-step]');if(!step)return;const input=event.currentTarget.elements.duration_days;input.value=Math.max(1,Math.min(365,Number(input.value||1)+Number(step.dataset.quickDurationStep)))});
 $('#taskList').addEventListener('click',event=>{const row=event.target.closest('[data-task-id]');if(row)openTaskEditor(tasks.find(task=>task.id===row.dataset.taskId))});$('#taskList').addEventListener('keydown',event=>{if(event.key==='Enter'){const row=event.target.closest('[data-task-id]');if(row)openTaskEditor(tasks.find(task=>task.id===row.dataset.taskId))}});
 $('#ganttChart').addEventListener('click',event=>{const button=event.target.closest('[data-edit-task]');if(button)openTaskEditor(tasks.find(task=>task.id===button.dataset.editTask))});
 $('#ganttChart').addEventListener('pointerdown',beginGanttScale);

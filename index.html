@@ -7,7 +7,7 @@
   <meta name="description" content="関係者で安全に共有・共同編集できる建設工程表">
   <title>現場工程表｜snake site</title>
   <link rel="icon" href="snake-site.gif">
-  <link rel="stylesheet" href="style.css?v=collaboration-4">
+  <link rel="stylesheet" href="style.css?v=collaboration-5">
 </head>
 <body>
   <div id="setupNotice" class="setup-notice" hidden>
@@ -82,12 +82,21 @@
         <div class="section-heading">
           <div><p class="eyebrow">MASTER SCHEDULE</p><h2>工程カレンダー</h2><p>同じ工程データを日程軸で確認します。</p></div>
           <div class="inline-actions">
-            <button class="button primary" id="ganttAddTaskButton" type="button">＋ 工程を作る</button>
+            <button class="button quiet" id="ganttAddTaskButton" type="button">詳細設定で作る</button>
             <button class="button secondary" id="impactButton" type="button">変更の影響を見る</button>
             <button class="button quiet" id="printButton" type="button">印刷・PDF</button>
           </div>
         </div>
         <div id="scheduleSummary" class="summary-grid"></div>
+        <form id="quickTaskForm" class="quick-task-form">
+          <div class="quick-task-intro"><b>工程をかんたん追加</b><small>最低限の入力だけで、続けて工程を作れます。</small></div>
+          <label class="quick-task-name"><span>工程名</span><input name="name" required maxlength="160" placeholder="例：基礎工事"></label>
+          <label><span>担当会社</span><input name="company" maxlength="160" placeholder="あとからでも設定できます"></label>
+          <label class="quick-duration"><span>日数</span><span class="duration-stepper"><button type="button" data-quick-duration-step="-1" aria-label="日数を1日減らす">−</button><input name="duration_days" type="number" min="1" max="365" value="1" required><button type="button" data-quick-duration-step="1" aria-label="日数を1日増やす">＋</button></span></label>
+          <label><span>開始位置</span><select name="after"><option value="">着工日から</option></select></label>
+          <button class="button primary quick-add-button" type="submit">＋ 追加</button>
+          <p id="quickTaskMessage" class="form-message" role="alert"></p>
+        </form>
         <div class="gantt-gesture-help" id="ganttGestureHelp"><span>↔ 表をスワイプして移動</span><span>月の右端をドラッグして拡大・縮小</span><span>工程バーをタップして編集</span><span>バー右端をドラッグして日数変更</span></div>
         <div id="ganttChart" class="gantt-shell"></div>
       </section>
@@ -133,15 +142,20 @@
       <div class="dialog-head"><div><p class="eyebrow">TASK</p><h2 id="taskDialogTitle">工程を作る</h2></div><button class="icon-button close-dialog" type="button">×</button></div>
       <input name="id" type="hidden"><input name="version" type="hidden">
       <div class="form-grid">
-        <label><span>記号</span><input name="code" required maxlength="12" placeholder="A"></label>
-        <label><span>工種</span><input name="trade" maxlength="80" placeholder="仮設"></label>
         <label class="wide"><span>工程名</span><input name="name" required maxlength="160"></label>
         <label class="wide"><span>担当会社</span><input name="company" maxlength="160"></label>
         <label><span>所要日数</span><span class="duration-stepper"><button type="button" data-duration-step="-1" aria-label="所要日数を1日減らす">−</button><input name="duration_days" type="number" min="1" max="365" required><button type="button" data-duration-step="1" aria-label="所要日数を1日増やす">＋</button></span></label>
         <label><span>進捗</span><select name="status"><option>未着手</option><option>進行中</option><option>完了</option><option>遅延</option></select></label>
-        <label class="wide"><span>前提工程（複数選択可）</span><select name="dependencies" multiple size="5"></select></label>
-        <label class="wide"><span>担当会社の稼働不可日</span><textarea name="blocked_dates" rows="2" placeholder="YYYY-MM-DD、カンマ区切り"></textarea></label>
-        <label class="wide"><span>備考</span><input name="notes" maxlength="500"></label>
+        <details class="advanced-fields wide">
+          <summary>詳細設定（記号・前工程・休日・備考）</summary>
+          <div class="advanced-grid">
+            <label><span>記号</span><input name="code" required maxlength="12" placeholder="A"></label>
+            <label><span>工種</span><input name="trade" maxlength="80" placeholder="仮設"></label>
+            <label class="wide"><span>前提工程（複数選択可）</span><select name="dependencies" multiple size="5"></select></label>
+            <label class="wide"><span>担当会社の稼働不可日</span><textarea name="blocked_dates" rows="2" placeholder="YYYY-MM-DD、カンマ区切り"></textarea></label>
+            <label class="wide"><span>備考</span><input name="notes" maxlength="500"></label>
+          </div>
+        </details>
       </div>
       <p id="taskFormMessage" class="form-message" role="alert"></p>
       <div class="dialog-actions"><button class="button danger" id="deleteTaskButton" type="button">削除</button><span class="spacer"></span><button class="button quiet close-dialog" type="button">キャンセル</button><button class="button primary" type="submit">保存</button></div>
@@ -180,6 +194,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js?v=supabase-20260928-2"></script>
-  <script type="module" src="app.js?v=collaboration-6"></script>
+  <script type="module" src="app.js?v=collaboration-7"></script>
 </body>
 </html>
