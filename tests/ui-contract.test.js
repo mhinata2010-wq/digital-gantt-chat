@@ -15,6 +15,9 @@ test('field UI keeps one task creation entry and one shared editor',async()=>{
   assert.match(app,/function openTaskEditor\(task=null\)/);
   assert.match(app,/data-edit-task/);
   assert.match(css,/\.gantt-row>\.gantt-label\{[\s\S]*?background:#fff/);
+  assert.match(html,/class="view-tabs" data-active="today"/);
+  assert.match(app,/tabs\.dataset\.active=view/);
+  assert.match(css,/\.view-tabs::before\{[\s\S]*?transform:translateX/);
 });
 
 test('database policies and optimistic locking protect shared editing',async()=>{

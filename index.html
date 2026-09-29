@@ -7,7 +7,7 @@
   <meta name="description" content="関係者で安全に共有・共同編集できる建設工程表">
   <title>現場工程表｜snake site</title>
   <link rel="icon" href="snake-site.gif">
-  <link rel="stylesheet" href="style.css?v=field-ui-3">
+  <link rel="stylesheet" href="style.css?v=field-ui-4">
 </head>
 <body>
   <div id="setupNotice" class="setup-notice" hidden>
@@ -73,11 +73,11 @@
         </div>
       </div>
 
-      <nav class="view-tabs" aria-label="工程表の表示切替">
-        <button type="button" data-view="today" aria-current="page">今日</button>
-        <button type="button" data-view="gantt">工程表</button>
-        <button type="button" data-view="network">ネットワーク図</button>
-        <button type="button" data-view="tasks">工程一覧</button>
+      <nav class="view-tabs" data-active="today" aria-label="工程表の表示切替" role="tablist">
+        <button type="button" data-view="today" role="tab" aria-selected="true" aria-current="page">今日</button>
+        <button type="button" data-view="gantt" role="tab" aria-selected="false">工程表</button>
+        <button type="button" data-view="network" role="tab" aria-selected="false">ネットワーク図</button>
+        <button type="button" data-view="tasks" role="tab" aria-selected="false">工程一覧</button>
       </nav>
 
       <section id="todayView" class="content-view">

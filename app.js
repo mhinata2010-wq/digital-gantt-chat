@@ -154,7 +154,11 @@ function renderProject(){
 
 function switchView(view,scroll=true){
   activeView=view;
-  document.querySelectorAll('[data-view]').forEach(button=>button.setAttribute('aria-current',button.dataset.view===view?'page':'false'));
+  const tabs=document.querySelector('.view-tabs');if(tabs)tabs.dataset.active=view;
+  document.querySelectorAll('[data-view]').forEach(button=>{
+    const selected=button.dataset.view===view;
+    button.setAttribute('aria-current',selected?'page':'false');button.setAttribute('aria-selected',String(selected));
+  });
   for(const name of ['today','gantt','network','tasks'])$(`#${name}View`).hidden=name!==view;
   const target=$(`#${view}View`);target.classList.remove('view-enter');void target.offsetWidth;target.classList.add('view-enter');
   if(scroll)window.scrollTo({top:0,behavior:'smooth'});
