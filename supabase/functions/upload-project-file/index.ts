@@ -29,7 +29,7 @@ Deno.serve(async request=>{
   if(origin&&!allowedOrigins.has(origin))return json({error:'origin not allowed'},403);
   if(request.method!=='POST')return json({error:'method not allowed'},405);
   const authorization=request.headers.get('Authorization');
-  const url=Deno.env.get('SUPABASE_URL'),publishable=Deno.env.get('SUPABASE_ANON_KEY'),secret=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  const url=Deno.env.get('SUPABASE_URL'),publishable=Deno.env.get('SUPABASE_PUBLISHABLE_KEY')||Deno.env.get('SUPABASE_ANON_KEY'),secret=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
   if(!authorization)return json({error:'authentication required'},401);
   if(!url||!publishable||!secret)return json({error:'function environment is incomplete'},503);
   const userClient=createClient(url,publishable,{global:{headers:{Authorization:authorization}}});

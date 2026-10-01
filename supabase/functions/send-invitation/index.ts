@@ -14,10 +14,10 @@ Deno.serve(async request=>{
   if(origin&&!allowedOrigins.has(origin))return json({error:'origin not allowed'},403);
   if(request.method!=='POST')return json({error:'method not allowed'},405);
   const authorization=request.headers.get('Authorization');if(!authorization)return json({error:'authentication required'},401);
-  const url=Deno.env.get('SUPABASE_URL'),anon=Deno.env.get('SUPABASE_ANON_KEY'),resendKey=Deno.env.get('RESEND_API_KEY'),from=Deno.env.get('INVITE_FROM_EMAIL');
-  if(!url||!anon)return json({error:'Supabase function environment is incomplete'},503);
+  const url=Deno.env.get('SUPABASE_URL'),publishable=Deno.env.get('SUPABASE_PUBLISHABLE_KEY')||Deno.env.get('SUPABASE_ANON_KEY'),resendKey=Deno.env.get('RESEND_API_KEY'),from=Deno.env.get('INVITE_FROM_EMAIL');
+  if(!url||!publishable)return json({error:'Supabase function environment is incomplete'},503);
   if(!resendKey||!from||!allowed)return json({configured:false,error:'Invitation email provider is not configured'},503);
-  const client=createClient(url,anon,{global:{headers:{Authorization:authorization}}});
+  const client=createClient(url,publishable,{global:{headers:{Authorization:authorization}}});
   const {data:{user},error:userError}=await client.auth.getUser();if(userError||!user)return json({error:'invalid session'},401);
   const {invitationId,inviteUrl}=await request.json();
   let candidate:URL|null=null;try{if(typeof inviteUrl==='string')candidate=new URL(inviteUrl)}catch{}
