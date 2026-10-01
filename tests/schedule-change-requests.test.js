@@ -31,8 +31,8 @@ test('review RPC locks a pending request and applies an approved duration atomic
 test('data service loads, submits, reviews and subscribes to change requests',async()=>{
   const service=await readFile(new URL('data-service.js',root),'utf8');
   assert.match(service,/export async function loadScheduleChangeRequests\(projectId\)/);
-  assert.match(service,/export async function submitScheduleChangeRequest\(projectId,taskId,expectedVersion,days,reason,impactData\)/);
-  assert.match(service,/p_proposed_patch:\{duration_days:Number\(days\)\}/);
+  assert.match(service,/export async function submitScheduleChangeRequest\(projectId,taskId,expectedVersion,changeType,proposedPatch,reason,impactData\)/);
+  assert.match(service,/p_change_type:changeType,p_proposed_patch:proposedPatch/);
   assert.match(service,/export async function reviewScheduleChangeRequest\(requestId,decision,reviewComment=''\)/);
   assert.match(service,/table:'schedule_change_requests'/);
   assert.match(service,/changeRequests:changeRequests\|\|\[\]/);

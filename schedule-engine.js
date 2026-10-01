@@ -97,6 +97,14 @@ export function compareSchedules(project,tasks,taskId,days){
   return {before,after,changes,finishShift:after.total-before.total};
 }
 
+export function compareTaskChange(project,tasks,taskId,{delayDays=0,blockedDates=[]}={}){
+  const before=computeSchedule(project,tasks),normalizedBlocked=parseDates(blockedDates),patched=tasks.map(task=>task.id===taskId?{
+    ...task,duration_days:Number(task.duration_days)+Math.max(0,Number(delayDays)||0),blocked_dates:[...new Set([...(task.blocked_dates||[]),...normalizedBlocked])]
+  }:task),after=computeSchedule(project,patched);
+  const changes=tasks.map(task=>{const previous=before.nodes.get(task.id),next=after.nodes.get(task.id);return {task,before:previous,after:next,moved:previous.es!==next.es||previous.ef!==next.ef}}).filter(change=>change.task.id===taskId||change.moved);
+  return {before,after,changes,finishShift:after.total-before.total,patch:{duration_days:patched.find(task=>task.id===taskId).duration_days,blocked_dates:patched.find(task=>task.id===taskId).blocked_dates}};
+}
+
 export function projectMargin(project,schedule){
   if(!project.deadline||!schedule.total)return null;
   const work=calendar(project);let cursor,amount=0;

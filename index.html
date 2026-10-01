@@ -8,7 +8,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <title>現場工程表｜snake site</title>
   <link rel="icon" href="snake-site.gif">
-  <link rel="stylesheet" href="style.css?v=hybrid-import-1">
+  <link rel="stylesheet" href="style.css?v=hybrid-weather-1">
 </head>
 <body>
   <a class="skip-link" href="#home">本文へ移動</a>
@@ -300,10 +300,12 @@
   <dialog id="impactDialog" class="dialog">
     <div class="dialog-head"><div><p class="eyebrow">WHAT IF</p><h2>変更の影響を見る</h2></div><button class="icon-button close-dialog" type="button">×</button></div>
     <div class="impact-controls">
+      <label><span>変更の原因</span><select id="impactCause"><option>天候</option><option>資材</option><option>人員</option><option>設計・承認</option><option>前工程</option><option>品質・是正</option><option>施主都合</option><option>その他</option></select></label>
       <label><span>遅れが出た工程</span><select id="delayTaskSelect"></select></label>
-      <label><span>遅れ（実働日）</span><input id="delayDaysInput" type="number" min="1" max="365" value="2"></label>
+      <label><span>追加する遅れ（実働日）</span><input id="delayDaysInput" type="number" min="0" max="365" value="1"></label>
       <button class="button primary" id="calculateImpactButton" type="button">変更案を見る</button>
     </div>
+    <label id="weatherDatesField" class="impact-reason"><span>天候による休工日</span><textarea id="weatherDatesInput" rows="2" placeholder="2026-10-05, 2026-10-06"></textarea><small>雨・強風・積雪などで作業できない日を入力します。休日と重なる日は工期へ二重加算しません。</small></label>
     <label class="impact-reason"><span>理由</span><textarea id="impactReasonInput" rows="2" maxlength="1000" placeholder="例：資材納入が2日遅れるため"></textarea></label>
     <div id="impactResult" class="impact-result" aria-live="polite">工程と遅延日数を選択してください。日程は確認するまで変更されません。</div>
     <div class="dialog-actions"><button class="button quiet close-dialog" type="button">閉じる</button><button class="button primary" id="applyImpactButton" type="button" hidden>変更案を提出</button></div>
@@ -315,6 +317,6 @@
   <script src="config.js?v=supabase-20260928-2"></script>
   <script src="vendor/xlsx.full.min.js" defer></script>
   <script src="vendor/qrcode.min.js" defer></script>
-  <script type="module" src="app.js?v=hybrid-import-1"></script>
+  <script type="module" src="app.js?v=hybrid-weather-1"></script>
 </body>
 </html>

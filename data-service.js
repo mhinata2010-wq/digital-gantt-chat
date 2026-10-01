@@ -143,10 +143,10 @@ export async function restoreScheduleVersion(versionId){const {error}=await clie
 export async function loadScheduleChangeRequests(projectId){
   const {data,error}=await client.from('schedule_change_requests').select('*').eq('project_id',projectId).order('created_at',{ascending:false});fail(error);return data||[];
 }
-export async function submitScheduleChangeRequest(projectId,taskId,expectedVersion,days,reason,impactData){
+export async function submitScheduleChangeRequest(projectId,taskId,expectedVersion,changeType,proposedPatch,reason,impactData){
   const {data,error}=await client.rpc('submit_schedule_change_request',{
     p_project_id:projectId,p_task_id:taskId,p_expected_version:expectedVersion,
-    p_change_type:'duration_delay',p_proposed_patch:{duration_days:Number(days)},
+    p_change_type:changeType,p_proposed_patch:proposedPatch,
     p_impact_data:impactData||{},p_reason:reason||''
   });fail(error);return data;
 }

@@ -9,8 +9,9 @@ GitHub Pagesは静的フロントエンドだけを配信します。認証、�
 1. `supabase/migrations/202609280001_collaboration.sql`
 2. `supabase/migrations/202609290001_field_operations.sql`
 3. `supabase/migrations/202610010001_hybrid_schedule_import.sql`
+4. `supabase/migrations/202610010002_weather_schedule_changes.sql`
 
-既に現場運用版を使っている環境では3だけを実行します。各追加移行は既存案件・工程を削除しません。実行後は次が作成されます。
+既に現場運用版を使っている環境では3、4を順に実行します。各追加移行は既存案件・工程を削除しません。実行後は次が作成されます。
 
 - 進捗／完了報告、コメント、添付
 - 工程版と版内スナップショット
@@ -20,6 +21,7 @@ GitHub Pagesは静的フロントエンドだけを配信します。認証、�
 - 各テーブルとStorageのRLS、監査トリガー、Realtime対象
 - Excel／読取結果の取込履歴、安全な一括追加RPC
 - ネットワーク図の共有手動配置
+- 天候休工日と遅延理由を含む変更案・影響経路・責任者承認
 
 移行が未適用でも旧共同編集機能は動きますが、現場報告・工程版・管理項目・通知は表示されません。これは公開中サイトを壊さないための互換動作です。
 

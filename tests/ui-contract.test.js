@@ -76,3 +76,9 @@ test('hybrid import requires human review and stores manual network layout secur
   assert.match(migration,/security definer/);assert.match(migration,/editor permission required/);assert.match(migration,/network_layout_update_editor/);assert.match(migration,/duplicate task code/);
   assert.match(worker,/schedule-import\.js/);
 });
+
+test('weather changes stay inside the selected schedule and show dependency impact',async()=>{
+  const [html,app,migration]=await Promise.all([readFile(new URL('index.html',root),'utf8'),readFile(new URL('app.js',root),'utf8'),readFile(new URL('supabase/migrations/202610010002_weather_schedule_changes.sql',root),'utf8')]);
+  assert.match(html,/id="impactCause"/);assert.match(html,/天候による休工日/);assert.match(app,/compareTaskChange/);assert.match(app,/taskConnectionSummary/);assert.match(app,/data-impact-task/);
+  assert.match(migration,/weather_delay/);assert.match(migration,/blocked_dates/);assert.match(migration,/owner permission required/);
+});
