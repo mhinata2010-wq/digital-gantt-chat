@@ -25,3 +25,15 @@ test('CSV is UTF-8 BOM prefixed and escapes Japanese values',()=>{
   assert.equal(value.charCodeAt(0),0xfeff);
   assert.match(value,/"基礎"/);
 });
+
+test('CSV neutralizes spreadsheet formulas without changing numeric values',()=>{
+  const value=utf8Csv(['値'],[['=1+1'],[' +SUM(A1:A2)'],['\t@IMPORT'],['\r-2'],['\t通常'],['\u00a0=HYPERLINK("https://example.invalid")'],[-42],['-42'],['通常']]);
+  assert.match(value,/"'=1\+1"/);
+  assert.match(value,/"' \+SUM\(A1:A2\)"/);
+  assert.match(value,/"'\t@IMPORT"/);
+  assert.match(value,/"'\r-2"/);
+  assert.match(value,/"'\t通常"/);
+  assert.match(value,/"'\u00a0=HYPERLINK\(""https:\/\/example\.invalid""\)"/);
+  assert.match(value,/\r\n"-42"\r\n"'-42"/);
+  assert.match(value,/"通常"/);
+});

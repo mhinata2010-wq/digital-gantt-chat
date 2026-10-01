@@ -55,6 +55,10 @@ export function compareVersionTasks(currentTasks,versionRows){
 }
 
 export function utf8Csv(headers,rows){
-  const quote=value=>`"${String(value??'').replaceAll('"','""')}"`;
+  const safeCell=value=>{
+    const text=String(value??'');
+    return typeof value==='string'&&(/^[\u0000-\u001f]/.test(text)||/^[\s\u00a0]*[=+@-]/u.test(text))?`'${text}`:text;
+  };
+  const quote=value=>`"${safeCell(value).replaceAll('"','""')}"`;
   return '\uFEFF'+[headers,...rows].map(row=>row.map(quote).join(',')).join('\r\n');
 }

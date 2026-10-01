@@ -89,3 +89,10 @@ test('construction network uses numbered events work arrows dummy links and edit
   assert.match(app,/buildEventNetwork/);assert.match(app,/event-edge dummy/);assert.match(app,/saveNetworkEventLayout/);
   assert.match(migration,/network_event_layouts/);assert.match(migration,/event_layout_update_editor/);
 });
+
+test('architect workbook fields stay editable importable exportable and protected',async()=>{
+  const [html,app,parser,migration]=await Promise.all([readFile(new URL('index.html',root),'utf8'),readFile(new URL('app.js',root),'utf8'),readFile(new URL('schedule-import.js',root),'utf8'),readFile(new URL('supabase/migrations/202610010005_architect_schedule_fields.sql',root),'utf8')]);
+  for(const name of ['quantity','unit','daily_output','crew_count','people_per_crew','cost_thousands','building','floor'])assert.match(html,new RegExp(`name="${name}"`));
+  assert.match(html,/id="preflightChecklist"/);assert.match(html,/id="weatherAllowanceInput"/);assert.match(app,/PREFLIGHT_ITEMS/);assert.match(app,/weightedProgress/);assert.match(app,/EXPORT_HEADERS/);
+  assert.match(parser,/dailyOutput/);assert.match(parser,/costThousands/);assert.match(migration,/preflight_completed/);assert.match(migration,/grant update\([\s\S]*cost_thousands/);assert.match(migration,/apply_schedule_import/);assert.match(migration,/restore_schedule_version_rows/);assert.match(migration,/quantity=excluded\.quantity/);
+});

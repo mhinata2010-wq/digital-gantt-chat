@@ -46,22 +46,34 @@ Deno.serve(async request=>{
     if(projectIds.length!==1||!uuidPattern.test(projectIds[0])||paths.some(path=>path.startsWith('/')||path.includes('..')))return json({error:'invalid project path'},400);
     const {data:member}=await userClient.from('project_members').select('role').eq('project_id',projectIds[0]).eq('user_id',user.id).in('role',['owner','editor']).maybeSingle();
     if(!member)return json({error:'editor permission required'},403);
-    const {error}=await admin.storage.from('project-files').remove(paths);if(error)return json({error:'file removal failed'},500);
+    const {error:claimError}=await admin.rpc('claim_project_file_cleanup',{p_project_id:projectIds[0],p_paths:paths,p_created_by:user.id});
+    if(claimError)return json({error:'file cleanup permission required'},403);
+    const {error}=await admin.storage.from('project-files').remove(paths);
+    if(error){await admin.from('file_upload_reservations').update({status:'stored'}).in('storage_path',paths).eq('status','deleting');return json({error:'file removal failed'},500)}
+    const {error:releaseError}=await admin.from('file_upload_reservations').delete().in('storage_path',paths);if(releaseError)return json({error:'upload cleanup accounting failed'},500);
     return json({removed:paths.length});
   }
 
   const form=await request.formData().catch(()=>null);
   const projectId=form?.get('projectId'),taskId=form?.get('taskId'),file=form?.get('file');
-  if(typeof projectId!=='string'||!uuidPattern.test(projectId)||typeof taskId!=='string'||!taskId||!(file instanceof File))return json({error:'invalid upload payload'},400);
+  if(typeof projectId!=='string'||!uuidPattern.test(projectId)||typeof taskId!=='string'||!(file instanceof File))return json({error:'invalid upload payload'},400);
+  const managementMatch=taskId.match(/^management-([0-9a-f-]{36})$/i);
+  const scopeKind=uuidPattern.test(taskId)?'task':managementMatch&&uuidPattern.test(managementMatch[1])?'management':null;
+  const scopeId=scopeKind==='task'?taskId:managementMatch?.[1];
+  if(!scopeKind||!scopeId)return json({error:'invalid upload scope'},400);
   const {data:member}=await userClient.from('project_members').select('role').eq('project_id',projectId).eq('user_id',user.id).in('role',['owner','editor']).maybeSingle();
   if(!member)return json({error:'editor permission required'},403);
   if(!allowedTypes.has(file.type)||file.size<1||file.size>MAX_BYTES)return json({error:'unsupported file'},400);
   const bytes=new Uint8Array(await file.arrayBuffer());
   if(!validSignature(bytes,file.type))return json({error:'file content does not match its type'},400);
   if(file.type==='application/pdf'&&hasActivePdfContent(bytes))return json({error:'active PDF content is not allowed'},400);
-  const cleanTask=taskId.replace(/[^a-zA-Z0-9-]+/g,'-').slice(0,100);
-  const path=`${projectId}/${cleanTask}/${crypto.randomUUID()}-${safeName(file.name)}`;
+  const scopeSegment=scopeKind==='task'?scopeId:`management-${scopeId}`;
+  const path=`${projectId}/${scopeSegment}/${crypto.randomUUID()}-${safeName(file.name)}`;
+  const {error:reservationError}=await admin.rpc('reserve_project_file_upload',{p_project_id:projectId,p_scope_kind:scopeKind,p_scope_id:scopeId,p_storage_path:path,p_byte_size:file.size,p_created_by:user.id});
+  if(reservationError){const limited=/rate limit|quota|limit exceeded/i.test(reservationError.message||'');return json({error:limited?'upload limit exceeded':'invalid upload scope'},limited?429:400)}
   const {error}=await admin.storage.from('project-files').upload(path,bytes,{contentType:file.type,upsert:false,cacheControl:'3600'});
-  if(error)return json({error:'file upload failed'},500);
+  if(error){await admin.from('file_upload_reservations').delete().eq('storage_path',path);return json({error:'file upload failed'},500)}
+  const {error:storedError}=await admin.from('file_upload_reservations').update({status:'stored'}).eq('storage_path',path).eq('status','reserved');
+  if(storedError){await admin.storage.from('project-files').remove([path]);await admin.from('file_upload_reservations').delete().eq('storage_path',path);return json({error:'upload accounting failed'},500)}
   return json({storage_path:path,original_name:file.name,mime_type:file.type,byte_size:file.size},201);
 });

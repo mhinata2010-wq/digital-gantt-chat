@@ -9,7 +9,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <title>現場工程表｜snake site</title>
   <link rel="icon" href="snake-site.gif">
-  <link rel="stylesheet" href="style.css?v=hybrid-network-1">
+  <link rel="stylesheet" href="style.css?v=architect-schedule-1">
   <script src="frame-guard.js"></script>
 </head>
 <body>
@@ -161,6 +161,7 @@
         <div id="scheduleSummary" class="summary-grid"></div>
         <div class="gantt-gesture-help" id="ganttGestureHelp"><button id="ganttTodayButton" type="button">今日へ</button><button id="ganttZoomOut" type="button" aria-label="縮小">−</button><button id="resetGanttScale" type="button">標準</button><button id="ganttZoomIn" type="button" aria-label="拡大">＋</button><span>↔ 横にスワイプ</span><span>工程をタップして詳細</span><span class="edit-only">✓ で完了報告</span></div>
         <div id="ganttChart" class="gantt-shell"></div>
+        <section id="progressCurve" class="progress-curve" aria-label="予定と実績の累積進捗"></section>
       </section>
 
       <section id="networkView" class="content-view" tabindex="-1" hidden>
@@ -187,7 +188,12 @@
           <label class="field-feature" hidden><span>設計者</span><input id="designerInput" maxlength="160"></label>
           <label class="field-feature" hidden><span>施工者</span><input id="contractorInput" maxlength="160"></label>
           <label class="field-feature" hidden><span>承認者</span><input id="approverInput" maxlength="160"></label>
+          <label><span>構造・規模</span><input id="structureScaleInput" maxlength="240" placeholder="RC造 3階建・延床 1,200㎡"></label>
+          <label><span>休日・稼働方針</span><input id="holidayPolicyInput" maxlength="240" placeholder="日曜・祝日休工、土曜は第2・第4休工"></label>
+          <label><span>ネットワークの区分</span><select id="networkGroupingInput"><option value="auto">自動</option><option value="building">棟別</option><option value="floor">階別</option><option value="building_floor">棟＋階</option><option value="none">区分なし</option></select></label>
+          <label><span>月別の天候余裕日</span><input id="weatherAllowanceInput" maxlength="240" placeholder="10:2, 11:3, 12:4"></label>
           <label class="wide"><span>休日・稼働不可日</span><textarea id="holidaysInput" rows="2" placeholder="2026-11-03, 2026-11-23"></textarea></label>
+          <details class="wide preflight-panel"><summary>工程表作成前チェック（20項目）</summary><div id="preflightChecklist" class="preflight-checklist"></div></details>
           <button class="button secondary" id="saveProjectButton" type="button">案件設定を保存</button>
         </div>
         <div id="taskList" class="task-list"></div>
@@ -230,6 +236,14 @@
           <div class="advanced-grid">
             <label><span>記号</span><input name="code" required maxlength="12" placeholder="A"></label>
             <label><span>工種</span><input name="trade" maxlength="80" placeholder="仮設"></label>
+            <label><span>棟</span><input name="building" maxlength="80" placeholder="A棟"></label>
+            <label><span>階</span><input name="floor" maxlength="80" placeholder="1階"></label>
+            <label><span>数量</span><input name="quantity" type="number" min="0" step="0.001"></label>
+            <label><span>単位</span><input name="unit" maxlength="24" placeholder="㎡、m、式"></label>
+            <label><span>1日量</span><input name="daily_output" type="number" min="0" step="0.001"></label>
+            <label><span>班数</span><input name="crew_count" type="number" min="0" max="999" step="1"></label>
+            <label><span>人／班</span><input name="people_per_crew" type="number" min="0" max="999" step="0.1"></label>
+            <label><span>金額（千円）</span><input name="cost_thousands" type="number" min="0" step="1"></label>
             <label class="wide"><span>前提工程（複数選択可）</span><select name="dependencies" multiple size="5"></select></label>
             <label class="wide"><span>担当会社の稼働不可日</span><textarea name="blocked_dates" rows="2" placeholder="YYYY-MM-DD、カンマ区切り"></textarea></label>
             <label class="wide"><span>備考</span><input name="notes" maxlength="500"></label>
@@ -320,6 +334,6 @@
   <script src="config.js?v=supabase-20260928-2"></script>
   <script src="vendor/xlsx.full.min.js" defer></script>
   <script src="vendor/qrcode.min.js" defer></script>
-  <script type="module" src="app.js?v=hybrid-network-1"></script>
+  <script type="module" src="app.js?v=architect-schedule-1"></script>
 </body>
 </html>

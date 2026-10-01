@@ -2,6 +2,7 @@ const HEADER_ALIASES={
   code:['工程記号','記号','code','id','no','番号'],trade:['工種','業種','trade'],name:['作業名','工程名','名称','task'],
   company:['担当会社','施工業者','業者','会社'],start:['開始日','着手日','start'],finish:['終了日','完了日','finish','end'],
   duration:['所要日数','日数','工期','duration'],predecessors:['先行','先行工程','前工程','dependencies','predecessor'],
+  quantity:['数量','qty'],unit:['単位','unit'],dailyOutput:['1日量','日当り','歩掛','dailyoutput'],crewCount:['班数','crew'],peoplePerCrew:['人/班','人／班','班人数','peoplepercrew'],costThousands:['金額(千円)','金額（千円）','金額','cost'],
   building:['棟','棟・階','棟階','グループ'],floor:['階','階数'],x0:['x0','開始x'],x1:['x1','終了x'],y:['y','行y']
 };
 
@@ -60,7 +61,7 @@ export function rowsFromMatrix(matrix,{sheetName=''}={}){
   const rows=matrix.slice(headerIndex+1).map((row,index)=>({
     sourceRow:headerIndex+index+2,code:clean(row[map.code]),trade:clean(row[map.trade]),name:clean(row[map.name]),company:clean(row[map.company]),
     start:excelDate(row[map.start]),finish:excelDate(row[map.finish]),duration:Number(row[map.duration])||0,
-    predecessorRefs:refs(row[map.predecessors]),building:clean(row[map.building]),floor:clean(row[map.floor]),
+    predecessorRefs:refs(row[map.predecessors]),building:clean(row[map.building]),floor:clean(row[map.floor]),quantity:clean(row[map.quantity]),unit:clean(row[map.unit]),dailyOutput:clean(row[map.dailyOutput]),crewCount:clean(row[map.crewCount]),peoplePerCrew:clean(row[map.peoplePerCrew]),costThousands:clean(row[map.costThousands]),
     x0:map.x0===undefined?'':clean(row[map.x0]),x1:map.x1===undefined?'':clean(row[map.x1]),y:map.y===undefined?'':clean(row[map.y])
   })).filter(row=>row.name||row.start||row.finish);
   return {rows,issues:[]};
@@ -83,7 +84,8 @@ export function buildImportCandidates(matrix,options={}){
       if(!allCodes.has(code)&&!existingCodes.has(code)){issues.push(`前工程 ${code} が見つかりません`);return false}
       return true;
     });
-    const duration=Math.round(row.duration)||inclusiveDays(row.start,row.finish);
+    const calculated=Number(row.quantity)>0&&Number(row.dailyOutput)>0?Math.ceil(Number(row.quantity)/(Number(row.dailyOutput)*Math.max(1,Number(row.crewCount)||1))):0;
+    const duration=Math.round(row.duration)||inclusiveDays(row.start,row.finish)||calculated;
     if(duration<1||duration>365)issues.push('所要日数を1〜365日で確認してください');
     if(row.start&&row.finish&&row.finish<row.start)issues.push('終了日が開始日より前です');
     return {...row,building,duration,predecessorCodes:[...new Set(predecessorCodes)],issues,accepted:issues.length===0};
@@ -95,7 +97,7 @@ export function toImportRows(candidates){
   return candidates.filter(row=>row.accepted).map((row,index)=>({
     code:row.code,trade:row.trade,name:row.name,company:row.company,duration_days:row.duration,
     predecessor_codes:row.predecessorCodes,position:index,start_date:row.start||null,finish_date:row.finish||null,
-    source_row:row.sourceRow,building:row.building||'',floor:row.floor||'',coordinates:{x0:row.x0||null,x1:row.x1||null,y:row.y||null}
+    source_row:row.sourceRow,building:row.building||'',floor:row.floor||'',quantity:row.quantity||null,unit:row.unit||'',daily_output:row.dailyOutput||null,crew_count:row.crewCount||null,people_per_crew:row.peoplePerCrew||null,cost_thousands:row.costThousands||null,coordinates:{x0:row.x0||null,x1:row.x1||null,y:row.y||null}
   }));
 }
 

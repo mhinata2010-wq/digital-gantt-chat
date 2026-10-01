@@ -31,7 +31,7 @@ test('database hardening fixes weather changes and server-owned actor fields',as
 });
 
 test('attachments pass through authenticated server-side content validation',async()=>{
-  const [service,fn]=await Promise.all([read('data-service.js'),read('supabase/functions/upload-project-file/index.ts')]);
+  const [service,fn,migration]=await Promise.all([read('data-service.js'),read('supabase/functions/upload-project-file/index.ts'),read('supabase/migrations/202610010006_security_rate_limits.sql')]);
   assert.match(service,/functions\.invoke\('upload-project-file'/);
   assert.doesNotMatch(service,/storage\.from\('project-files'\)\.upload/);
   assert.doesNotMatch(service,/storage\.from\('project-files'\)\.remove/);
@@ -41,15 +41,35 @@ test('attachments pass through authenticated server-side content validation',asy
   assert.match(fn,/file content does not match its type/);
   assert.match(fn,/active PDF content is not allowed/);
   assert.match(fn,/SUPABASE_SERVICE_ROLE_KEY/);
+  assert.match(fn,/reserve_project_file_upload/);
+  assert.match(fn,/claim_project_file_cleanup/);
+  assert.match(fn,/update\(\{status:'stored'\}\).*\.eq\('status','deleting'\)/);
+  assert.match(migration,/active task must belong to project/);
+  assert.match(migration,/management item must belong to project/);
+  assert.match(migration,/attachment upload reservation mismatch/);
+  assert.match(migration,/attachment task scope mismatch/);
+  assert.match(migration,/attachment task must remain active/);
+  assert.match(migration,/attachment management scope mismatch/);
+  assert.match(migration,/reservation\.created_by<>auth\.uid\(\)/);
+  assert.match(migration,/upload-user:/);
+  assert.match(migration,/upload rate limit exceeded/);
+  assert.match(migration,/project upload quota exceeded/);
 });
 
 test('invitation mail binds exact site invitation and owner',async()=>{
-  const fn=await read('supabase/functions/send-invitation/index.ts');
+  const [fn,migration]=await Promise.all([read('supabase/functions/send-invitation/index.ts'),read('supabase/migrations/202610010006_security_rate_limits.sql')]);
   assert.match(fn,/candidate\.origin!==allowed\.origin/);
   assert.match(fn,/candidate\.pathname!==allowed\.pathname/);
-  assert.match(fn,/sha256\(token\)!==invitation\.token_hash/);
+  assert.match(fn,/tokenHash=await sha256\(token\);if\(tokenHash!==invitation\.token_hash\)/);
   assert.match(fn,/\.eq\('role','owner'\)/);
   assert.match(fn,/invitation\.accepted_at\|\|invitation\.revoked_at/);
+  assert.match(fn,/claim_invitation_email_delivery/);
+  assert.match(fn,/Idempotency-Key/);
+  assert.match(migration,/invitation email cooldown/);
+  assert.match(migration,/sender email rate limit exceeded/);
+  assert.match(migration,/recipient email rate limit exceeded/);
+  assert.match(migration,/invite-sender:/);
+  assert.match(migration,/invite-recipient:/);
   assert.doesNotMatch(fn,/inviteUrl\.startsWith\(site\)/);
   assert.doesNotMatch(fn,/Access-Control-Allow-Origin':'\*'/);
 });

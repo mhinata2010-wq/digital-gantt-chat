@@ -28,9 +28,12 @@ Deno.serve(async request=>{
   const {data:owner}=await client.from('project_members').select('id').eq('project_id',invitation.project_id).eq('user_id',user.id).eq('role','owner').maybeSingle();
   if(!owner)return json({error:'owner permission required'},403);
   if(invitation.accepted_at||invitation.revoked_at||new Date(invitation.expires_at)<=new Date())return json({error:'invitation inactive'},410);
-  if(await sha256(token)!==invitation.token_hash)return json({error:'invitation token mismatch'},400);
+  const tokenHash=await sha256(token);if(tokenHash!==invitation.token_hash)return json({error:'invitation token mismatch'},400);
+  const {data:deliveryId,error:claimError}=await client.rpc('claim_invitation_email_delivery',{p_invitation_id:invitation.id,p_token_hash:tokenHash});
+  if(claimError||typeof deliveryId!=='string')return json({error:'invitation email is temporarily limited'},429);
   const projectName=escapeHtml((invitation.project as {name?:string})?.name||'工程表'),safeUrl=escapeHtml(inviteUrl),role=invitation.role==='editor'?'編集者':'閲覧者';
-  const response=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${resendKey}`,'Content-Type':'application/json'},body:JSON.stringify({from,to:[invitation.email],subject:`【snake site】${projectName}への招待`,html:`<h1>${projectName}への招待</h1><p>${role}として工程表へ招待されました。</p><p><a href="${safeUrl}">招待を受ける</a></p><p>このリンクは${escapeHtml(invitation.expires_at)}まで有効です。招待先と同じメールアドレスでログインしてください。</p>`})});
-  if(!response.ok)return json({error:'email delivery failed',providerStatus:response.status},502);
+  const response=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${resendKey}`,'Content-Type':'application/json','Idempotency-Key':`snake-invite-${deliveryId}`},body:JSON.stringify({from,to:[invitation.email],subject:`【snake site】${projectName}への招待`,html:`<h1>${projectName}への招待</h1><p>${role}として工程表へ招待されました。</p><p><a href="${safeUrl}">招待を受ける</a></p><p>このリンクは${escapeHtml(invitation.expires_at)}まで有効です。招待先と同じメールアドレスでログインしてください。</p>`})}).catch(()=>null);
+  await client.rpc('complete_invitation_email_delivery',{p_delivery_id:deliveryId,p_status:response?.ok?'sent':'failed',p_provider_status:response?.status||null});
+  if(!response?.ok)return json({error:'email delivery failed',providerStatus:response?.status||null},502);
   return json({configured:true,sent:true});
 });

@@ -216,6 +216,8 @@
   padding:2px 14px 15px;
 }
 .advanced-grid .wide{grid-column:1/-1!important}
+.progress-curve{margin-top:18px;border:1px solid var(--line);border-radius:10px;padding:15px 18px;background:#fff}.progress-curve-head{display:flex;align-items:start;justify-content:space-between;gap:14px}.progress-curve-head b,.progress-curve-head small{display:block}.progress-curve-head small{margin-top:4px;color:var(--muted);font-size:.68rem}.progress-curve-head>span{border-radius:99px;padding:5px 9px;background:var(--green-soft);color:var(--green-dark);font-size:.66rem;font-weight:850}.progress-curve svg{display:block;width:100%;max-height:210px;margin-top:6px;overflow:visible}.progress-curve svg text{fill:var(--muted);font-size:11px}.curve-grid{fill:none;stroke:#dfe5e1;stroke-width:1}.curve-plan{fill:none;stroke:var(--green);stroke-width:3}.curve-today{stroke:#9aa49f;stroke-dasharray:4 4}.curve-actual{fill:var(--red);stroke:#fff;stroke-width:2}.curve-actual-label{fill:var(--red)!important;font-weight:850}
+.preflight-panel{border:1px solid var(--line);border-radius:9px;background:#fff}.preflight-panel summary{padding:11px 12px;cursor:pointer;color:var(--green-dark);font-weight:850}.preflight-checklist{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 12px 14px}.preflight-checklist label{display:grid;grid-template-columns:18px 1fr;align-items:start;font-weight:650;line-height:1.45}.preflight-checklist input{width:auto;margin-top:2px}
 .task-drawer{
   width:min(500px,calc(100% - 44px));
   height:100dvh;
@@ -264,6 +266,7 @@
   .gantt-label{width:140px;padding-inline:10px}
   .gantt-gesture-help{display:grid;grid-template-columns:1fr;margin-top:0}
   .advanced-grid{grid-template-columns:1fr}
+  .preflight-checklist{grid-template-columns:1fr}
   .advanced-grid .wide{grid-column:auto!important}
   .task-drawer{
     width:100%;
