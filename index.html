@@ -2,745 +2,202 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>snake site｜現場工程表</title>
-  <meta name="description" content="建設工事の予定登録と遅延影響を確認できる工程表">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=timeline-print-20260924">
-  <link rel="icon" type="image/gif" href="snake-site.gif">
-  <link rel="apple-touch-icon" href="snake-site.gif">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#173f35">
+  <meta name="description" content="関係者で安全に共有・共同編集できる建設工程表">
+  <title>現場工程表｜snake site</title>
+  <link rel="icon" href="snake-site.gif">
+  <link rel="stylesheet" href="style.css?v=field-ui-4">
 </head>
 <body>
-  <section class="account-gate" id="accountGate">
-    <header class="account-header">
-      <a class="brand-lockup" href="#accountGate" aria-label="snake site トップへ">
-        <img src="snake-site.gif" alt="snake site" class="account-logo">
-      </a>
-      <div class="account-product"><b>現場工程表</b><span>beta</span></div>
+  <div id="setupNotice" class="setup-notice" hidden>
+    <strong>共同編集バックエンドが未設定です</strong>
+    <span><code>config.js</code> にSupabaseのURLと公開キーを設定してください。</span>
+    <a href="SETUP.md">設定手順</a>
+  </div>
+
+  <main id="authView" class="auth-layout" hidden>
+    <section class="auth-panel">
+      <div class="auth-card">
+        <a class="auth-brand" href="./"><img src="snake-site.gif" alt="snake site"></a>
+        <h2 id="authTitle">ログイン</h2>
+        <p id="authDescription">参加している案件を開きます。</p>
+        <form id="authForm">
+          <label id="displayNameField" hidden><span>お名前</span><input id="displayName" autocomplete="name" maxlength="80"></label>
+          <label><span>メールアドレス</span><input id="authEmail" type="email" autocomplete="email" required></label>
+          <label><span>パスワード</span><input id="authPassword" type="password" autocomplete="current-password" minlength="8" required></label>
+          <p id="authMessage" class="form-message" role="alert"></p>
+          <button class="button primary full" id="authSubmit" type="submit">ログイン</button>
+        </form>
+        <button class="text-button" id="authSwitch" type="button">新しいアカウントを作る</button>
+        <button class="text-button muted" id="resetPassword" type="button">パスワードを忘れた方</button>
+      </div>
+    </section>
+  </main>
+
+  <div id="application" hidden>
+    <header class="topbar">
+      <a class="brand" href="#projects" id="brandLink"><img src="snake-site.gif" alt=""><span>snake site</span></a>
+      <div class="topbar-actions">
+        <span id="connectionState" class="connection-state" data-state="connecting">接続中</span>
+        <button class="user-button" id="userButton" type="button"><span id="userInitial">—</span><b id="userName">ユーザー</b></button>
+        <button class="button quiet compact" id="logoutButton" type="button">ログアウト</button>
+      </div>
     </header>
-    <div class="account-layout">
-      <section class="site-intro" aria-label="サービス概要">
-        <div class="intro-copy-block">
-          <p class="site-number"><span></span>CONSTRUCTION SCHEDULE</p>
-          <h1>工事の流れを、<br><em>ひと目で。</em></h1>
-          <p class="site-copy">工程の前後関係を、現場の全員が同じ一枚で理解する。遅れが出れば、次の手までつながります。</p>
+
+    <section id="projectsView" class="page-shell">
+      <div class="page-heading">
+        <div><p class="eyebrow">MY PROJECTS</p><h1>案件一覧</h1><p>あなたが参加している現場</p></div>
+        <button class="button primary" id="newProjectButton" type="button">＋ 新しい案件</button>
+      </div>
+      <aside id="migrationBanner" class="migration-banner" hidden>
+        <div><strong>この端末に以前の工程データがあります</strong><p>以前のデータは消さず、共有データベースへコピーできます。</p></div>
+        <button class="button secondary" id="migrateButton" type="button">データを移行</button>
+        <button class="icon-button" id="dismissMigration" type="button" aria-label="閉じる">×</button>
+      </aside>
+      <div id="projectGrid" class="project-grid" aria-live="polite"></div>
+    </section>
+
+    <section id="projectView" class="project-page" hidden>
+      <div class="project-toolbar">
+        <button class="button quiet compact" id="backButton" type="button">← 案件一覧</button>
+        <div class="project-title-wrap">
+          <p id="projectRole" class="role-pill">閲覧者</p>
+          <h1 id="projectTitle">案件名</h1>
+          <p id="projectMeta">—</p>
         </div>
-        <div class="snake-route" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-        <div class="site-board" aria-label="遅延時の工程変更イメージ">
-          <div class="board-head"><span>木造住宅 新築工事</span><time>8月1日 — 8月14日</time><b>遅延を反映</b></div>
-          <div class="board-row"><b>土木</b><i style="--start:0;--span:4;--tone:#00723e"></i><small>完了</small></div>
-          <div class="board-row delayed"><b>基礎</b><i style="--start:4;--span:4;--tone:#d07b32"></i><small>+ 1日</small></div>
-          <div class="board-row shifted"><b>躯体</b><i style="--start:8;--span:6;--tone:#00723e"></i><small>連動</small></div>
-          <div class="board-scale"><span>8/1</span><span>8/7</span><span>8/14</span></div>
-          <p class="board-message"><b>基礎工事の遅れを反映。</b> 躯体工事の開始候補を1日後ろへ変更しました。</p>
+        <div class="project-actions">
+          <button class="button primary" id="addTaskButton" type="button">＋ 工程</button>
+          <button class="button secondary" id="membersButton" type="button">メンバーを招待</button>
+          <button class="button quiet" id="historyButton" type="button">変更履歴</button>
         </div>
-        <div class="intro-foot"><span>工程を並べる</span><i></i><span>影響を確かめる</span><i></i><span>関係者と共有する</span></div>
+      </div>
+
+      <nav class="view-tabs" data-active="today" aria-label="工程表の表示切替" role="tablist">
+        <button type="button" data-view="today" role="tab" aria-selected="true" aria-current="page">今日</button>
+        <button type="button" data-view="gantt" role="tab" aria-selected="false">工程表</button>
+        <button type="button" data-view="network" role="tab" aria-selected="false">ネットワーク図</button>
+        <button type="button" data-view="tasks" role="tab" aria-selected="false">工程一覧</button>
+      </nav>
+
+      <section id="todayView" class="content-view">
+        <div class="today-heading">
+          <div><p class="eyebrow">TODAY</p><h2>今日の現場</h2><p id="todayDateLabel">—</p></div>
+          <div id="todayProgress" class="today-progress"></div>
+        </div>
+        <div id="fieldDashboard" class="field-dashboard"></div>
       </section>
 
-      <main class="account-panel">
-        <div class="account-panel-head">
-          <p><span class="head-line"></span>はじめる</p>
-          <h2 id="authTitle">利用をはじめる</h2>
-          <span id="authDescription">現場の工程表を、チームで確認できます。</span>
+      <section id="ganttView" class="content-view" hidden>
+        <div class="section-heading">
+          <div><p class="eyebrow">MASTER SCHEDULE</p><h2>工程カレンダー</h2><p>同じ工程データを日程軸で確認します。</p></div>
+          <div class="inline-actions">
+            <button class="button secondary" id="impactButton" type="button">変更の影響を見る</button>
+            <button class="button quiet" id="printButton" type="button">印刷・PDF</button>
+          </div>
         </div>
-        <form id="authForm" class="auth-form">
-          <label id="nameField"><span>表示名</span><input id="authName" autocomplete="name" placeholder="例：宮地 陽大"></label>
-          <label><span>メールアドレス</span><input id="authEmail" type="email" autocomplete="email" required placeholder="name@example.com"></label>
-          <label><span>パスワード</span><span class="password-field"><input id="authPassword" type="password" minlength="6" required placeholder="6文字以上"><button id="passwordToggle" type="button" aria-label="パスワードを表示する">表示</button></span></label>
-          <p id="authError" class="auth-error" role="alert"></p>
-          <button class="primary-button auth-submit" id="authSubmit" type="submit">アカウントを作成 <span>→</span></button>
-        </form>
-        <div class="account-options">
-          <button class="auth-switch" id="authSwitch" type="button">すでにアカウントをお持ちの方</button>
-          <button class="demo-button" id="demoLogin" type="button">登録せずにデモを見る</button>
-        </div>
-        <div class="trust-panel">
-          <p><b>このデモについて</b>　入力した情報はこの端末内だけに保存されます。普段使っているパスワードは使用しないでください。</p>
-          <button id="forgotPassword" type="button">パスワードを忘れた場合</button>
-        </div>
-      </main>
-    </div>
-  </section>
+        <div id="scheduleSummary" class="summary-grid"></div>
+        <div class="gantt-gesture-help" id="ganttGestureHelp"><span>↔ 横にスワイプ</span><span>工程をタップして詳細</span><span class="edit-only">✓ で完了報告</span><span class="edit-only">右端をドラッグして日数変更</span><button id="resetGanttScale" type="button">表示幅を戻す</button></div>
+        <div id="ganttChart" class="gantt-shell"></div>
+      </section>
 
-  <section class="workspace" id="workspaceView" hidden>
-    <header class="workspace-header">
-      <img src="snake-site.gif" alt="snake site">
-      <button class="user-chip" id="accountMenu"><span id="userInitial">S</span><b id="userName">現場監督</b></button>
-    </header>
-    <main class="workspace-main">
-      <div class="workspace-title">
-        <div><p class="kicker">MY PROJECTS</p><h1>案件一覧</h1><p>参加している現場の工程表</p></div>
-        <button class="primary-button" id="newProject">＋ 新しい案件</button>
-      </div>
-      <div class="project-grid" id="projectGrid"></div>
-      <button class="logout-button" id="logoutButton">ログアウト</button>
-    </main>
-  </section>
+      <section id="networkView" class="content-view" hidden>
+        <div class="section-heading">
+          <div><p class="eyebrow">DEPENDENCIES</p><h2>ネットワーク図</h2><p>工程をタップして編集できます。赤色は全体工期に影響する工程です。</p></div>
+          <span class="legend"><i class="critical"></i>クリティカル <i></i>余裕あり</span>
+        </div>
+        <div class="network-shell"><svg id="networkDiagram" role="img" aria-label="工程の依存関係"></svg></div>
+        <p class="caption">EST：最早開始 / EFT：最早終了 / LST：最遅開始 / LFT：最遅終了 / TF：全余裕</p>
+      </section>
 
-  <dialog class="member-dialog" id="memberDialog">
-    <form method="dialog" class="dialog-card" id="memberForm">
-      <div class="dialog-head"><div><p class="kicker">PROJECT MEMBERS</p><h2>メンバー管理</h2></div><button value="cancel" aria-label="閉じる">×</button></div>
-      <div id="memberList" class="member-list"></div>
-      <label><span>招待するメールアドレス</span><input id="inviteEmail" type="email" placeholder="partner@example.com"></label>
-      <label><span>権限</span><select id="inviteRole"><option value="editor">編集者</option><option value="viewer">閲覧者</option></select></label>
-      <p class="dialog-note">同じ端末で、このメールアドレスのアカウントを作成すると案件が表示されます。</p>
-      <button class="primary-button" id="inviteMember" type="button">メンバーを追加</button>
+      <section id="tasksView" class="content-view" hidden>
+        <div class="section-heading">
+          <div><p class="eyebrow">TASKS</p><h2>工程一覧</h2><p>工程をタップすると、他の表示と同じ詳細画面が開きます。</p></div>
+        </div>
+        <div class="project-settings" id="projectSettings">
+          <label><span>案件名</span><input id="projectNameInput" maxlength="120"></label>
+          <label><span>担当責任者</span><input id="managerInput" maxlength="120"></label>
+          <label><span>着工日</span><input id="startDateInput" type="date"></label>
+          <label><span>契約完成日</span><input id="deadlineInput" type="date"></label>
+          <label class="wide"><span>休日・稼働不可日</span><textarea id="holidaysInput" rows="2" placeholder="2026-11-03, 2026-11-23"></textarea></label>
+          <button class="button secondary" id="saveProjectButton" type="button">案件設定を保存</button>
+        </div>
+        <div id="taskList" class="task-list"></div>
+      </section>
+    </section>
+  </div>
+
+  <dialog id="projectDialog" class="dialog small-dialog">
+    <form id="projectForm" method="dialog">
+      <div class="dialog-head"><div><p class="eyebrow">NEW PROJECT</p><h2>新しい案件</h2></div><button class="icon-button close-dialog" type="button">×</button></div>
+      <label><span>案件名</span><input name="name" required maxlength="120" placeholder="〇〇邸 新築工事"></label>
+      <label><span>着工日</span><input name="start_date" type="date" required></label>
+      <label class="template-choice">
+        <input name="use_template" type="checkbox" checked>
+        <span><b>標準工程テンプレートを使う</b><small>基礎工事から完成まで、先行関係付きの工程を自動で作ります。</small></span>
+      </label>
+      <div class="dialog-actions"><button class="button quiet close-dialog" type="button">キャンセル</button><button class="button primary" type="submit">案件を作成</button></div>
     </form>
   </dialog>
 
-  <div class="backdrop" id="appRoot" hidden>
-    <main class="app-shell">
-      <header class="app-header">
-        <button class="projects-back" id="projectsButton" aria-label="案件一覧に戻る">← 案件一覧</button>
-        <nav class="view-tabs" aria-label="表示切り替え">
-          <button id="scheduleTab" class="tab active" data-view="schedule">予定表</button>
-          <button id="calendarTab" class="tab" data-view="calendar">カレンダー</button>
-          <span class="tab-indicator" aria-hidden="true"></span>
-        </nav>
-        <div class="header-actions">
-          <button class="icon-button share-button" id="shareButton" aria-label="この工程表を共有">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 13v6h14v-6"/></svg>
-          </button>
-          <button class="icon-button settings-button" id="settingsButton" aria-label="現場情報を表示">•••</button>
-        </div>
-      </header>
-
-      <div class="view-stage">
-        <section id="scheduleView" class="view active-view" aria-labelledby="scheduleTitle">
-          <div class="view-title-row">
-            <div>
-              <p class="kicker">PROJECT SCHEDULE</p>
-              <h1 id="scheduleTitle">工程予定表</h1>
-            </div>
-            <button class="round-add" id="addProcess" aria-label="工程を追加">＋</button>
+  <dialog id="taskDialog" class="dialog task-drawer">
+    <form id="taskForm" method="dialog">
+      <div class="dialog-head"><div><p class="eyebrow">TASK</p><h2 id="taskDialogTitle">工程を作る</h2></div><button class="icon-button close-dialog" type="button">×</button></div>
+      <input name="id" type="hidden"><input name="version" type="hidden">
+      <div class="form-grid">
+        <label class="wide"><span>工程名</span><input name="name" required maxlength="160"></label>
+        <label class="wide"><span>担当会社</span><input name="company" maxlength="160"></label>
+        <label><span>所要日数</span><span class="duration-stepper"><button type="button" data-duration-step="-1" aria-label="所要日数を1日減らす">−</button><input name="duration_days" type="number" min="1" max="365" required><button type="button" data-duration-step="1" aria-label="所要日数を1日増やす">＋</button></span></label>
+        <label><span>進捗</span><select name="status"><option>未着手</option><option>進行中</option><option>完了</option><option>遅延</option></select></label>
+        <details class="advanced-fields wide">
+          <summary>詳細設定（記号・前工程・休日・備考）</summary>
+          <div class="advanced-grid">
+            <label><span>記号</span><input name="code" required maxlength="12" placeholder="A"></label>
+            <label><span>工種</span><input name="trade" maxlength="80" placeholder="仮設"></label>
+            <label class="wide"><span>前提工程（複数選択可）</span><select name="dependencies" multiple size="5"></select></label>
+            <label class="wide"><span>担当会社の稼働不可日</span><textarea name="blocked_dates" rows="2" placeholder="YYYY-MM-DD、カンマ区切り"></textarea></label>
+            <label class="wide"><span>備考</span><input name="notes" maxlength="500"></label>
           </div>
-
-          <section class="project-settings" id="projectSettings">
-            <label><span>現場名</span><input id="projectName" value="木造住宅 新築工事"></label>
-            <label><span>開始日</span><input id="projectStart" type="date" value="2026-08-01"></label>
-            <label><span>管理担当</span><input id="manager" value="現場監督"></label>
-          </section>
-
-          <div class="schedule-caption">
-            <span>上から順に施工</span>
-            <span class="drag-help">左の <b>⠿</b> を持って並べ替え</span>
-          </div>
-          <div id="processList" class="process-list"></div>
-
-          <div class="schedule-footer">
-            <button class="text-button" id="resetBuilder">初期データに戻す</button>
-            <button class="primary-button" id="openCalendar">カレンダーで確認 <span>→</span></button>
-          </div>
-        </section>
-
-        <section id="calendarView" class="view" hidden aria-labelledby="calendarTitle">
-          <div class="view-title-row calendar-title">
-            <div>
-              <p class="kicker" id="projectMeta">MASTER SCHEDULE</p>
-              <h1 id="calendarTitle">工程カレンダー</h1>
-            </div>
-            <div class="finish-chip"><small>完了予定</small><b id="finish">—</b></div>
-          </div>
-
-          <details class="delay-disclosure"><summary>遅延の影響を試算する <span>工程と日数を入力して候補を確認</span></summary><section class="delay-panel">
-            <div class="delay-fields">
-              <label><span>遅れが出た工程</span><select id="taskSelect"></select></label>
-              <label class="days-field"><span>遅れ</span><input id="delay" type="number" min="1" max="30" value="2"><em>日</em></label>
-            </div>
-            <button class="primary-button delay-button" id="simulate">
-              <span class="button-label">日程案を試算</span>
-              <span class="loading-label">再計算中…</span>
-            </button>
-          </section></details>
-
-          <section class="timeline-card" id="scheduleBoard">
-            <div class="timeline-head">
-              <div><span class="status-dot"></span>全体工程 <small id="todayNote" class="today-note"></small></div>
-              <div class="timeline-actions">
-                <div class="legend"><span><i class="complete-key"></i>完了</span><span><i class="progress-key"></i>進行中</span><span><i class="planned-key"></i>未着手</span><span><i class="blocked-key"></i>稼働不可</span></div>
-                <button class="print-button" id="printPdf" type="button" title="ガントチャートを印刷・PDF保存">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 8V3h10v5M7 17H5a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M7 14h10v7H7zM17 11h.01"/></svg>
-                  <span>PDF保存</span>
-                </button>
-              </div>
-            </div>
-            <div class="timeline-scroll"><div id="timeline" class="timeline"></div></div>
-          </section>
-
-          <div id="summary" class="result" aria-live="polite"></div>
-          <section id="compare" class="comparison">
-            <h2>変更前後の比較</h2>
-            <div class="table-scroll"><table><thead><tr><th>工程</th><th>変更前</th><th>変更後</th><th>影響</th></tr></thead><tbody id="changes"></tbody></table></div>
-          </section>
-        </section>
+        </details>
       </div>
-    </main>
-  </div>
-  <div id="shareToast" class="share-toast" role="status" aria-live="polite"></div>
+      <p id="taskFormMessage" class="form-message" role="alert"></p>
+      <div class="dialog-actions"><button class="button danger" id="deleteTaskButton" type="button">削除</button><span class="spacer"></span><button class="button quiet close-dialog" type="button">閉じる</button><button class="button primary" id="taskSaveButton" type="submit">保存</button></div>
+    </form>
+  </dialog>
 
-  <script>
-    const $=id=>document.getElementById(id);
-    const DAY=42;
-    const palette=['#00723e','#d48827','#356f8f','#a73d4d','#536f78','#7b5b78','#477b62'];
-    const defaults=[
-      {name:'土木工事',company:'土木業者',days:4,blocked:'',status:'完了'},
-      {name:'基礎工事',company:'基礎業者',days:3,blocked:'8/6',status:'進行中'},
-      {name:'躯体工事',company:'大工・建方業者',days:7,blocked:'',status:'未着手'},
-      {name:'電気配線',company:'電気業者',days:4,blocked:'',status:'未着手'},
-      {name:'内装工事',company:'内装業者',days:5,blocked:'',status:'未着手'}
-    ];
-    let tasks=structuredClone(defaults);
-    let base=new Date('2026-08-01T00:00:00');
-    let current=null;
-    let activeView='schedule';
-    let switching=false;
-    const STORAGE={accounts:'snake_accounts_v1',session:'snake_session_v1',projects:'snake_projects_v1'};
-    let currentAccount=null;
-    let currentProjectId=null;
-    let memberProjectId=null;
-    let authMode='register';
-    let viewerMode=false;
-    const add=(date,n)=>{const x=new Date(date);x.setDate(x.getDate()+n);return x};
-    const fmt=date=>`${date.getMonth()+1}/${date.getDate()}`;
-    const esc=value=>String(value).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
-    const clone=value=>JSON.parse(JSON.stringify(value));
-    const readStore=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key))??fallback}catch(error){return fallback}};
-    const writeStore=(key,value)=>localStorage.setItem(key,JSON.stringify(value));
-    const uid=()=>crypto.randomUUID?crypto.randomUUID():`${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  <dialog id="membersDialog" class="dialog">
+    <div class="dialog-head"><div><p class="eyebrow">MEMBERS</p><h2>メンバーを招待</h2></div><button class="icon-button close-dialog" type="button">×</button></div>
+    <div class="role-guide"><span><b>責任者</b>設定・招待・日程確定</span><span><b>編集者</b>工程の編集・完了報告</span><span><b>閲覧者</b>最新工程の確認のみ</span></div>
+    <form id="inviteForm" class="invite-form">
+      <label><span>メールアドレス</span><input name="email" type="email" required></label>
+      <label><span>権限</span><select name="role"><option value="editor">編集できる人</option><option value="viewer">閲覧する人</option></select></label>
+      <button class="button primary" type="submit">招待を追加</button>
+    </form>
+    <p class="help-text">相手が同じメールアドレスで登録・ログインすると、自動的に案件へ参加します。案件URLだけでは閲覧できません。</p>
+    <p id="inviteMessage" class="form-message" role="alert"></p>
+    <div id="memberList" class="member-list"></div>
+  </dialog>
 
-    async function hashPassword(value){
-      const data=new TextEncoder().encode(value);
-      const digest=await crypto.subtle.digest('SHA-256',data);
-      return [...new Uint8Array(digest)].map(byte=>byte.toString(16).padStart(2,'0')).join('');
-    }
+  <dialog id="historyDialog" class="dialog">
+    <div class="dialog-head"><div><p class="eyebrow">AUDIT LOG</p><h2>変更履歴</h2></div><button class="icon-button close-dialog" type="button">×</button></div>
+    <div id="historyList" class="history-list"></div>
+  </dialog>
 
-    function makeProject(ownerId,name='木造住宅 新築工事'){
-      return {id:uid(),ownerId,name,start:'2026-08-01',manager:currentAccount?.name||'現場監督',tasks:clone(defaults),members:[],updatedAt:new Date().toISOString()};
-    }
+  <dialog id="impactDialog" class="dialog">
+    <div class="dialog-head"><div><p class="eyebrow">WHAT IF</p><h2>変更の影響を見る</h2></div><button class="icon-button close-dialog" type="button">×</button></div>
+    <div class="impact-controls">
+      <label><span>遅れが出た工程</span><select id="delayTaskSelect"></select></label>
+      <label><span>遅れ（実働日）</span><input id="delayDaysInput" type="number" min="1" max="365" value="2"></label>
+      <button class="button primary" id="calculateImpactButton" type="button">変更案を見る</button>
+    </div>
+    <div id="impactResult" class="impact-result">工程と遅延日数を選択してください。日程は確認するまで変更されません。</div>
+    <div class="dialog-actions"><button class="button quiet close-dialog" type="button">閉じる</button><button class="button primary" id="applyImpactButton" type="button" hidden>この変更案を反映</button></div>
+  </dialog>
 
-    function setAuthMode(mode){
-      authMode=mode;
-      const registering=mode==='register';
-      $('nameField').hidden=!registering;
-      $('authName').required=registering;
-      $('authTitle').textContent=registering?'利用をはじめる':'ログイン';
-      $('authDescription').textContent=registering?'現場の工程表を、チームで確認できます。':'登録したメールアドレスとパスワードを入力してください。';
-      $('authSubmit').innerHTML=registering?'アカウントを作成 <span>→</span>':'ログイン <span>→</span>';
-      $('authSwitch').textContent=registering?'すでにアカウントをお持ちの方':'新しいアカウントを作る';
-      $('authError').textContent='';
-    }
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-    function accessibleProjects(){
-      if(!currentAccount)return [];
-      return readStore(STORAGE.projects,[]).filter(project=>project.ownerId===currentAccount.id||(project.members||[]).some(member=>member.email===currentAccount.email));
-    }
-
-    function roleFor(project){
-      if(project.ownerId===currentAccount?.id)return 'owner';
-      return (project.members||[]).find(member=>member.email===currentAccount?.email)?.role||'viewer';
-    }
-
-    function renderProjects(){
-      const projects=accessibleProjects().sort((a,b)=>String(b.updatedAt).localeCompare(String(a.updatedAt)));
-      $('projectGrid').innerHTML=projects.length?projects.map(project=>{
-        const role=roleFor(project),canManage=role==='owner';
-        return `<article class="project-card" data-id="${esc(project.id)}" tabindex="0" role="link" aria-label="${esc(project.name)}の工程表を開く">
-          <div class="project-card-top"><span class="project-role ${role}">${role==='owner'?'管理者':role==='editor'?'編集者':'閲覧者'}</span><time>${new Date(project.updatedAt).toLocaleDateString('ja-JP')}</time></div>
-          <h2>${esc(project.name)}</h2><p>${esc(project.manager||'担当未設定')} ・ ${project.tasks.length}工程</p>
-          <div class="project-progress"><i style="width:${Math.round(project.tasks.filter(task=>task.status==='完了').length/project.tasks.length*100)||0}%"></i></div>
-          <div class="project-actions">${canManage?'<button class="members-project" aria-label="メンバー管理">共有</button>':''}</div>
-        </article>`;
-      }).join(''):`<div class="empty-projects"><b>参加中の案件はありません</b><p>「新しい案件」から最初の工程表を作成できます。</p></div>`;
-      $('projectGrid').querySelectorAll('.project-card').forEach(card=>{
-        const id=card.dataset.id;
-        card.addEventListener('click',event=>{if(!event.target.closest('button,a'))openProject(id)});
-        card.addEventListener('keydown',event=>{if((event.key==='Enter'||event.key===' ')&&event.target===card){event.preventDefault();openProject(id)}});
-        card.querySelector('.members-project')?.addEventListener('click',()=>openMembers(id));
-      });
-    }
-
-    function enterWorkspace(account){
-      currentAccount=account;
-      currentProjectId=null;
-      $('accountGate').hidden=true;
-      $('appRoot').hidden=true;
-      $('workspaceView').hidden=false;
-      $('userName').textContent=account.name;
-      $('userInitial').textContent=(account.name||account.email).trim().charAt(0).toUpperCase();
-      renderProjects();
-    }
-
-    function createProject(){
-      const projects=readStore(STORAGE.projects,[]);
-      const number=projects.filter(project=>project.ownerId===currentAccount.id).length+1;
-      const project=makeProject(currentAccount.id,number===1?'木造住宅 新築工事':`新しい建設案件 ${number}`);
-      projects.push(project);
-      writeStore(STORAGE.projects,projects);
-      openProject(project.id);
-    }
-
-    function openProject(id){
-      const project=readStore(STORAGE.projects,[]).find(item=>item.id===id);
-      if(!project)return;
-      currentProjectId=id;
-      viewerMode=roleFor(project)==='viewer';
-      tasks=clone(project.tasks?.length?project.tasks:defaults);
-      $('projectName').value=project.name||'現場工程表';
-      $('projectStart').value=project.start||'2026-08-01';
-      $('manager').value=project.manager||'';
-      base=new Date(`${$('projectStart').value}T00:00:00`);
-      current=null;
-      $('workspaceView').hidden=true;
-      $('accountGate').hidden=true;
-      $('appRoot').hidden=false;
-      document.body.classList.toggle('viewer-mode',viewerMode);
-      ['projectName','projectStart','manager'].forEach(field=>$(field).disabled=viewerMode);
-      if(activeView!=='schedule'){
-        $('calendarView').hidden=true;$('calendarView').className='view';
-        $('scheduleView').hidden=false;$('scheduleView').className='view active-view';
-        activeView='schedule';
-        document.querySelectorAll('.tab').forEach(tab=>tab.classList.toggle('active',tab.dataset.view==='schedule'));
-      }
-      renderBuilder();
-      if(viewerMode)showShareToast('閲覧権限で開いています');
-    }
-
-    function saveCurrentProject(){
-      if(!currentProjectId||viewerMode)return;
-      const projects=readStore(STORAGE.projects,[]);
-      const project=projects.find(item=>item.id===currentProjectId);
-      if(!project)return;
-      project.name=$('projectName').value||'名称未設定の案件';
-      project.start=$('projectStart').value||'2026-08-01';
-      project.manager=$('manager').value;
-      project.tasks=clone(tasks);
-      project.updatedAt=new Date().toISOString();
-      writeStore(STORAGE.projects,projects);
-    }
-
-    function showWorkspace(){
-      saveCurrentProject();
-      document.body.classList.remove('viewer-mode');
-      $('appRoot').hidden=true;
-      $('workspaceView').hidden=false;
-      currentProjectId=null;
-      renderProjects();
-    }
-
-    function openMembers(id){
-      memberProjectId=id;
-      renderMembers();
-      $('memberDialog').showModal();
-    }
-
-    function renderMembers(){
-      const project=readStore(STORAGE.projects,[]).find(item=>item.id===memberProjectId);
-      if(!project)return;
-      const owner=readStore(STORAGE.accounts,[]).find(account=>account.id===project.ownerId);
-      const rows=[{email:owner?.email||'管理者',role:'owner'},...(project.members||[])];
-      $('memberList').innerHTML=rows.map((member,index)=>`<div class="member-row"><span>${esc(member.email)}</span><b>${member.role==='owner'?'管理者':member.role==='editor'?'編集者':'閲覧者'}</b>${index?`<button type="button" data-email="${esc(member.email)}" aria-label="削除">×</button>`:'<i>OWNER</i>'}</div>`).join('');
-      $('memberList').querySelectorAll('[data-email]').forEach(button=>button.addEventListener('click',()=>{
-        const projects=readStore(STORAGE.projects,[]),target=projects.find(item=>item.id===memberProjectId);
-        target.members=(target.members||[]).filter(member=>member.email!==button.dataset.email);
-        target.updatedAt=new Date().toISOString();
-        writeStore(STORAGE.projects,projects);
-        renderMembers();renderProjects();
-      }));
-    }
-
-    function addMember(){
-      const email=$('inviteEmail').value.trim().toLowerCase();
-      if(!/^\S+@\S+\.\S+$/.test(email)){showShareToast('メールアドレスを確認してください');return}
-      const projects=readStore(STORAGE.projects,[]),project=projects.find(item=>item.id===memberProjectId);
-      if(!project)return;
-      project.members=project.members||[];
-      if(project.members.some(member=>member.email===email)){showShareToast('すでに追加されています');return}
-      project.members.push({email,role:$('inviteRole').value});
-      project.updatedAt=new Date().toISOString();
-      writeStore(STORAGE.projects,projects);
-      $('inviteEmail').value='';
-      renderMembers();renderProjects();showShareToast('メンバーを追加しました');
-    }
-
-    function sharedPlanUrl(){
-      const payload={
-        name:$('projectName').value,
-        start:$('projectStart').value,
-        manager:$('manager').value,
-        tasks
-      };
-      const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
-      const url=new URL(location.href);
-      url.hash=`plan=${encodeURIComponent(encoded)}`;
-      return url.href;
-    }
-
-    function loadSharedPlan(){
-      if(!location.hash.startsWith('#plan='))return false;
-      try{
-        const encoded=decodeURIComponent(location.hash.slice(6));
-        const payload=JSON.parse(decodeURIComponent(escape(atob(encoded))));
-        if(!payload||!Array.isArray(payload.tasks)||!payload.tasks.length)return false;
-        tasks=payload.tasks.map(task=>({
-          name:String(task.name||'新しい工程'),
-          company:String(task.company||'担当会社'),
-          days:Math.max(1,Number(task.days)||1),
-          blocked:String(task.blocked||''),
-          status:['未着手','進行中','完了','遅延'].includes(task.status)?task.status:'未着手'
-        }));
-        $('projectName').value=String(payload.name||'共有された工程表');
-        $('projectStart').value=/^\\d{4}-\\d{2}-\\d{2}$/.test(payload.start||'')?payload.start:'2026-08-01';
-        $('manager').value=String(payload.manager||'');
-        return true;
-      }catch(error){
-        console.warn('共有リンクを読み込めませんでした',error);
-        return false;
-      }
-    }
-
-    let toastTimer;
-    function showShareToast(message){
-      const toast=$('shareToast');
-      toast.textContent=message;
-      toast.classList.add('show');
-      clearTimeout(toastTimer);
-      toastTimer=setTimeout(()=>toast.classList.remove('show'),2400);
-    }
-
-    async function shareSchedule(){
-      const url=sharedPlanUrl();
-      const title=`${$('projectName').value||'現場工程表'}｜snake site`;
-      const text='工程表を共有します。';
-      if(navigator.share){
-        try{
-          await navigator.share({title,text,url});
-          showShareToast('工程表を共有しました');
-          return;
-        }catch(error){
-          if(error.name==='AbortError')return;
-        }
-      }
-      try{
-        await navigator.clipboard.writeText(url);
-      }catch(error){
-        const input=document.createElement('textarea');
-        input.value=url;
-        input.style.position='fixed';
-        input.style.opacity='0';
-        document.body.appendChild(input);
-        input.select();
-        document.execCommand('copy');
-        input.remove();
-      }
-      showShareToast('共有リンクをコピーしました');
-    }
-
-    function switchView(next){
-      if(next===activeView)return;
-      if(next==='calendar')prepareCalendar();
-      const oldView=activeView==='schedule'?$('scheduleView'):$('calendarView');
-      const newView=next==='schedule'?$('scheduleView'):$('calendarView');
-      const forward=next==='calendar';
-      switching=true;
-      oldView.hidden=false;
-      newView.hidden=false;
-      newView.className=`view ${forward?'enter-forward':'enter-back'}`;
-      oldView.className=`view ${forward?'leave-forward':'leave-back'}`;
-      document.querySelectorAll('.tab').forEach(tab=>tab.classList.toggle('active',tab.dataset.view===next));
-      activeView=next;
-      const finish=()=>{
-        oldView.hidden=true;
-        oldView.className='view';
-        newView.className='view active-view';
-        switching=false;
-      };
-      window.scrollTo({top:0,behavior:'smooth'});
-      newView.addEventListener('animationend',finish,{once:true});
-      window.setTimeout(finish,700);
-    }
-
-    function builderRow(task,index){
-      const statuses=['未着手','進行中','完了','遅延'].map(s=>`<option ${s===task.status?'selected':''}>${s}</option>`).join('');
-      const dependency=index?tasks[index-1].name:'開始工程';
-      return `<article class="process-row" data-index="${index}">
-        <div class="row-order"><button class="drag-handle" aria-label="${esc(task.name)}を並べ替え">⠿</button><span>${String(index+1).padStart(2,'0')}</span></div>
-        <label class="process-name"><small>工程名</small><input data-key="name" value="${esc(task.name)}"></label>
-        <label><small>担当会社</small><input data-key="company" value="${esc(task.company)}"></label>
-        <label class="small-field"><small>日数</small><input data-key="days" type="number" min="1" value="${task.days}"></label>
-        <div class="dependency"><small>前提工程</small><b>${esc(dependency)}</b></div>
-        <label><small>稼働不可日</small><input data-key="blocked" placeholder="8/6" value="${esc(task.blocked)}"></label>
-        <label><small>進捗</small><select data-key="status">${statuses}</select></label>
-        <button class="remove" aria-label="${esc(task.name)}を削除">×</button>
-      </article>`;
-    }
-
-    function renderBuilder(highlightLast=false){
-      $('processList').innerHTML=tasks.map(builderRow).join('');
-      document.querySelectorAll('.process-row').forEach(row=>{
-        const index=Number(row.dataset.index);
-        row.querySelectorAll('[data-key]').forEach(control=>control.addEventListener('change',()=>{
-          tasks[index][control.dataset.key]=control.dataset.key==='days'?Math.max(1,Number(control.value)||1):control.value;
-          renderBuilder();
-          saveCurrentProject();
-        }));
-        row.querySelector('.remove').addEventListener('click',()=>removeTask(index));
-        row.querySelector('.drag-handle').addEventListener('pointerdown',event=>startReorder(event,row));
-      });
-      if(highlightLast){
-        const last=$('processList').lastElementChild;
-        last.classList.add('just-added');
-        last.scrollIntoView({behavior:'smooth',block:'center'});
-      }
-      if(viewerMode)$('processList').querySelectorAll('input,select,button').forEach(control=>control.disabled=true);
-    }
-
-    function animateReflow(list,before){
-      requestAnimationFrame(()=>[...list.children].forEach(row=>{
-        const oldTop=before.get(row);
-        if(oldTop===undefined)return;
-        const delta=oldTop-row.getBoundingClientRect().top;
-        if(delta)row.animate([{transform:`translateY(${delta}px)`},{transform:'translateY(0)'}],{duration:260,easing:'cubic-bezier(.2,.8,.2,1)'});
-      }));
-    }
-
-    function startReorder(event,row){
-      if(event.button!==undefined&&event.button!==0)return;
-      event.preventDefault();
-      const list=$('processList'),rect=row.getBoundingClientRect(),offset=event.clientY-rect.top,ghost=row.cloneNode(true);
-      ghost.classList.add('drag-ghost');
-      Object.assign(ghost.style,{left:`${rect.left}px`,top:`${rect.top}px`,width:`${rect.width}px`});
-      document.body.appendChild(ghost);
-      row.classList.add('dragging');
-      const move=e=>{
-        ghost.style.top=`${e.clientY-offset}px`;
-        const before=new Map([...list.children].map(item=>[item,item.getBoundingClientRect().top]));
-        const others=[...list.querySelectorAll('.process-row:not(.dragging)')];
-        const target=others.find(item=>e.clientY<item.getBoundingClientRect().top+item.offsetHeight/2);
-        if(target&&target!==row.nextElementSibling)list.insertBefore(row,target);
-        else if(!target&&row!==list.lastElementChild)list.appendChild(row);
-        animateReflow(list,before);
-        if(e.clientY<90)window.scrollBy({top:-12});
-        else if(e.clientY>innerHeight-70)window.scrollBy({top:12});
-      };
-      const end=()=>{
-        document.removeEventListener('pointermove',move);
-        document.removeEventListener('pointerup',end);
-        document.removeEventListener('pointercancel',end);
-        ghost.remove();
-        row.classList.remove('dragging');
-        const oldTasks=tasks;
-        tasks=[...list.querySelectorAll('.process-row')].map(item=>oldTasks[Number(item.dataset.index)]);
-        renderBuilder();
-        saveCurrentProject();
-      };
-      document.addEventListener('pointermove',move);
-      document.addEventListener('pointerup',end,{once:true});
-      document.addEventListener('pointercancel',end,{once:true});
-    }
-
-    function removeTask(index){
-      if(tasks.length===1)return;
-      tasks.splice(index,1);
-      renderBuilder();
-      saveCurrentProject();
-    }
-
-    function schedule(delayId=-1,extra=0){
-      const result=[];
-      tasks.forEach((task,index)=>{
-        const days=Number(task.days)+(index===delayId?extra:0);
-        let start=index?new Date(result[index-1].end):new Date(base);
-        const blocked=parseBlockedDates(task.blocked);
-        while(blocked.has(dateKey(start)))start=add(start,1);
-        let end=new Date(start),worked=0;const workDates=[];
-        while(worked<days){
-          if(!blocked.has(dateKey(end))){worked++;workDates.push(new Date(end));}
-          if(worked<days)end=add(end,1);
-        }
-        result.push({start,end:add(end,1),days,workDates,shift:0});
-      });
-      if(delayId>=0){
-        const original=schedule();
-        result.forEach((item,index)=>item.shift=Math.round((item.start-original[index].start)/864e5));
-      }
-      return result;
-    }
-
-    function dateKey(date){return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`}
-
-    function parseBlockedDates(value){
-      const blocked=new Set();
-      String(value||'').split(/[,、\s]+/).filter(Boolean).forEach(token=>{
-        let match=token.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
-        if(match)blocked.add(dateKey(new Date(Number(match[1]),Number(match[2])-1,Number(match[3]))));
-        else if((match=token.match(/^(\d{1,2})\/(\d{1,2})$/)))blocked.add(dateKey(new Date(base.getFullYear(),Number(match[1])-1,Number(match[2]))));
-      });
-      return blocked;
-    }
-
-    function prepareCalendar(){
-      base=new Date(`${$('projectStart').value}T00:00:00`);
-      current=null;
-      $('calendarTitle').textContent=$('projectName').value||'工程カレンダー';
-      $('projectMeta').textContent=`${fmt(base)} 開始 ・ ${$('manager').value||'担当未設定'}`;
-      $('taskSelect').innerHTML=tasks.map((task,index)=>`<option value="${index}">${esc(task.name)}（${esc(task.company)}）</option>`).join('');
-      $('taskSelect').value=String(Math.min(1,tasks.length-1));
-      $('summary').className='result';
-      $('compare').className='comparison';
-      $('delay').value='2';
-      document.querySelector('.delay-disclosure').open=false;
-      renderTimeline(false);
-    }
-
-    function taskLayout(index){
-      const above=index%2===0,row=Math.floor(index/2);
-      return above?{bar:28+row*67,meta:62+row*67}:{bar:320+row*67,meta:355+row*67};
-    }
-
-    function renderTimeline(animate){
-      const data=current?current.after:schedule(),before=current?current.before:null;
-      const lastEnd=Math.max(...data.map(item=>item.end.getTime()));
-      const total=Math.max(28,Math.ceil((lastEnd-base)/864e5)+3),width=total*DAY;
-      $('timeline').style.setProperty('--print-scale-x',String(Math.min(1,1050/width)));
-      const today=new Date(),todayIndex=Math.floor((new Date(today.getFullYear(),today.getMonth(),today.getDate())-base)/864e5);
-      $('todayNote').textContent=todayIndex>=0&&todayIndex<total?'赤い縦線が今日':`今日 ${fmt(today)} は表示期間外`;
-      let html=`<div class="month-label">${base.getFullYear()}年 ${base.getMonth()+1}月</div><div class="axis" style="width:${width}px">`;
-      for(let i=0;i<total;i++){
-        const date=add(base,i),week=['日','月','火','水','木','金','土'][date.getDay()];
-        html+=`<div class="day ${date.getDay()===0||date.getDay()===6?'weekend':''}">${date.getDate()}<small>${week}</small></div>`;
-      }
-      html+='</div>';
-      if(todayIndex>=0&&todayIndex<total)html+=`<div class="today-line" style="left:${todayIndex*DAY+DAY/2}px"><span>今日 ${fmt(today)}</span></div>`;
-      tasks.forEach((task,index)=>{
-        const item=data[index],old=before&&before[index];
-        const start=Math.round((item.start-base)/864e5),oldStart=old?Math.round((old.start-base)/864e5):start;
-        const layout=taskLayout(index),color=palette[index%palette.length];
-        const changed=Boolean(current&&(index===current.id||item.shift>0));
-        const barWidth=Math.max(item.days*DAY-5,46),oldWidth=old?Math.max(old.days*DAY-5,46):barWidth;
-        const markerTop=layout.bar<232?227:277,connTop=Math.min(layout.bar+15,257),connHeight=Math.abs(247-(layout.bar+15));
-        const startBoundary=start*DAY,endBoundary=Math.round((item.end-base)/864e5)*DAY;
-        if(changed&&old)old.workDates.forEach(date=>{const offset=Math.round((date-base)/864e5);html+=`<div class="oldbar" style="left:${offset*DAY+3}px;top:${layout.bar}px;width:${DAY-5}px"></div>`});
-        html+=`<div class="connector start-connector" style="--color:${color};left:${startBoundary}px;top:${connTop}px;height:${connHeight}px"></div><div class="marker start-marker" style="--color:${color};left:${startBoundary}px;top:${markerTop}px"></div><div class="connector end-connector" style="--color:${color};left:${endBoundary}px;top:${connTop}px;height:${connHeight}px"></div><div class="marker end-marker" style="--color:${color};left:${endBoundary}px;top:${markerTop}px"></div>`;
-        const motion=animate&&changed?(item.shift>0?'shifted':'expanded'):'initial';
-        const status=task.status==='完了'?'complete':task.status==='進行中'?'in-progress':task.status==='遅延'?'late':'planned';
-        const lastWork=Math.round((item.workDates.at(-1)-base)/864e5);
-        html+=`<div class="taskbar ${motion} ${changed?'changed':''} ${status}" style="--color:${color};--shift:${item.shift*DAY}px;--delay:${index*.06}s;left:${start*DAY+3}px;top:${layout.bar}px;width:${(lastWork-start+1)*DAY-5}px"><span>${esc(task.name)}</span><em>${item.days}日</em></div>`;
-        const worked=new Set(item.workDates.map(dateKey));
-        for(let day=start;day<=lastWork;day++){
-          const date=add(base,day);
-          if(!worked.has(dateKey(date)))html+=`<div class="unavailable-day" aria-label="${fmt(date)}は稼働不可" title="${fmt(date)} 稼働不可" style="left:${day*DAY+3}px;top:${layout.bar}px;width:${DAY-5}px"></div>`;
-        }
-        html+=`<div class="taskmeta ${changed?'changed':''}" style="left:${start*DAY+4}px;top:${layout.meta}px">${esc(task.company)}<small>${fmt(item.start)} — ${fmt(item.end)}</small></div>`;
-      });
-      $('timeline').style.width=`${width}px`;
-      $('timeline').innerHTML=html;
-      $('finish').textContent=fmt(new Date(lastEnd));
-    }
-
-    function simulate(){
-      const id=Number($('taskSelect').value),days=Math.max(1,Number($('delay').value)||1),button=$('simulate');
-      button.classList.add('processing');
-      $('scheduleBoard').classList.add('updating');
-      setTimeout(()=>{
-        const before=schedule(),after=schedule(id,days);
-        current={id,days,before,after};
-        const affected=tasks.map((task,index)=>({task,index})).filter(({index})=>index!==id&&after[index].shift>0);
-        const finishShift=Math.round((Math.max(...after.map(item=>item.end))-Math.max(...before.map(item=>item.end)))/864e5);
-        renderTimeline(true);
-        $('summary').innerHTML=`<strong>日程変更案</strong>「${esc(tasks[id].name)}」の完了が${days}日遅れるため、${affected.length?affected.map(item=>esc(item.task.name)).join('、'):'後続工程なし'}の開始候補を再計算しました。全体の完了予定は<b>${finishShift}日後ろ倒し</b>です。`;
-        $('summary').className='result show';
-        $('changes').innerHTML=tasks.map((task,index)=>({task,index})).filter(({index})=>index===id||after[index].shift>0).map(({task,index})=>`<tr><td><b>${esc(task.name)}</b><br><small>${esc(task.company)}</small></td><td>${fmt(before[index].start)}〜${fmt(before[index].end)}</td><td>${fmt(after[index].start)}〜${fmt(after[index].end)}</td><td class="shift">${index===id?`所要日数 +${days}日`:`開始 +${after[index].shift}日`}</td></tr>`).join('');
-        $('compare').className='comparison show';
-        button.classList.remove('processing');
-        setTimeout(()=>$('scheduleBoard').classList.remove('updating'),80);
-      },420);
-    }
-
-    async function submitAuth(event){
-      event.preventDefault();
-      const email=$('authEmail').value.trim().toLowerCase(),password=$('authPassword').value;
-      const accounts=readStore(STORAGE.accounts,[]),passwordHash=await hashPassword(password);
-      if(authMode==='register'){
-        const name=$('authName').value.trim();
-        if(!name){$('authError').textContent='表示名を入力してください。';return}
-        if(accounts.some(account=>account.email===email)){$('authError').textContent='このメールアドレスは登録済みです。';return}
-        const account={id:uid(),name,email,passwordHash,createdAt:new Date().toISOString()};
-        accounts.push(account);writeStore(STORAGE.accounts,accounts);localStorage.setItem(STORAGE.session,account.id);
-        currentAccount=account;
-        const projects=readStore(STORAGE.projects,[]);projects.push(makeProject(account.id));writeStore(STORAGE.projects,projects);
-        enterWorkspace(account);
-        return;
-      }
-      const account=accounts.find(item=>item.email===email&&item.passwordHash===passwordHash);
-      if(!account){$('authError').textContent='メールアドレスまたはパスワードが違います。';return}
-      localStorage.setItem(STORAGE.session,account.id);enterWorkspace(account);
-    }
-
-    async function loginDemo(){
-      const accounts=readStore(STORAGE.accounts,[]);
-      let account=accounts.find(item=>item.email==='demo@snake.local');
-      if(!account){
-        account={id:uid(),name:'デモ現場監督',email:'demo@snake.local',passwordHash:await hashPassword('snake-demo'),createdAt:new Date().toISOString()};
-        accounts.push(account);writeStore(STORAGE.accounts,accounts);
-        const projects=readStore(STORAGE.projects,[]);projects.push(makeProject(account.id));writeStore(STORAGE.projects,projects);
-      }
-      localStorage.setItem(STORAGE.session,account.id);enterWorkspace(account);
-    }
-
-    function bootApp(){
-      if(location.hash.startsWith('#plan=')&&loadSharedPlan()){
-        viewerMode=true;
-        currentProjectId=null;
-        document.body.classList.add('viewer-mode');
-        ['projectName','projectStart','manager'].forEach(field=>$(field).disabled=true);
-        $('accountGate').hidden=true;$('workspaceView').hidden=true;$('appRoot').hidden=false;
-        renderBuilder();
-        showShareToast('共有された工程表を閲覧しています');
-        return;
-      }
-      const sessionId=localStorage.getItem(STORAGE.session);
-      const account=readStore(STORAGE.accounts,[]).find(item=>item.id===sessionId);
-      if(account)enterWorkspace(account);
-      else{$('accountGate').hidden=false;$('workspaceView').hidden=true;$('appRoot').hidden=true;setAuthMode('register')}
-    }
-
-    document.querySelectorAll('.tab').forEach(tab=>tab.addEventListener('click',()=>switchView(tab.dataset.view)));
-    $('openCalendar').addEventListener('click',()=>switchView('calendar'));
-    $('shareButton').addEventListener('click',shareSchedule);
-    $('settingsButton').addEventListener('click',()=>{$('projectSettings').classList.toggle('compact-hidden');$('settingsButton').classList.toggle('selected')});
-    $('addProcess').addEventListener('click',()=>{tasks.push({name:'新しい工程',company:'担当会社',days:1,blocked:'',status:'未着手'});renderBuilder(true);saveCurrentProject()});
-    $('resetBuilder').addEventListener('click',()=>{tasks=structuredClone(defaults);$('projectStart').value='2026-08-01';$('projectName').value='木造住宅 新築工事';$('manager').value=currentAccount?.name||'現場監督';renderBuilder();saveCurrentProject()});
-    $('simulate').addEventListener('click',simulate);
-    $('printPdf').addEventListener('click',()=>{
-      document.body.classList.add('printing-schedule');
-      window.print();
-    });
-    window.addEventListener('afterprint',()=>document.body.classList.remove('printing-schedule'));
-    $('authForm').addEventListener('submit',submitAuth);
-    $('authSwitch').addEventListener('click',()=>setAuthMode(authMode==='register'?'login':'register'));
-    $('demoLogin').addEventListener('click',loginDemo);
-    $('passwordToggle').addEventListener('click',()=>{
-      const input=$('authPassword'),showing=input.type==='text';
-      input.type=showing?'password':'text';
-      $('passwordToggle').textContent=showing?'表示':'非表示';
-      $('passwordToggle').setAttribute('aria-label',showing?'パスワードを表示する':'パスワードを隠す');
-    });
-    $('forgotPassword').addEventListener('click',()=>{
-      $('authError').textContent='この検証版では、端末内に保存されたアカウントのみを使用します。新しいアカウントを作成するか、デモをお試しください。';
-    });
-    $('newProject').addEventListener('click',createProject);
-    $('accountMenu').addEventListener('click',()=>showShareToast(currentAccount?.email||''));
-    $('logoutButton').addEventListener('click',()=>{localStorage.removeItem(STORAGE.session);currentAccount=null;$('workspaceView').hidden=true;$('accountGate').hidden=false;setAuthMode('login')});
-    $('projectsButton').addEventListener('click',()=>{if(currentAccount)showWorkspace();else{location.hash='';document.body.classList.remove('viewer-mode');$('appRoot').hidden=true;$('accountGate').hidden=false;setAuthMode('login')}});
-    $('inviteMember').addEventListener('click',addMember);
-    window.addEventListener('scroll',()=>{
-      const header=$('appRoot').hidden?null:$('appRoot').querySelector('.app-header');
-      header?.classList.toggle('scrolled',window.scrollY>8);
-    },{passive:true});
-    ['projectName','projectStart','manager'].forEach(id=>$(id).addEventListener('change',saveCurrentProject));
-    bootApp();
-  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js?v=supabase-20260928-2"></script>
+  <script type="module" src="app.js?v=field-ui-2"></script>
 </body>
 </html>

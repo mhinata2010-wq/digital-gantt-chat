@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>snake site メールアドレスの確認</title>
+  </head>
+  <body style="margin:0;padding:0;background:#f4f5f3;color:#18211e;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Hiragino Sans','Noto Sans JP',sans-serif;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f4f5f3;">
+      <tr>
+        <td align="center" style="padding:36px 16px;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:560px;background:#ffffff;border:1px solid #dce3df;border-radius:16px;overflow:hidden;">
+            <tr>
+              <td style="padding:28px 34px 24px;background:#0c4934;">
+                <img src="https://mhinata2010-wq.github.io/digital-gantt-chat/snake-site.gif" width="128" alt="snake site" style="display:block;width:128px;height:auto;border:0;background:#ffffff;border-radius:6px;">
+                <p style="margin:18px 0 0;color:#dceee6;font-size:13px;font-weight:700;letter-spacing:.04em;">共同編集できる建設工程表</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:36px 34px 32px;">
+                <p style="margin:0 0 10px;color:#176b4d;font-size:12px;font-weight:800;letter-spacing:.12em;">ACCOUNT CONFIRMATION</p>
+                <h1 style="margin:0 0 18px;font-size:26px;line-height:1.4;">メールアドレスを確認してください</h1>
+                <p style="margin:0 0 26px;color:#56625c;font-size:15px;line-height:1.8;">snake siteへのアカウント登録ありがとうございます。下のボタンを押すと登録が完了し、参加している工程表を開けるようになります。</p>
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                  <tr>
+                    <td bgcolor="#176b4d" style="border-radius:9px;">
+                      <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:14px 28px;color:#ffffff;font-size:15px;font-weight:800;text-decoration:none;">メールアドレスを確認する</a>
+                    </td>
+                  </tr>
+                </table>
+                <p style="margin:28px 0 0;color:#7a847f;font-size:12px;line-height:1.7;">この登録に心当たりがない場合は、このメールを無視してください。</p>
+                <p style="margin:16px 0 0;color:#7a847f;font-size:11px;line-height:1.7;word-break:break-all;">ボタンを押せない場合：<br><a href="{{ .ConfirmationURL }}" style="color:#176b4d;">{{ .ConfirmationURL }}</a></p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:18px 34px;border-top:1px solid #edf0ee;color:#7a847f;font-size:11px;line-height:1.6;">snake site｜関係者で安全に共有・共同編集できる建設工程表</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
