@@ -5,22 +5,65 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#173f35">
   <meta name="description" content="関係者で安全に共有・共同編集できる建設工程表">
+  <link rel="manifest" href="manifest.webmanifest">
   <title>現場工程表｜snake site</title>
   <link rel="icon" href="snake-site.gif">
-  <link rel="stylesheet" href="style.css?v=field-ui-4">
+  <link rel="stylesheet" href="style.css?v=hybrid-import-1">
 </head>
 <body>
+  <a class="skip-link" href="#home">本文へ移動</a>
   <div id="setupNotice" class="setup-notice" hidden>
     <strong>共同編集バックエンドが未設定です</strong>
     <span><code>config.js</code> にSupabaseのURLと公開キーを設定してください。</span>
     <a href="SETUP.md">設定手順</a>
   </div>
 
+  <main id="landingView" class="public-site">
+    <header class="public-nav">
+      <a class="public-brand" href="#home" aria-label="現場工程表 ホーム"><img src="snake-site.gif" alt=""><span><b>現場工程表</b><small>by snake site</small></span></a>
+      <nav aria-label="公開ページ"><a href="#how-it-works">使い方</a><a href="#trust">安全性</a><button class="button quiet compact" id="publicLogin" type="button">ログイン</button><button class="button primary compact" id="publicRegister" type="button">アカウント作成</button></nav>
+    </header>
+
+    <section class="landing-hero" id="home">
+      <div class="hero-copy">
+        <p class="public-kicker">工務店・現場監督・協力会社のための共有工程表</p>
+        <h1>工程変更を、<br>伝わったところまで管理する。</h1>
+        <p class="hero-lead">ガントとネットワーク図は同じ工程データ。遅れの影響、変更前後、誰が確定したかを一つの案件で共有します。</p>
+        <ul class="value-list"><li><b>監督</b><span>今日の遅延と変更待ちを確認</span></li><li><b>協力会社</b><span>自社の次の作業日をスマホで確認</span></li><li><b>責任者</b><span>影響を見てから正式日程を確定</span></li></ul>
+        <div class="hero-actions"><a class="button primary" href="#publicDemo">登録なしで操作を試す</a><button class="button quiet" id="heroLogin" type="button">利用中の方はログイン</button></div>
+        <p class="trial-note">現在は試験提供中です。デモに実在する案件データは含まれません。</p>
+      </div>
+
+      <section class="public-demo" id="publicDemo" aria-label="現場工程表の操作デモ">
+        <div class="demo-window-head"><div><span class="demo-mark">DEMO</span><b>こども園新築工事</b><small>10/5 着工 ・ 14工程</small></div><span id="demoSyncState">操作デモ</span></div>
+        <div class="demo-tabs" role="tablist" aria-label="デモ表示の切り替え"><button id="demoTodayTab" data-demo-view="today" role="tab" aria-controls="demoTodayPanel" aria-selected="true" tabindex="0" type="button">今日</button><button id="demoGanttTab" data-demo-view="gantt" role="tab" aria-controls="demoGanttPanel" aria-selected="false" tabindex="-1" type="button">ガント</button><button id="demoNetworkTab" data-demo-view="network" role="tab" aria-controls="demoNetworkPanel" aria-selected="false" tabindex="-1" type="button">ネットワーク</button></div>
+        <div class="demo-panel" id="demoTodayPanel" data-demo-panel="today" role="tabpanel" aria-labelledby="demoTodayTab">
+          <div class="demo-alert"><span>要確認</span><div><b>日程変更案が1件あります</b><small>外壁工事の遅れが内装開始へ影響</small></div><button id="demoShowImpact" type="button">影響を見る</button></div>
+          <div class="demo-metrics"><div><small>全体進捗</small><b id="demoProgressValue">62%</b></div><div><small>今日の作業</small><b>3件</b></div><div><small>遅延</small><b class="danger-text">1件</b></div></div>
+          <div class="demo-task-list"><article><span class="demo-code">H</span><div><b>電気・給排水配管</b><small>山川設備・今日完了予定</small><i><em id="demoProgressBar" style="width:80%"></em></i></div><button id="demoCompleteTask" type="button">完了を報告</button></article><article class="is-delay"><span class="demo-code">G</span><div><b>外壁工事</b><small>北斗外装・予定より2日遅れ</small></div><span class="demo-status">遅延</span></article><article><span class="demo-code">I</span><div><b>断熱・内装下地</b><small>前工程待ち・10/21着手予定</small></div><span class="demo-status waiting">次工程</span></article></div>
+        </div>
+        <div class="demo-panel" id="demoGanttPanel" data-demo-panel="gantt" role="tabpanel" aria-labelledby="demoGanttTab" hidden>
+          <div class="demo-gantt"><div class="demo-gantt-dates"><span></span><b>15 木</b><b>16 金</b><b>17 土</b><b>18 日</b><b>19 月</b><b>20 火</b><b>21 水</b></div><div class="demo-gantt-row"><span>G 外壁工事</span><i class="demo-bar delayed" style="--left:5%;--width:54%">外壁工事 <small>55%</small></i></div><div class="demo-gantt-row"><span>H 設備配管</span><i class="demo-bar" style="--left:18%;--width:38%">設備配管 <small>80%</small></i></div><div class="demo-gantt-row"><span>I 内装下地</span><i class="demo-baseline" style="--left:55%;--width:31%"></i><i class="demo-bar proposed" style="--left:67%;--width:31%">変更案</i></div></div><p class="demo-caption"><i></i>現在予定　<span></span>変更案　<em></em>確定前の基準日</p>
+        </div>
+        <div class="demo-panel" id="demoNetworkPanel" data-demo-panel="network" role="tabpanel" aria-labelledby="demoNetworkTab" hidden>
+          <div class="demo-network" aria-label="工程の先行関係"><article><small>G</small><b>外壁工事</b><span>余裕 0日</span></article><i>→</i><article><small>I</small><b>内装下地</b><span>余裕 0日</span></article><i>→</i><article><small>J</small><b>内装仕上げ</b><span>余裕 0日</span></article></div><p class="demo-network-note">赤枠は全体工期へ影響する工程です。実際の画面では工程をタップすると、どの表示からでも同じ詳細パネルが開きます。</p>
+        </div>
+        <div class="demo-impact" id="demoImpact" hidden><div><small>現在の予定</small><b>内装下地 10/21開始</b></div><span>→</span><div><small>変更案</small><b>内装下地 10/23開始</b></div><button id="demoConfirmImpact" class="button primary compact" type="button">責任者として確定を試す</button><p id="demoImpactStatus">確定するまで正式日程は変わりません。</p></div>
+      </section>
+    </section>
+
+    <section class="public-section" id="how-it-works"><div class="public-section-head"><p>現場で迷わない3つの流れ</p><h2>確認、報告、確定を分ける。</h2></div><div class="scenario-grid"><article><span>01</span><h3>朝、今日を見る</h3><p>スマホを開くと今日・遅延・次の作業を表示。協力会社は案件全体を編集せず、自分に必要な予定から確認できます。</p></article><article><span>02</span><h3>現場から報告する</h3><p>工程をタップして着手・進捗・完了を報告。写真、残日数、遅延理由を同じ画面に記録します。</p></article><article><span>03</span><h3>影響を見て確定する</h3><p>遅れによる後続工程の変更案を新旧で比較。責任者が確認するまで正式日程へ反映しません。</p></article></div></section>
+
+    <section class="public-section trust-section" id="trust"><div class="public-section-head"><p>案件データを預けるために</p><h2>見られる人と、変えられる人を案件ごとに制限。</h2></div><div class="trust-grid"><article><b>招待された人だけ</b><p>案件URLやIDを知っているだけでは閲覧できません。責任者・編集者・閲覧者の権限をデータベース側でも確認します。</p></article><article><b>変更を戻せる</b><p>誰が、いつ、何を変えたかを記録。確定版と復元前バックアップで誤操作から工程を戻せます。</p></article><article><b>持ち出せる</b><p>工程表は印刷・PDF、CSV、Excelで出力できます。障害時にも工程情報を手元へ残せます。</p></article></div><aside class="operator-card"><div><small>開発・運営</small><b>snake site</b><p>本サービスは現在、実案件での検証を進める試験提供版です。</p></div><a href="https://github.com/mhinata2010-wq/digital-gantt-chat/issues" target="_blank" rel="noopener">お問い合わせ・不具合報告</a><a href="https://github.com/mhinata2010-wq/digital-gantt-chat" target="_blank" rel="noopener">開発情報</a></aside></section>
+
+    <footer class="public-footer"><span>現場工程表 <small>by snake site</small></span><div><a href="#trust">データと権限</a><button id="footerLogin" type="button">ログイン</button></div></footer>
+  </main>
+
   <main id="authView" class="auth-layout" hidden>
     <section class="auth-panel">
       <div class="auth-card">
-        <a class="auth-brand" href="./"><img src="snake-site.gif" alt="snake site"></a>
-        <h2 id="authTitle">ログイン</h2>
+        <button class="auth-back" id="authBack" type="button">← サービス紹介へ戻る</button><a class="auth-brand" href="#home"><img src="snake-site.gif" alt="snake site"></a>
+        <h1 id="authTitle">現場工程表にログイン</h1>
         <p id="authDescription">参加している案件を開きます。</p>
         <form id="authForm">
           <label id="displayNameField" hidden><span>お名前</span><input id="displayName" autocomplete="name" maxlength="80"></label>
@@ -37,9 +80,10 @@
 
   <div id="application" hidden>
     <header class="topbar">
-      <a class="brand" href="#projects" id="brandLink"><img src="snake-site.gif" alt=""><span>snake site</span></a>
+      <a class="brand" href="#projects" id="brandLink"><img src="snake-site.gif" alt=""><span>現場工程表</span></a>
       <div class="topbar-actions">
         <span id="connectionState" class="connection-state" data-state="connecting">接続中</span>
+        <button class="notification-button" id="notificationsButton" type="button" aria-label="通知" hidden><span aria-hidden="true">●</span><b id="notificationCount">0</b></button>
         <button class="user-button" id="userButton" type="button"><span id="userInitial">—</span><b id="userName">ユーザー</b></button>
         <button class="button quiet compact" id="logoutButton" type="button">ログアウト</button>
       </div>
@@ -49,6 +93,11 @@
       <div class="page-heading">
         <div><p class="eyebrow">MY PROJECTS</p><h1>案件一覧</h1><p>あなたが参加している現場</p></div>
         <button class="button primary" id="newProjectButton" type="button">＋ 新しい案件</button>
+      </div>
+      <div class="project-controls" id="projectControls" hidden>
+        <label><span>案件を検索</span><input id="projectSearch" type="search" placeholder="案件名・責任者"></label>
+        <label><span>表示</span><select id="projectFilter"><option value="all">すべて</option><option value="delayed">遅延あり</option><option value="attention">要対応あり</option><option value="before">着工前</option><option value="active">施工中</option><option value="complete">完了</option></select></label>
+        <label><span>並べ替え</span><select id="projectSort"><option value="updated">最終更新順</option><option value="delay">遅延が多い順</option><option value="progress">進捗が低い順</option><option value="name">案件名順</option></select></label>
       </div>
       <aside id="migrationBanner" class="migration-banner" hidden>
         <div><strong>この端末に以前の工程データがあります</strong><p>以前のデータは消さず、共有データベースへコピーできます。</p></div>
@@ -68,7 +117,10 @@
         </div>
         <div class="project-actions">
           <button class="button primary" id="addTaskButton" type="button">＋ 工程</button>
+          <button class="button secondary" id="importScheduleButton" type="button">工程を取り込む</button>
           <button class="button secondary" id="membersButton" type="button">メンバーを招待</button>
+          <button class="button secondary field-feature" id="managementButton" type="button" hidden>管理項目</button>
+          <button class="button quiet field-feature" id="versionsButton" type="button" hidden>工程版</button>
           <button class="button quiet" id="historyButton" type="button">変更履歴</button>
         </div>
       </div>
@@ -80,37 +132,45 @@
         <button type="button" data-view="tasks" role="tab" aria-selected="false">工程一覧</button>
       </nav>
 
-      <section id="todayView" class="content-view">
+      <section id="todayView" class="content-view" tabindex="-1">
         <div class="today-heading">
           <div><p class="eyebrow">TODAY</p><h2>今日の現場</h2><p id="todayDateLabel">—</p></div>
           <div id="todayProgress" class="today-progress"></div>
         </div>
+        <div class="today-controls">
+          <div class="horizon-tabs" id="horizonTabs" role="group" aria-label="表示期間">
+            <button type="button" data-horizon="1" aria-pressed="true">今日</button><button type="button" data-horizon="7" aria-pressed="false">7日間</button><button type="button" data-horizon="14" aria-pressed="false">14日間</button>
+          </div>
+          <label class="company-filter"><span>担当会社</span><select id="todayCompanyFilter" aria-label="表示する担当会社"><option value="all">すべての会社</option></select></label>
+        </div>
+        <section class="change-request-board field-feature" id="changeRequestBoard" hidden aria-live="polite"></section>
         <div id="fieldDashboard" class="field-dashboard"></div>
+        <section class="attention-board field-feature" id="attentionBoard" hidden><div class="section-heading compact-heading"><div><p class="eyebrow">TO DO</p><h2>今日判断が必要な項目</h2></div><button class="button quiet compact" id="openManagementFromToday" type="button">すべて見る</button></div><div id="attentionItems"></div></section>
       </section>
 
-      <section id="ganttView" class="content-view" hidden>
+      <section id="ganttView" class="content-view" tabindex="-1" hidden>
         <div class="section-heading">
           <div><p class="eyebrow">MASTER SCHEDULE</p><h2>工程カレンダー</h2><p>同じ工程データを日程軸で確認します。</p></div>
           <div class="inline-actions">
             <button class="button secondary" id="impactButton" type="button">変更の影響を見る</button>
-            <button class="button quiet" id="printButton" type="button">印刷・PDF</button>
+            <button class="button quiet" id="printButton" type="button">出力</button>
           </div>
         </div>
         <div id="scheduleSummary" class="summary-grid"></div>
-        <div class="gantt-gesture-help" id="ganttGestureHelp"><span>↔ 横にスワイプ</span><span>工程をタップして詳細</span><span class="edit-only">✓ で完了報告</span><span class="edit-only">右端をドラッグして日数変更</span><button id="resetGanttScale" type="button">表示幅を戻す</button></div>
+        <div class="gantt-gesture-help" id="ganttGestureHelp"><button id="ganttTodayButton" type="button">今日へ</button><button id="ganttZoomOut" type="button" aria-label="縮小">−</button><button id="resetGanttScale" type="button">標準</button><button id="ganttZoomIn" type="button" aria-label="拡大">＋</button><span>↔ 横にスワイプ</span><span>工程をタップして詳細</span><span class="edit-only">✓ で完了報告</span></div>
         <div id="ganttChart" class="gantt-shell"></div>
       </section>
 
-      <section id="networkView" class="content-view" hidden>
+      <section id="networkView" class="content-view" tabindex="-1" hidden>
         <div class="section-heading">
           <div><p class="eyebrow">DEPENDENCIES</p><h2>ネットワーク図</h2><p>工程をタップして編集できます。赤色は全体工期に影響する工程です。</p></div>
-          <span class="legend"><i class="critical"></i>クリティカル <i></i>余裕あり</span>
+          <div class="network-controls"><div class="mini-segment" role="group" aria-label="ネットワーク図の表示"><button type="button" data-network-mode="simple" aria-pressed="true">かんたん</button><button type="button" data-network-mode="expert" aria-pressed="false">専門</button></div><button class="button secondary compact" id="networkLayoutButton" type="button" aria-pressed="false">配置を調整</button><button class="button quiet compact" id="resetNetworkLayoutButton" type="button">自動配置に戻す</button><span class="legend"><i class="critical"></i>重要工程 <i></i>余裕あり</span></div>
         </div>
         <div class="network-shell"><svg id="networkDiagram" role="img" aria-label="工程の依存関係"></svg></div>
         <p class="caption">EST：最早開始 / EFT：最早終了 / LST：最遅開始 / LFT：最遅終了 / TF：全余裕</p>
       </section>
 
-      <section id="tasksView" class="content-view" hidden>
+      <section id="tasksView" class="content-view" tabindex="-1" hidden>
         <div class="section-heading">
           <div><p class="eyebrow">TASKS</p><h2>工程一覧</h2><p>工程をタップすると、他の表示と同じ詳細画面が開きます。</p></div>
         </div>
@@ -119,6 +179,11 @@
           <label><span>担当責任者</span><input id="managerInput" maxlength="120"></label>
           <label><span>着工日</span><input id="startDateInput" type="date"></label>
           <label><span>契約完成日</span><input id="deadlineInput" type="date"></label>
+          <label class="field-feature" hidden><span>現場名</span><input id="siteNameInput" maxlength="160"></label>
+          <label class="field-feature" hidden><span>発注者</span><input id="clientNameInput" maxlength="160"></label>
+          <label class="field-feature" hidden><span>設計者</span><input id="designerInput" maxlength="160"></label>
+          <label class="field-feature" hidden><span>施工者</span><input id="contractorInput" maxlength="160"></label>
+          <label class="field-feature" hidden><span>承認者</span><input id="approverInput" maxlength="160"></label>
           <label class="wide"><span>休日・稼働不可日</span><textarea id="holidaysInput" rows="2" placeholder="2026-11-03, 2026-11-23"></textarea></label>
           <button class="button secondary" id="saveProjectButton" type="button">案件設定を保存</button>
         </div>
@@ -149,6 +214,14 @@
         <label class="wide"><span>担当会社</span><input name="company" maxlength="160"></label>
         <label><span>所要日数</span><span class="duration-stepper"><button type="button" data-duration-step="-1" aria-label="所要日数を1日減らす">−</button><input name="duration_days" type="number" min="1" max="365" required><button type="button" data-duration-step="1" aria-label="所要日数を1日増やす">＋</button></span></label>
         <label><span>進捗</span><select name="status"><option>未着手</option><option>進行中</option><option>完了</option><option>遅延</option></select></label>
+        <section class="progress-editor wide field-feature" hidden>
+          <div class="progress-editor-head"><span>進捗率</span><output id="progressOutput">0%</output></div>
+          <div class="progress-quick" aria-label="進捗率を選択"><button type="button" data-progress="0">0%</button><button type="button" data-progress="25">25%</button><button type="button" data-progress="50">50%</button><button type="button" data-progress="75">75%</button><button type="button" data-progress="100">100%</button></div>
+          <input name="progress_percent" type="range" min="0" max="100" step="1" value="0" aria-label="進捗率">
+        </section>
+        <div class="field-feature actual-grid wide" hidden>
+          <label><span>実績開始日</span><input name="actual_start" type="date"></label><label><span>実績完了日</span><input name="actual_finish" type="date"></label><label><span>残り日数</span><input name="remaining_days" type="number" min="0" max="3650"></label>
+        </div>
         <details class="advanced-fields wide">
           <summary>詳細設定（記号・前工程・休日・備考）</summary>
           <div class="advanced-grid">
@@ -157,29 +230,70 @@
             <label class="wide"><span>前提工程（複数選択可）</span><select name="dependencies" multiple size="5"></select></label>
             <label class="wide"><span>担当会社の稼働不可日</span><textarea name="blocked_dates" rows="2" placeholder="YYYY-MM-DD、カンマ区切り"></textarea></label>
             <label class="wide"><span>備考</span><input name="notes" maxlength="500"></label>
+            <label class="wide field-feature" hidden><span>遅延理由</span><textarea name="delay_reason" rows="2" maxlength="1000"></textarea></label>
+            <label class="field-feature" hidden><span>遅延分類</span><select name="delay_category"><option>未分類</option><option>天候</option><option>資材</option><option>人員</option><option>設計・承認</option><option>前工程</option><option>品質・是正</option><option>施主都合</option><option>その他</option></select></label>
+            <label class="wide field-feature" hidden><span>次に必要な対応</span><textarea name="next_action" rows="2" maxlength="1000"></textarea></label>
           </div>
         </details>
       </div>
+      <section class="task-activity field-feature" id="taskActivity" hidden><div class="activity-tabs"><button type="button" data-activity="reports" aria-pressed="true">報告</button><button type="button" data-activity="comments" aria-pressed="false">コメント</button><button type="button" data-activity="files" aria-pressed="false">写真・資料</button></div><div id="taskActivityContent"></div></section>
       <p id="taskFormMessage" class="form-message" role="alert"></p>
-      <div class="dialog-actions"><button class="button danger" id="deleteTaskButton" type="button">削除</button><span class="spacer"></span><button class="button quiet close-dialog" type="button">閉じる</button><button class="button primary" id="taskSaveButton" type="submit">保存</button></div>
+      <div class="dialog-actions"><button class="button danger" id="deleteTaskButton" type="button">削除</button><button class="button secondary" id="reportFromTaskButton" type="button" hidden>進捗を報告</button><span class="spacer"></span><button class="button quiet close-dialog" type="button">閉じる</button><button class="button primary" id="taskSaveButton" type="submit">保存</button></div>
     </form>
+  </dialog>
+
+  <dialog id="scheduleImportDialog" class="dialog import-dialog">
+    <div class="dialog-head"><div><p class="eyebrow">HYBRID IMPORT</p><h2>既存工程表を取り込む</h2></div><button class="icon-button close-dialog" type="button">×</button></div>
+    <section class="import-guide"><b>Excel・読取結果を、確認してから工程へ追加します</b><p>Excelは「03作業リスト」を優先して読みます。PDFは直接確定せず、bar_pdf_reader.py の読取結果（TSV／CSV）を選んでください。既存工程は上書きしません。</p></section>
+    <div class="import-file-row"><label><span>ファイル</span><input id="scheduleImportFile" type="file" accept=".xlsx,.xlsm,.xls,.csv,.tsv,.txt"></label><button class="button secondary" id="analyzeScheduleFile" type="button">候補を確認</button></div>
+    <p id="scheduleImportSummary" class="help-text">ファイルを選択してください。</p>
+    <div id="scheduleImportPreview" class="import-preview"></div>
+    <p id="scheduleImportMessage" class="form-message" role="alert"></p>
+    <div class="dialog-actions"><button class="button quiet close-dialog" type="button">閉じる</button><span class="spacer"></span><button class="button primary" id="applyScheduleImport" type="button" disabled>選択した工程を追加</button></div>
   </dialog>
 
   <dialog id="membersDialog" class="dialog">
     <div class="dialog-head"><div><p class="eyebrow">MEMBERS</p><h2>メンバーを招待</h2></div><button class="icon-button close-dialog" type="button">×</button></div>
-    <div class="role-guide"><span><b>責任者</b>設定・招待・日程確定</span><span><b>編集者</b>工程の編集・完了報告</span><span><b>閲覧者</b>最新工程の確認のみ</span></div>
+    <div class="role-guide"><span><b>責任者</b>設定・招待・正式日程の確定</span><span><b>編集者</b>工程編集・進捗報告・変更案の提出</span><span><b>閲覧者</b>最新の確定工程を確認</span></div>
     <form id="inviteForm" class="invite-form">
       <label><span>メールアドレス</span><input name="email" type="email" required></label>
       <label><span>権限</span><select name="role"><option value="editor">編集できる人</option><option value="viewer">閲覧する人</option></select></label>
       <button class="button primary" type="submit">招待を追加</button>
     </form>
-    <p class="help-text">相手が同じメールアドレスで登録・ログインすると、自動的に案件へ参加します。案件URLだけでは閲覧できません。</p>
+    <p class="help-text">招待URLを受け取った本人が、同じメールアドレスでログインした場合だけ参加できます。URLだけでは案件を閲覧できません。</p>
     <p id="inviteMessage" class="form-message" role="alert"></p>
+    <section id="inviteShare" class="invite-share field-feature" hidden><div><b>招待リンク</b><p id="inviteLink"></p></div><button class="button secondary" id="copyInviteLink" type="button">リンクをコピー</button><div id="inviteQr" aria-label="招待QRコード"></div><p id="inviteDeliveryState" class="help-text"></p></section>
+    <div id="invitationList" class="member-list field-feature" hidden></div>
     <div id="memberList" class="member-list"></div>
   </dialog>
 
+  <dialog id="reportDialog" class="dialog small-dialog">
+    <form id="reportForm" method="dialog"><div class="dialog-head"><div><p class="eyebrow">FIELD REPORT</p><h2 id="reportTitle">進捗を報告</h2></div><button class="icon-button close-dialog" type="button">×</button></div><input name="task_id" type="hidden"><input name="offline_operation_id" type="hidden">
+      <div class="progress-quick report-progress" aria-label="進捗率"><button type="button" data-report-progress="0">0%</button><button type="button" data-report-progress="25">25%</button><button type="button" data-report-progress="50">50%</button><button type="button" data-report-progress="75">75%</button><button type="button" data-report-progress="100">100%</button></div>
+      <label><span>進捗率</span><input name="progress_percent" type="number" min="0" max="100" step="1" required></label>
+      <div class="form-grid"><label><span>実績開始日</span><input name="actual_start" type="date"></label><label><span>実績完了日</span><input name="actual_finish" type="date"></label><label><span>残り日数</span><input name="remaining_days" type="number" min="0" max="3650"></label><label><span>検査状態</span><select name="inspection_status"><option>未確認</option><option>自主検査済み</option><option>監理者確認済み</option><option>是正あり</option><option>是正完了</option></select></label><label class="wide"><span>予定への影響</span><select name="schedule_condition"><option value="ontrack">予定どおり</option><option value="delayed">遅れ・着手不可</option></select></label><div class="report-delay-fields wide" id="reportDelayFields" hidden><label><span>遅延分類</span><select name="delay_category"><option>未分類</option><option>天候</option><option>資材</option><option>人員</option><option>設計・承認</option><option>前工程</option><option>品質・是正</option><option>施主都合</option><option>その他</option></select></label><label><span>遅延・着手不可の理由</span><textarea name="delay_reason" rows="2" maxlength="1000"></textarea></label><label class="wide"><span>次に必要な対応</span><textarea name="next_action" rows="2" maxlength="1000"></textarea></label></div><label class="wide"><span>現場コメント（任意）</span><textarea name="comment" rows="3" maxlength="2000"></textarea></label><label class="wide"><span>写真・資料（任意、各10MBまで）</span><input name="files" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" multiple></label><label class="wide check-line"><input name="notify_next" type="checkbox"><span>次工程へ連絡が必要</span></label></div>
+      <p id="reportMessage" class="form-message" role="alert"></p><div class="dialog-actions"><button class="button quiet close-dialog" type="button">キャンセル</button><span class="spacer"></span><button class="button primary" id="reportSubmit" type="submit">報告を保存</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="managementDialog" class="dialog">
+    <div class="dialog-head"><div><p class="eyebrow">PROJECT CONTROL</p><h2>発注・承認・検査・課題</h2></div><button class="icon-button close-dialog" type="button">×</button></div>
+    <form id="managementForm" class="management-form"><input name="id" type="hidden"><label><span>種別</span><select name="item_type"><option>資材発注</option><option>納品</option><option>施工図</option><option>承認図</option><option>質疑</option><option>施主承認</option><option>行政検査</option><option>社内検査</option><option>監理者検査</option><option>是正</option><option>その他</option></select></label><label class="wide"><span>件名</span><input name="title" required maxlength="200"></label><label><span>関連工程</span><select name="task_id"><option value="">なし</option></select></label><label><span>期限</span><input name="due_date" type="date"></label><label><span>担当者</span><input name="assignee_name"></label><label><span>担当会社</span><input name="company"></label><label><span>状態</span><select name="status"><option>未着手</option><option>対応中</option><option>確認待ち</option><option>承認済み</option><option>完了</option><option>保留</option></select></label><label><span>優先度</span><select name="priority"><option>低</option><option selected>通常</option><option>高</option><option>緊急</option></select></label><label class="wide"><span>コメント</span><textarea name="comment" rows="2" maxlength="2000"></textarea></label><label class="wide"><span>写真・資料</span><input name="files" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" multiple></label><button class="button primary" type="submit">管理項目を保存</button></form><div id="managementList" class="management-list"></div>
+  </dialog>
+
+  <dialog id="versionsDialog" class="dialog">
+    <div class="dialog-head"><div><p class="eyebrow">SCHEDULE VERSIONS</p><h2>工程表の版</h2></div><button class="icon-button close-dialog" type="button">×</button></div><form id="versionForm" class="version-form"><label><span>版名</span><input name="name" required placeholder="着工時工程"></label><label><span>変更理由</span><input name="reason"></label><label class="wide"><span>コメント</span><input name="comment"></label><label class="check-line"><input name="is_baseline" type="checkbox"><span>当初工程にする</span></label><button class="button primary" type="submit">現在の工程を確定</button></form><div id="versionCompare" class="version-compare"></div><div id="versionList" class="version-list"></div>
+  </dialog>
+
+  <dialog id="notificationsDialog" class="dialog small-dialog"><div class="dialog-head"><div><p class="eyebrow">NOTIFICATIONS</p><h2>通知</h2></div><button class="icon-button close-dialog" type="button">×</button></div><form id="notificationPreferences" class="notification-preferences"><label class="check-line"><input name="in_app" type="checkbox"><span>アプリ内通知</span></label><label class="check-line"><input name="email" type="checkbox"><span>メール通知</span></label><label class="check-line"><input name="browser" type="checkbox"><span>ブラウザ通知</span></label><label class="check-line"><input name="line" type="checkbox"><span>LINE通知（設定時のみ）</span></label><button class="button secondary compact" type="submit">通知設定を保存</button></form><button class="text-button" id="readAllNotifications" type="button">すべて既読にする</button><div id="notificationList" class="notification-list"></div></dialog>
+
+  <dialog id="offlineConflictDialog" class="dialog small-dialog"><div class="dialog-head"><div><p class="eyebrow">SYNC CONFLICT</p><h2>未同期の報告を確認</h2></div><button class="icon-button close-dialog" type="button">×</button></div><p class="help-text">同じ工程が別の端末で更新されています。自動では上書きしません。</p><div id="offlineConflictDetails" class="conflict-compare"></div><div class="dialog-actions"><button class="button danger" id="discardOfflineReport" type="button">端末側を破棄</button><span class="spacer"></span><button class="button primary" id="reopenOfflineReport" type="button">最新値を基に編集</button></div></dialog>
+
+  <dialog id="exportDialog" class="dialog small-dialog"><div class="dialog-head"><div><p class="eyebrow">OUTPUT</p><h2>工程表を出力</h2></div><button class="icon-button close-dialog" type="button">×</button></div><form id="exportForm"><label><span>範囲</span><select name="range"><option value="all">全体工程</option><option value="month">月間工程</option><option value="week">週間工程</option></select></label><label><span>用紙</span><select name="paper"><option value="A3">A3 横</option><option value="A4">A4 横</option></select></label><div class="export-actions"><button class="button primary" id="printSchedule" type="button">印刷・PDF</button><button class="button secondary field-feature" id="xlsxExport" type="button" hidden>Excel</button><button class="button quiet" id="csvExport" type="button">CSV</button></div><p class="help-text">印刷画面で「PDFとして保存」を選ぶとPDFにできます。</p></form></dialog>
+
   <dialog id="historyDialog" class="dialog">
     <div class="dialog-head"><div><p class="eyebrow">AUDIT LOG</p><h2>変更履歴</h2></div><button class="icon-button close-dialog" type="button">×</button></div>
+    <div class="history-filters"><label><span>対象</span><select id="historyEntityFilter"><option value="all">すべて</option><option value="task">工程</option><option value="project">案件</option><option value="member">メンバー</option><option value="report">進捗報告</option><option value="schedule_change_request">日程変更案</option><option value="management_item">管理項目</option><option value="version">工程版</option></select></label><label><span>操作</span><select id="historyActionFilter"><option value="all">すべて</option><option value="create">追加</option><option value="update">変更</option><option value="delete">削除</option></select></label><label><span>検索</span><input id="historySearch" type="search" placeholder="担当者・変更内容"></label></div>
     <div id="historyList" class="history-list"></div>
   </dialog>
 
@@ -190,14 +304,17 @@
       <label><span>遅れ（実働日）</span><input id="delayDaysInput" type="number" min="1" max="365" value="2"></label>
       <button class="button primary" id="calculateImpactButton" type="button">変更案を見る</button>
     </div>
-    <div id="impactResult" class="impact-result">工程と遅延日数を選択してください。日程は確認するまで変更されません。</div>
-    <div class="dialog-actions"><button class="button quiet close-dialog" type="button">閉じる</button><button class="button primary" id="applyImpactButton" type="button" hidden>この変更案を反映</button></div>
+    <label class="impact-reason"><span>理由</span><textarea id="impactReasonInput" rows="2" maxlength="1000" placeholder="例：資材納入が2日遅れるため"></textarea></label>
+    <div id="impactResult" class="impact-result" aria-live="polite">工程と遅延日数を選択してください。日程は確認するまで変更されません。</div>
+    <div class="dialog-actions"><button class="button quiet close-dialog" type="button">閉じる</button><button class="button primary" id="applyImpactButton" type="button" hidden>変更案を提出</button></div>
   </dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js?v=supabase-20260928-2"></script>
-  <script type="module" src="app.js?v=field-ui-2"></script>
+  <script src="vendor/xlsx.full.min.js" defer></script>
+  <script src="vendor/qrcode.min.js" defer></script>
+  <script type="module" src="app.js?v=hybrid-import-1"></script>
 </body>
 </html>

@@ -29,3 +29,50 @@ test('database policies and optimistic locking protect shared editing',async()=>
   assert.match(service,/\.eq\('version',task\.version\)/);
   assert.match(service,/code:'CONFLICT'/);
 });
+
+test('field operations migration secures reports versions files invitations and notifications',async()=>{
+  const migration=await readFile(new URL('supabase/migrations/202609290001_field_operations.sql',root),'utf8');
+  for(const table of ['task_reports','task_comments','task_attachments','schedule_versions','schedule_version_tasks','management_items','notifications','project_invitations'])assert.match(migration,new RegExp(`alter table public\\.${table} enable row level security`));
+  assert.match(migration,/progress_percent integer not null default 0/);
+  assert.match(migration,/token_hash text not null unique/);
+  assert.match(migration,/digest\(raw_token,'sha256'\)/);
+  assert.match(migration,/values\('project-files','project-files',false/);
+  assert.match(migration,/project_files_read_member/);
+  assert.match(migration,/task version conflict/);
+  assert.match(migration,/tasks_active_project_code_idx/);
+  assert.match(migration,/revoke delete on public\.tasks from authenticated/);
+  assert.match(migration,/revoke all on function private\.restore_schedule_version_rows/);
+  assert.doesNotMatch(migration,/delete from public\.tasks where project_id=pid/);
+});
+
+test('completion uses a report dialog and mobile UI retains field details',async()=>{
+  const [html,app,css]=await Promise.all([readFile(new URL('index.html',root),'utf8'),readFile(new URL('app.js',root),'utf8'),readFile(new URL('style.css',root),'utf8')]);
+  assert.match(html,/id="reportDialog"/);assert.match(html,/data-report-progress="100"/);assert.match(html,/accept="image\/jpeg,image\/png,image\/webp,application\/pdf"/);
+  assert.match(app,/function openReportDialog/);assert.match(app,/uploadTaskFiles/);assert.match(app,/reportTaskProgress/);assert.match(app,/queueProgress/);
+  assert.match(css,/@media\(max-width:620px\)[\s\S]*?\.task-row \.task-cell\{display:block!important/);
+  assert.match(html,/data-network-mode="simple"/);assert.match(html,/id="xlsxExport"/);
+  assert.match(html,/id="offlineConflictDialog"/);assert.match(app,/function showOfflineConflict/);assert.match(app,/function reopenOfflineConflict/);
+  assert.match(html,/id="notificationPreferences"/);assert.match(app,/saveNotificationPreferences/);
+  assert.match(html,/id="historyEntityFilter"/);assert.match(app,/function renderHistory/);
+});
+
+test('public entry explains the product and offers a login-free working demo',async()=>{
+  const [html,app,css]=await Promise.all([readFile(new URL('index.html',root),'utf8'),readFile(new URL('app.js',root),'utf8'),readFile(new URL('style.css',root),'utf8')]);
+  assert.match(html,/id="landingView"/);assert.match(html,/登録なしで操作を試す/);assert.match(html,/工程変更を、/);
+  assert.match(html,/data-demo-view="today"/);assert.match(html,/data-demo-view="gantt"/);assert.match(html,/data-demo-view="network"/);
+  assert.match(html,/責任者として確定を試す/);assert.match(html,/お問い合わせ・不具合報告/);
+  assert.match(app,/function showLanding/);assert.match(app,/function completeDemoTask/);assert.match(app,/function confirmDemoImpact/);
+  assert.match(css,/\.landing-hero/);assert.match(css,/@media\(max-width:700px\)/);
+});
+
+test('hybrid import requires human review and stores manual network layout securely',async()=>{
+  const [html,app,service,migration,worker]=await Promise.all([
+    readFile(new URL('index.html',root),'utf8'),readFile(new URL('app.js',root),'utf8'),readFile(new URL('data-service.js',root),'utf8'),
+    readFile(new URL('supabase/migrations/202610010001_hybrid_schedule_import.sql',root),'utf8'),readFile(new URL('sw.js',root),'utf8')
+  ]);
+  assert.match(html,/id="scheduleImportDialog"/);assert.match(html,/既存工程は上書きしません/);assert.match(html,/id="networkLayoutButton"/);
+  assert.match(app,/buildImportCandidates/);assert.match(app,/要確認の行は登録されません/);assert.match(app,/toImportRows/);assert.match(app,/function beginNetworkDrag/);
+  assert.match(service,/apply_schedule_import/);assert.match(service,/network_task_layouts/);
+  assert.match(migration,/security definer/);assert.match(migration,/editor permission required/);assert.match(migration,/network_layout_update_editor/);assert.match(migration,/duplicate task code/);
+  assert.match(worker,/schedule-import\.js/);
+});
