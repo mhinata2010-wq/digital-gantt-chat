@@ -8,7 +8,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <title>現場工程表｜snake site</title>
   <link rel="icon" href="snake-site.gif">
-  <link rel="stylesheet" href="style.css?v=hybrid-weather-1">
+  <link rel="stylesheet" href="style.css?v=hybrid-network-1">
 </head>
 <body>
   <a class="skip-link" href="#home">本文へ移動</a>
@@ -163,11 +163,12 @@
 
       <section id="networkView" class="content-view" tabindex="-1" hidden>
         <div class="section-heading">
-          <div><p class="eyebrow">DEPENDENCIES</p><h2>ネットワーク図</h2><p>工程をタップして編集できます。赤色は全体工期に影響する工程です。</p></div>
-          <div class="network-controls"><div class="mini-segment" role="group" aria-label="ネットワーク図の表示"><button type="button" data-network-mode="simple" aria-pressed="true">かんたん</button><button type="button" data-network-mode="expert" aria-pressed="false">専門</button></div><button class="button secondary compact" id="networkLayoutButton" type="button" aria-pressed="false">配置を調整</button><button class="button quiet compact" id="resetNetworkLayoutButton" type="button">自動配置に戻す</button><span class="legend"><i class="critical"></i>重要工程 <i></i>余裕あり</span></div>
+          <div><p class="eyebrow">DEPENDENCIES</p><h2>ネットワーク図</h2><p>番号付きの丸はイベント、実線矢印は工程、破線は前後関係だけを示すダミーです。矢線を押して工程を修正できます。</p></div>
+          <div class="network-controls"><div class="mini-segment" role="group" aria-label="ネットワーク図の形式"><button type="button" data-network-structure="event" aria-pressed="true">建築ネットワーク</button><button type="button" data-network-structure="task" aria-pressed="false">工程カード</button></div><div class="mini-segment" role="group" aria-label="ネットワーク図の情報量"><button type="button" data-network-mode="simple" aria-pressed="true">かんたん</button><button type="button" data-network-mode="expert" aria-pressed="false">専門</button></div><button class="button secondary compact" id="networkLayoutButton" type="button" aria-pressed="false">配置を調整</button><button class="button quiet compact" id="resetNetworkLayoutButton" type="button">自動配置に戻す</button><span class="legend"><i class="critical"></i>重要工程 <i></i>余裕あり <i class="dummy"></i>ダミー</span></div>
         </div>
         <div class="network-shell"><svg id="networkDiagram" role="img" aria-label="工程の依存関係"></svg></div>
-        <p class="caption">EST：最早開始 / EFT：最早終了 / LST：最遅開始 / LFT：最遅終了 / TF：全余裕</p>
+        <p class="caption">専門表示：EST＝最早開始 / EFT＝最早終了 / LST＝最遅開始 / LFT＝最遅終了 / TF＝全余裕 / FF＝自由余裕。配置調整では番号付きイベントをドラッグできます。</p>
+        <section id="networkRelationList" class="network-relation-list" aria-label="ネットワーク工程の関係一覧"></section>
       </section>
 
       <section id="tasksView" class="content-view" tabindex="-1" hidden>
@@ -317,6 +318,6 @@
   <script src="config.js?v=supabase-20260928-2"></script>
   <script src="vendor/xlsx.full.min.js" defer></script>
   <script src="vendor/qrcode.min.js" defer></script>
-  <script type="module" src="app.js?v=hybrid-weather-1"></script>
+  <script type="module" src="app.js?v=hybrid-network-1"></script>
 </body>
 </html>

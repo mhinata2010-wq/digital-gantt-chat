@@ -41,14 +41,15 @@ export async function loadProject(id){
   const fieldOperations=Boolean(project&&Object.hasOwn(project,'site_name'));
   let taskQuery=client.from('tasks').select('*').eq('project_id',id);if(fieldOperations)taskQuery=taskQuery.is('archived_at',null);
   const {data:tasks,error:taskError}=await taskQuery.order('position');fail(taskError);
-  if(!fieldOperations)return {project,tasks:tasks||[],fieldOperations:false,managementItems:[],versions:[],changeRequests:[],networkLayouts:[]};
-  const [{data:managementItems,error:itemError},{data:versions,error:versionError},{data:changeRequests,error:changeRequestError},{data:networkLayouts,error:layoutError}]=await Promise.all([
+  if(!fieldOperations)return {project,tasks:tasks||[],fieldOperations:false,managementItems:[],versions:[],changeRequests:[],networkLayouts:[],networkEventLayouts:[]};
+  const [{data:managementItems,error:itemError},{data:versions,error:versionError},{data:changeRequests,error:changeRequestError},{data:networkLayouts,error:layoutError},{data:networkEventLayouts,error:eventLayoutError}]=await Promise.all([
     client.from('management_items').select('*').eq('project_id',id).order('due_date',{ascending:true,nullsFirst:false}),
     client.from('schedule_versions').select('*').eq('project_id',id).order('version_number',{ascending:false}),
     client.from('schedule_change_requests').select('*').eq('project_id',id).order('created_at',{ascending:false}),
-    client.from('network_task_layouts').select('*').eq('project_id',id)
+    client.from('network_task_layouts').select('*').eq('project_id',id),
+    client.from('network_event_layouts').select('*').eq('project_id',id)
   ]);
-  fail(itemError);fail(versionError);fail(changeRequestError);if(layoutError&&!['42P01','PGRST205'].includes(layoutError.code))fail(layoutError);return {project,tasks:tasks||[],fieldOperations:true,managementItems:managementItems||[],versions:versions||[],changeRequests:changeRequests||[],networkLayouts:networkLayouts||[]};
+  fail(itemError);fail(versionError);fail(changeRequestError);if(layoutError&&!['42P01','PGRST205'].includes(layoutError.code))fail(layoutError);if(eventLayoutError&&!['42P01','PGRST205'].includes(eventLayoutError.code))fail(eventLayoutError);return {project,tasks:tasks||[],fieldOperations:true,managementItems:managementItems||[],versions:versions||[],changeRequests:changeRequests||[],networkLayouts:networkLayouts||[],networkEventLayouts:networkEventLayouts||[]};
 }
 export async function updateProject(project,patch){
   const {data,error}=await client.from('projects').update({...patch,revision:project.revision+1}).eq('id',project.id).eq('revision',project.revision).select().maybeSingle();fail(error);
@@ -74,6 +75,8 @@ export async function deleteTask(task){
 export async function applyScheduleImport(projectId,sourceName,sourceKind,rows){const {data,error}=await client.rpc('apply_schedule_import',{p_project_id:projectId,p_source_name:sourceName,p_source_kind:sourceKind,p_rows:rows});fail(error);return data}
 export async function saveNetworkLayout(projectId,taskId,x,y){const {data,error}=await client.from('network_task_layouts').upsert({project_id:projectId,task_id:taskId,x:Math.round(x),y:Math.round(y),pinned:true,updated_at:new Date().toISOString()},{onConflict:'task_id'}).select().single();fail(error);return data}
 export async function resetNetworkLayout(projectId){const {data,error}=await client.rpc('reset_network_layout',{p_project_id:projectId});fail(error);return data}
+export async function saveNetworkEventLayout(projectId,eventKey,x,y){const {data,error}=await client.from('network_event_layouts').upsert({project_id:projectId,event_key:eventKey,x:Math.round(x),y:Math.round(y),updated_at:new Date().toISOString()},{onConflict:'project_id,event_key'}).select().single();fail(error);return data}
+export async function resetNetworkEventLayout(projectId){const {error}=await client.from('network_event_layouts').delete().eq('project_id',projectId);fail(error)}
 export async function loadMembers(projectId){
   const {data,error}=await client.from('project_members').select('id,email,role,user_id,accepted_at,created_at').eq('project_id',projectId).order('created_at');fail(error);return data||[];
 }

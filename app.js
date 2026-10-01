@@ -1,10 +1,11 @@
-import {configured,client,session,signUp,signIn,signOut,sendPasswordReset,claimInvitations,loadProfile,loadProjects,createProject,loadProject,updateProject,createTask,updateTask,deleteTask,loadMembers,inviteMember,changeMemberRole,removeMember,loadHistory,importProject,subscribe,reportTaskProgress,syncPlannedDates,loadTaskActivity,createComment,uploadTaskFiles,saveAttachmentRecords,removeUploadedFiles,signedAttachmentUrl,createManagementItem,updateManagementItem,deleteManagementItem,saveManagementAttachmentRecords,createScheduleVersion,loadVersionTasks,restoreScheduleVersion,submitScheduleChangeRequest,reviewScheduleChangeRequest,createInvitation,listInvitations,revokeInvitation,acceptInvitation,loadNotifications,markNotificationRead,markAllNotificationsRead,loadNotificationPreferences,saveNotificationPreferences,applyScheduleImport,saveNetworkLayout,resetNetworkLayout} from './data-service.js';
+import {configured,client,session,signUp,signIn,signOut,sendPasswordReset,claimInvitations,loadProfile,loadProjects,createProject,loadProject,updateProject,createTask,updateTask,deleteTask,loadMembers,inviteMember,changeMemberRole,removeMember,loadHistory,importProject,subscribe,reportTaskProgress,syncPlannedDates,loadTaskActivity,createComment,uploadTaskFiles,saveAttachmentRecords,removeUploadedFiles,signedAttachmentUrl,createManagementItem,updateManagementItem,deleteManagementItem,saveManagementAttachmentRecords,createScheduleVersion,loadVersionTasks,restoreScheduleVersion,submitScheduleChangeRequest,reviewScheduleChangeRequest,createInvitation,listInvitations,revokeInvitation,acceptInvitation,loadNotifications,markNotificationRead,markAllNotificationsRead,loadNotificationPreferences,saveNotificationPreferences,applyScheduleImport,saveNetworkLayout,resetNetworkLayout,saveNetworkEventLayout,resetNetworkEventLayout} from './data-service.js';
 import {computeSchedule,compareTaskChange,projectMargin,dateRange,workdayChecker,parseDates,addDays} from './schedule-engine.js';
 import {discoverLegacy,markMigrated,dismissMigration,migrationDismissed} from './legacy-migration.js';
 import {categorizeFieldTasks} from './field-dashboard.js';
 import {progressOf,taskState,scheduleState,validateProgressReport,compareVersionTasks,utf8Csv} from './field-operations.js';
 import {cacheProject,readCachedProject,queueProgress,pendingOperations,removeOperation,clearOfflineUser} from './offline-store.js';
 import {parseDelimited,buildImportCandidates,toImportRows} from './schedule-import.js';
+import {buildEventNetwork,relationRows} from './network-diagram.js';
 
 const $=selector=>document.querySelector(selector);
 const esc=value=>String(value??'').replace(/[&<>'"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
@@ -30,7 +31,7 @@ const STANDARD_TASK_TEMPLATE=[
 ];
 const GANTT_MIN_UNIT=20,GANTT_DEFAULT_UNIT=24,GANTT_MAX_UNIT=48;
 function savedGanttUnit(){try{const stored=localStorage.getItem('snake-gantt-day-width');if(stored===null)return GANTT_DEFAULT_UNIT;const value=Number(stored);return Number.isFinite(value)?Math.max(GANTT_MIN_UNIT,Math.min(GANTT_MAX_UNIT,value)):GANTT_DEFAULT_UNIT}catch{return GANTT_DEFAULT_UNIT}}
-let authMode='login',profile=null,projects=[],currentProject=null,tasks=[],managementItems=[],versions=[],baselineTasks=[],historyItems=[],changeRequests=[],networkLayouts=[],fieldOperations=false,activeView='today',todayHorizon=1,todayCompany='all',networkMode='simple',networkLayoutEditing=false,importCandidates=[],importSource=null,stopRealtime=null,reloadTimer=null,pendingImpact=null,offlineConflict=null,toastTimer=null,ganttUnit=savedGanttUnit(),lastSchedule=null,lastInviteUrl='';
+let authMode='login',profile=null,projects=[],currentProject=null,tasks=[],managementItems=[],versions=[],baselineTasks=[],historyItems=[],changeRequests=[],networkLayouts=[],networkEventLayouts=[],fieldOperations=false,activeView='today',todayHorizon=1,todayCompany='all',networkMode='simple',networkStructure='event',networkLayoutEditing=false,importCandidates=[],importSource=null,stopRealtime=null,reloadTimer=null,pendingImpact=null,offlineConflict=null,toastTimer=null,ganttUnit=savedGanttUnit(),lastSchedule=null,lastInviteUrl='';
 
 function toast(message){const node=$('#toast');node.textContent=message;node.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>node.classList.remove('show'),3200)}
 function setConnection(state,label){const node=$('#connectionState');node.dataset.state=state;node.textContent=label}
@@ -43,7 +44,7 @@ function friendlyErrorMessage(error){
   if(/password should be at least/i.test(message))return 'パスワードは6文字以上で入力してください。';
   if(/invalid login credentials/i.test(message))return 'メールアドレスまたはパスワードが正しくありません。確認メールをまだ開いていない場合は、先にメール内のリンクを開いてください。';
   if(/email not confirmed/i.test(message))return 'メールアドレスの確認が完了していません。受信メール内の確認リンクを開いてください。';
-  if(/apply_schedule_import|reset_network_layout|network_task_layouts|schema cache/i.test(message))return '工程取込機能のデータベース更新がまだ反映されていません。SETUP.mdの最新マイグレーションを適用してください。';
+  if(/apply_schedule_import|reset_network_layout|network_(task|event)_layouts|schema cache/i.test(message))return '工程取込・配置調整機能のデータベース更新がまだ反映されていません。SETUP.mdの最新マイグレーションを適用してください。';
   return message||'処理に失敗しました。';
 }
 function showError(error,target='#toast'){
@@ -121,7 +122,7 @@ async function enterApplication(){
 }
 
 async function showProjects(){
-  stopRealtime?.();stopRealtime=null;currentProject=null;tasks=[];managementItems=[];versions=[];changeRequests=[];networkLayouts=[];todayCompany='all';fieldOperations=false;location.hash='projects';
+  stopRealtime?.();stopRealtime=null;currentProject=null;tasks=[];managementItems=[];versions=[];changeRequests=[];networkLayouts=[];networkEventLayouts=[];todayCompany='all';fieldOperations=false;location.hash='projects';
   $('#projectView').hidden=true;$('#projectsView').hidden=false;setConnection('online','同期済み');
   projects=await loadProjects();renderProjects();renderMigration();
 }
@@ -169,11 +170,11 @@ async function migrateLegacy(){
 async function openProject(id){
   try{
     setConnection('connecting','読込中');
-    const loaded=await loadProject(id);currentProject=loaded.project;tasks=loaded.tasks;managementItems=loaded.managementItems||[];versions=loaded.versions||[];changeRequests=loaded.changeRequests||[];networkLayouts=loaded.networkLayouts||[];fieldOperations=Boolean(loaded.fieldOperations);todayCompany=loadCompanyFilter(id);
+    const loaded=await loadProject(id);currentProject=loaded.project;tasks=loaded.tasks;managementItems=loaded.managementItems||[];versions=loaded.versions||[];changeRequests=loaded.changeRequests||[];networkLayouts=loaded.networkLayouts||[];networkEventLayouts=loaded.networkEventLayouts||[];fieldOperations=Boolean(loaded.fieldOperations);todayCompany=loadCompanyFilter(id);
     await cacheProject(profile.id,loaded).catch(()=>{});await hydrateBaseline();
     $('#projectsView').hidden=true;$('#projectView').hidden=false;location.hash=`project=${id}`;
     activeView='today';renderProject();startRealtime(id);setConnection('online','同期済み');
-  }catch(error){const cached=profile?await readCachedProject(profile.id,id).catch(()=>null):null;if(!cached){showError(error);await showProjects();return}const loaded=cached.payload;currentProject=loaded.project;tasks=loaded.tasks;managementItems=loaded.managementItems||[];versions=loaded.versions||[];changeRequests=loaded.changeRequests||[];networkLayouts=loaded.networkLayouts||[];fieldOperations=Boolean(loaded.fieldOperations);todayCompany=loadCompanyFilter(id);$('#projectsView').hidden=true;$('#projectView').hidden=false;location.hash=`project=${id}`;activeView='today';renderProject();setConnection('offline',`オフライン・最終同期 ${formatDateTime(cached.cachedAt)}`);toast('保存済みの工程表を表示しています')}
+  }catch(error){const cached=profile?await readCachedProject(profile.id,id).catch(()=>null):null;if(!cached){showError(error);await showProjects();return}const loaded=cached.payload;currentProject=loaded.project;tasks=loaded.tasks;managementItems=loaded.managementItems||[];versions=loaded.versions||[];changeRequests=loaded.changeRequests||[];networkLayouts=loaded.networkLayouts||[];networkEventLayouts=loaded.networkEventLayouts||[];fieldOperations=Boolean(loaded.fieldOperations);todayCompany=loadCompanyFilter(id);$('#projectsView').hidden=true;$('#projectView').hidden=false;location.hash=`project=${id}`;activeView='today';renderProject();setConnection('offline',`オフライン・最終同期 ${formatDateTime(cached.cachedAt)}`);toast('保存済みの工程表を表示しています')}
 }
 
 function startRealtime(projectId){
@@ -186,7 +187,7 @@ function startRealtime(projectId){
 
 async function refreshCurrentProject(silent=false){
   if(!currentProject)return;
-  try{const loaded=await loadProject(currentProject.id);currentProject=loaded.project;tasks=loaded.tasks;managementItems=loaded.managementItems||[];versions=loaded.versions||[];changeRequests=loaded.changeRequests||[];networkLayouts=loaded.networkLayouts||[];fieldOperations=Boolean(loaded.fieldOperations);await cacheProject(profile.id,loaded).catch(()=>{});await hydrateBaseline();renderProject();setConnection('online','同期済み');if(!silent)toast('最新の工程表を読み込みました')}catch(error){setConnection('offline','同期エラー');showError(error)}
+  try{const loaded=await loadProject(currentProject.id);currentProject=loaded.project;tasks=loaded.tasks;managementItems=loaded.managementItems||[];versions=loaded.versions||[];changeRequests=loaded.changeRequests||[];networkLayouts=loaded.networkLayouts||[];networkEventLayouts=loaded.networkEventLayouts||[];fieldOperations=Boolean(loaded.fieldOperations);await cacheProject(profile.id,loaded).catch(()=>{});await hydrateBaseline();renderProject();setConnection('online','同期済み');if(!silent)toast('最新の工程表を読み込みました')}catch(error){setConnection('offline','同期エラー');showError(error)}
 }
 
 async function hydrateBaseline(){const baseline=versions.find(version=>version.is_baseline);baselineTasks=baseline?await loadVersionTasks(baseline.id).catch(()=>[]):[]}
@@ -219,13 +220,13 @@ function switchView(view,scroll=true){
 function scheduleResult(delay){
   try{return computeSchedule(currentProject,tasks,delay)}catch(error){
     $('#ganttChart').innerHTML=`<div class="empty-state"><b>工程を計算できません</b><span>${esc(error.message)}</span></div>`;
-    $('#networkDiagram').innerHTML='';return null;
+    $('#networkDiagram').innerHTML='';$('#networkRelationList').innerHTML='';return null;
   }
 }
 
 function renderScheduleViews(){
   if(!tasks.length){
-    $('#scheduleSummary').innerHTML='';$('#ganttChart').innerHTML='<div class="empty-state"><b>工程がまだありません</b><span>画面上部の「＋ 工程」から最初の工程を作成してください。</span></div>';$('#networkDiagram').innerHTML='';renderToday(null);return;
+    $('#scheduleSummary').innerHTML='';$('#ganttChart').innerHTML='<div class="empty-state"><b>工程がまだありません</b><span>画面上部の「＋ 工程」から最初の工程を作成してください。</span></div>';$('#networkDiagram').innerHTML='';$('#networkRelationList').innerHTML='';renderToday(null);return;
   }
   const result=scheduleResult();if(!result)return;lastSchedule=result;
   const margin=projectMargin(currentProject,result),critical=[...result.nodes.values()].filter(node=>node.tf===0).length,done=tasks.filter(task=>progressOf(task)===100).length,average=Math.round(tasks.reduce((sum,task)=>sum+progressOf(task),0)/tasks.length);
@@ -332,7 +333,7 @@ function beginGanttResize(event){
   handle.addEventListener('pointermove',move);handle.addEventListener('pointerup',finish);handle.addEventListener('pointercancel',cancel);
 }
 
-function renderNetwork(result){
+function renderTaskNetwork(result){
   const nodes=[...result.nodes.values()],levels=Math.max(...nodes.map(node=>node.level))+1,positions=new Map();let maxRows=1;
   for(let level=0;level<levels;level++){const group=nodes.filter(node=>node.level===level);maxRows=Math.max(maxRows,group.length);group.forEach((node,index)=>positions.set(node.id,{x:30+level*265,y:35+index*145}))}
   for(const layout of networkLayouts){if(positions.has(layout.task_id))positions.set(layout.task_id,{x:Number(layout.x),y:Number(layout.y)})}
@@ -341,6 +342,22 @@ function renderNetwork(result){
   for(const node of nodes){const point=positions.get(node.id),label=node.name.length>15?`${node.name.slice(0,14)}…`:node.name,critical=node.tf===0,details=networkMode==='expert'?`<text x="13" y="81" class="node-numbers">EST ${node.es}  EFT ${node.ef}</text><text x="13" y="97" class="node-numbers">LST ${node.ls}  LFT ${node.lf}  TF ${node.tf}</text>`:`<text x="13" y="81" class="node-numbers">予定 ${formatDate(node.startDate)} → ${formatDate(node.endDate)}</text><text x="13" y="97" class="node-numbers">遅らせられる日数 ${node.tf}日</text>`;svg+=`<g class="node ${critical?'hot':''}" data-edit-task="${node.id}" tabindex="0" role="button" aria-label="${esc(node.name)}の詳細を開く。${critical?'全体工期に影響する重要工程':'余裕 '+node.tf+'日'}" transform="translate(${point.x},${point.y})"><rect width="215" height="105" rx="6"/><text x="13" y="23" class="node-code">${esc(node.code)} ${esc(node.trade)}</text>${critical?'<text x="202" y="22" text-anchor="end" class="node-critical">◆ 重要</text>':''}<text x="13" y="48" class="node-name"><title>${esc(node.name)}</title>${esc(label)}</text><path d="M13 62 H202" class="node-rule"/>${details}</g>`}
   const diagram=$('#networkDiagram');diagram.setAttribute('viewBox',`0 0 ${width} ${height}`);diagram.setAttribute('width',width);diagram.setAttribute('height',height);diagram.innerHTML=svg;
   diagram.classList.toggle('layout-editing',networkLayoutEditing);
+}
+
+function eventPath(from,to){const startX=from.x+20,endX=to.x-20,middle=(startX+endX)/2;return from.y===to.y?`M${startX} ${from.y} L${endX} ${to.y}`:`M${startX} ${from.y} L${middle} ${from.y} L${middle} ${to.y} L${endX} ${to.y}`}
+
+function renderEventNetwork(result){
+  const network=buildEventNetwork(tasks,result),positions=new Map(network.events.map(event=>[event.id,{x:55+event.level*205,y:65+event.row*110}])),width=Math.max(900,network.maxLevel*205+120),height=Math.max(420,network.rows*110+70);let svg='<defs><marker id="eventArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="context-stroke"/></marker></defs>';
+  for(const layout of networkEventLayouts)if(positions.has(layout.event_key))positions.set(layout.event_key,{x:Number(layout.x),y:Number(layout.y)});
+  for(const edge of network.edges){const from=positions.get(edge.from),to=positions.get(edge.to);if(!from||!to)continue;const path=eventPath(from,to),midX=(from.x+to.x)/2,midY=(from.y+to.y)/2-8;if(edge.kind==='dummy'){svg+=`<path class="event-edge dummy ${edge.critical?'hot':''}" d="${path}" marker-end="url(#eventArrow)"><title>ダミー：${esc(tasks.find(task=>task.id===edge.predecessorId)?.code||'')} → ${esc(tasks.find(task=>task.id===edge.taskId)?.code||'')}</title></path>`;continue}const details=networkMode==='expert'?`${edge.duration}日 / TF ${edge.tf} / FF ${edge.ff}`:`${edge.duration}日`;svg+=`<g class="event-work ${edge.critical?'hot':''}" data-edit-task="${edge.taskId}" role="button" tabindex="0"><path class="event-edge work ${edge.critical?'hot':''}" d="${path}" marker-end="url(#eventArrow)"/><rect x="${midX-78}" y="${midY-22}" width="156" height="38" rx="7"/><text x="${midX}" y="${midY-7}" text-anchor="middle" class="event-work-name">${esc(`${edge.code} ${edge.name.length>13?`${edge.name.slice(0,12)}…`:edge.name}`)}</text><text x="${midX}" y="${midY+8}" text-anchor="middle" class="event-work-detail">${esc(details)}</text><title>${esc(edge.name)}を編集</title></g>`}
+  for(const event of network.events){const point=positions.get(event.id),detail=networkMode==='expert'?`<text x="0" y="35" text-anchor="middle" class="event-time">${event.kind==='start'?'EST':'EFT'} ${event.time} / ${event.kind==='start'?'LST':'LFT'} ${event.late}</text>`:'';svg+=`<g class="event-node" data-event-key="${event.id}" transform="translate(${point.x},${point.y})"><circle cx="0" cy="0" r="20"/><text x="0" y="5" text-anchor="middle">${event.number}</text>${detail}</g>`}
+  const diagram=$('#networkDiagram');diagram.classList.toggle('layout-editing',networkLayoutEditing);diagram.setAttribute('viewBox',`0 0 ${Math.max(width,...[...positions.values()].map(point=>point.x+70))} ${Math.max(height,...[...positions.values()].map(point=>point.y+70))}`);diagram.setAttribute('width',Math.max(width,...[...positions.values()].map(point=>point.x+70)));diagram.setAttribute('height',Math.max(height,...[...positions.values()].map(point=>point.y+70)));diagram.innerHTML=svg;
+  const rows=relationRows(tasks,result,network);$('#networkRelationList').innerHTML=`<div class="network-relation-head"><div><b>工程とイベントの対応</b><small>矢線をクリックすると、日数・前工程・担当を修正できます。</small></div><span>${network.edges.filter(edge=>edge.kind==='dummy').length}本のダミー</span></div><div class="network-relation-table"><div class="network-relation-row heading"><span>工程</span><span>イベント</span><span>前工程</span><span>後続</span><span>日数</span><span>余裕</span><span></span></div>${rows.map(row=>`<button class="network-relation-row ${row.critical?'critical':''}" data-edit-task="${row.task.id}" type="button"><b>${esc(row.task.code)} ${esc(row.task.name)}</b><span>${row.from} → ${row.to}</span><span>${esc(row.predecessors.join('・')||'なし')}</span><span>${esc(row.successors.join('・')||'完了')}</span><span>${row.duration}日</span><span>TF ${row.tf} / FF ${row.ff}</span><span>編集 ›</span></button>`).join('')}</div>`;
+}
+
+function renderNetwork(result){
+  const eventMode=networkStructure==='event';$('#networkLayoutButton').hidden=!canEdit();$('#resetNetworkLayoutButton').hidden=!canEdit();
+  if(eventMode)renderEventNetwork(result);else{renderTaskNetwork(result);$('#networkRelationList').innerHTML=''}
 }
 
 function openScheduleImport(){
@@ -374,14 +391,14 @@ async function commitScheduleImport(){
 }
 
 function beginNetworkDrag(event){
-  const node=event.target.closest('[data-edit-task]');if(!networkLayoutEditing||!node||!canEdit())return;event.preventDefault();const diagram=$('#networkDiagram'),viewBox=diagram.viewBox.baseVal,box=diagram.getBoundingClientRect(),matrix=node.transform.baseVal.consolidate()?.matrix,start={x:matrix?.e||0,y:matrix?.f||0},pointer={x:event.clientX,y:event.clientY};let moved=false;node.setPointerCapture?.(event.pointerId);
+  const eventMode=networkStructure==='event',node=event.target.closest(eventMode?'[data-event-key]':'[data-edit-task]');if(!networkLayoutEditing||!node||!canEdit())return;event.preventDefault();const diagram=$('#networkDiagram'),viewBox=diagram.viewBox.baseVal,box=diagram.getBoundingClientRect(),matrix=node.transform.baseVal.consolidate()?.matrix,start={x:matrix?.e||0,y:matrix?.f||0},pointer={x:event.clientX,y:event.clientY};let moved=false;node.setPointerCapture?.(event.pointerId);
   const move=moveEvent=>{const x=Math.max(0,start.x+(moveEvent.clientX-pointer.x)*viewBox.width/box.width),y=Math.max(0,start.y+(moveEvent.clientY-pointer.y)*viewBox.height/box.height);moved=moved||Math.abs(moveEvent.clientX-pointer.x)>3||Math.abs(moveEvent.clientY-pointer.y)>3;node.setAttribute('transform',`translate(${x},${y})`);node.dataset.layoutX=String(x);node.dataset.layoutY=String(y)};
-  const finish=async upEvent=>{node.removeEventListener('pointermove',move);node.removeEventListener('pointerup',finish);node.releasePointerCapture?.(upEvent.pointerId);if(!moved)return;node.dataset.dragged='true';try{const saved=await saveNetworkLayout(currentProject.id,node.dataset.editTask,Number(node.dataset.layoutX),Number(node.dataset.layoutY));networkLayouts=networkLayouts.filter(item=>item.task_id!==saved.task_id).concat(saved);renderNetwork(lastSchedule);toast('配置を保存しました')}catch(error){showError(error);renderNetwork(lastSchedule)}};
+  const finish=async upEvent=>{node.removeEventListener('pointermove',move);node.removeEventListener('pointerup',finish);node.releasePointerCapture?.(upEvent.pointerId);if(!moved)return;node.dataset.dragged='true';try{if(eventMode){const saved=await saveNetworkEventLayout(currentProject.id,node.dataset.eventKey,Number(node.dataset.layoutX),Number(node.dataset.layoutY));networkEventLayouts=networkEventLayouts.filter(item=>item.event_key!==saved.event_key).concat(saved)}else{const saved=await saveNetworkLayout(currentProject.id,node.dataset.editTask,Number(node.dataset.layoutX),Number(node.dataset.layoutY));networkLayouts=networkLayouts.filter(item=>item.task_id!==saved.task_id).concat(saved)}renderNetwork(lastSchedule);toast('配置を保存しました')}catch(error){showError(error);renderNetwork(lastSchedule)}};
   node.addEventListener('pointermove',move);node.addEventListener('pointerup',finish,{once:true});
 }
 
-function toggleNetworkLayout(){networkLayoutEditing=!networkLayoutEditing;$('#networkLayoutButton').setAttribute('aria-pressed',String(networkLayoutEditing));$('#networkLayoutButton').textContent=networkLayoutEditing?'調整を終了':'配置を調整';if(lastSchedule)renderNetwork(lastSchedule);toast(networkLayoutEditing?'工程をドラッグして配置を調整できます':'配置調整を終了しました')}
-async function clearNetworkLayout(){if(!networkLayouts.length)return;if(!confirm('保存した手動配置を消して、自動配置へ戻しますか？'))return;try{await resetNetworkLayout(currentProject.id);networkLayouts=[];renderNetwork(lastSchedule);toast('自動配置に戻しました')}catch(error){showError(error)}}
+function toggleNetworkLayout(){networkLayoutEditing=!networkLayoutEditing;$('#networkLayoutButton').setAttribute('aria-pressed',String(networkLayoutEditing));$('#networkLayoutButton').textContent=networkLayoutEditing?'調整を終了':'配置を調整';if(lastSchedule)renderNetwork(lastSchedule);toast(networkLayoutEditing?(networkStructure==='event'?'番号付きの丸をドラッグして配置を調整できます':'工程をドラッグして配置を調整できます'):'配置調整を終了しました')}
+async function clearNetworkLayout(){const eventMode=networkStructure==='event',layouts=eventMode?networkEventLayouts:networkLayouts;if(!layouts.length)return;if(!confirm('保存した手動配置を消して、自動配置へ戻しますか？'))return;try{if(eventMode){await resetNetworkEventLayout(currentProject.id);networkEventLayouts=[]}else{await resetNetworkLayout(currentProject.id);networkLayouts=[]}renderNetwork(lastSchedule);toast('自動配置に戻しました')}catch(error){showError(error)}}
 
 function renderTaskList(){
   $('#taskList').innerHTML=tasks.length?tasks.map(task=>{
@@ -632,6 +649,8 @@ $('#networkDiagram').addEventListener('pointerdown',beginNetworkDrag);
 $('#networkDiagram').addEventListener('click',event=>{const node=event.target.closest('[data-edit-task]');if(node&&!networkLayoutEditing&&!node.dataset.dragged)openTaskEditor(tasks.find(task=>task.id===node.dataset.editTask));if(node)delete node.dataset.dragged});
 $('#networkDiagram').addEventListener('keydown',event=>{if(!['Enter',' '].includes(event.key))return;const node=event.target.closest('[data-edit-task]');if(node){event.preventDefault();openTaskEditor(tasks.find(task=>task.id===node.dataset.editTask))}});
 document.querySelectorAll('[data-network-mode]').forEach(button=>button.addEventListener('click',()=>{networkMode=button.dataset.networkMode;document.querySelectorAll('[data-network-mode]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));if(lastSchedule)renderNetwork(lastSchedule)}));
+document.querySelectorAll('[data-network-structure]').forEach(button=>button.addEventListener('click',()=>{networkStructure=button.dataset.networkStructure;networkLayoutEditing=false;document.querySelectorAll('[data-network-structure]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));$('#networkLayoutButton').setAttribute('aria-pressed','false');$('#networkLayoutButton').textContent='配置を調整';if(lastSchedule)renderNetwork(lastSchedule)}));
+$('#networkRelationList').addEventListener('click',event=>{const row=event.target.closest('[data-edit-task]');if(row)openTaskEditor(tasks.find(task=>task.id===row.dataset.editTask))});
 $('#networkLayoutButton').addEventListener('click',toggleNetworkLayout);$('#resetNetworkLayoutButton').addEventListener('click',clearNetworkLayout);
 $('#ganttChart').addEventListener('pointerdown',beginGanttScale);
 $('#ganttChart').addEventListener('pointerdown',beginGanttResize);
