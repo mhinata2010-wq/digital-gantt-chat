@@ -47,6 +47,8 @@
 
 共同編集にはGitHub PagesだけでなくSupabaseが必要です。最初の導入、既存環境の更新、Storage、招待メール、認証URL、公開手順は [SETUP.md](SETUP.md) を参照してください。
 
+クライアントへ提供できる機能と、実装・本番設定・実地受入を合わせた100%完了条件は [CLIENT_READINESS.md](CLIENT_READINESS.md) に記録します。コードが存在するだけで本番完了とは判定しません。
+
 ```sh
 npm run check
 npm test

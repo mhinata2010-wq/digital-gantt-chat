@@ -539,3 +539,4 @@ button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible,te
   .report-delay-fields{grid-template-columns:1fr}.report-delay-fields .wide{grid-column:auto}
   .icon-button{min-width:44px;height:44px}
 }
+html:not(.top-level) body{display:none!important}

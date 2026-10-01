@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' https://cdn.jsdelivr.net; connect-src 'self' https://*.supabase.co wss://*.supabase.co; img-src 'self' data: blob: https://*.supabase.co; style-src 'self' 'unsafe-inline'; font-src 'self'; manifest-src 'self'; worker-src 'self'; frame-src 'none'; form-action 'self'; upgrade-insecure-requests">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#173f35">
   <meta name="description" content="関係者で安全に共有・共同編集できる建設工程表">
@@ -9,6 +10,7 @@
   <title>現場工程表｜snake site</title>
   <link rel="icon" href="snake-site.gif">
   <link rel="stylesheet" href="style.css?v=hybrid-network-1">
+  <script src="frame-guard.js"></script>
 </head>
 <body>
   <a class="skip-link" href="#home">本文へ移動</a>
@@ -314,7 +316,7 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js" integrity="sha384-AkNSQdptcXlJ0/NBZc4qGk86cDVXcCevwoWgEKIpHOEfbvlXGLlIkimQtONt8KNf" crossorigin="anonymous"></script>
   <script src="config.js?v=supabase-20260928-2"></script>
   <script src="vendor/xlsx.full.min.js" defer></script>
   <script src="vendor/qrcode.min.js" defer></script>

@@ -119,19 +119,17 @@ export async function uploadTaskFiles(projectId,taskId,files){
     for(const file of files){
       if(!['image/jpeg','image/png','image/webp','application/pdf'].includes(file.type))throw new Error(`${file.name} は対応していないファイル形式です。`);
       if(file.size>10485760)throw new Error(`${file.name} は10MB以下にしてください。`);
-      const safeName=file.name.normalize('NFKC').replace(/[^a-zA-Z0-9._-]+/g,'-').slice(-100)||'file';
-      const path=`${projectId}/${taskId}/${crypto.randomUUID()}-${safeName}`;
-      const {error}=await client.storage.from('project-files').upload(path,file,{contentType:file.type,upsert:false});fail(error);
-      uploaded.push({storage_path:path,original_name:file.name,mime_type:file.type,byte_size:file.size});
+      const form=new FormData();form.set('projectId',projectId);form.set('taskId',taskId);form.set('file',file,file.name);
+      const {data,error}=await client.functions.invoke('upload-project-file',{body:form});fail(error);uploaded.push(data);
     }
     return uploaded;
-  }catch(error){await Promise.all(uploaded.map(item=>client.storage.from('project-files').remove([item.storage_path])));throw error}
+  }catch(error){if(uploaded.length)await removeUploadedFiles(uploaded.map(item=>item.storage_path)).catch(()=>{});throw error}
 }
 export async function saveAttachmentRecords(projectId,taskId,items,reportId=null,commentId=null){
   if(!items.length)return [];
   const {data,error}=await client.from('task_attachments').insert(items.map(item=>({...item,project_id:projectId,task_id:taskId,report_id:reportId,comment_id:commentId}))).select();fail(error);return data||[];
 }
-export async function removeUploadedFiles(paths){if(paths.length){const {error}=await client.storage.from('project-files').remove(paths);fail(error)}}
+export async function removeUploadedFiles(paths){if(paths.length){const {error}=await client.functions.invoke('upload-project-file',{body:{action:'delete',paths}});fail(error)}}
 export async function signedAttachmentUrl(path){const {data,error}=await client.storage.from('project-files').createSignedUrl(path,900);fail(error);return data.signedUrl}
 
 export async function createManagementItem(values){const {data,error}=await client.from('management_items').insert(values).select().single();fail(error);return data}

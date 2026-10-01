@@ -4,15 +4,16 @@ GitHub Pagesは静的フロントエンドだけを配信します。認証、�
 
 ## 1. データベースを作成・更新する
 
-新規環境ではSupabase SQL Editorで次を番号順に実行します。
+新規環境ではSupabase SQL Editorで1〜5を番号順に実行し、5章の`upload-project-file`をデプロイしてから6を実行します。
 
 1. `supabase/migrations/202609280001_collaboration.sql`
 2. `supabase/migrations/202609290001_field_operations.sql`
 3. `supabase/migrations/202610010001_hybrid_schedule_import.sql`
 4. `supabase/migrations/202610010002_weather_schedule_changes.sql`
 5. `supabase/migrations/202610010003_event_network_layout.sql`
+6. `supabase/migrations/202610010004_security_hardening.sql`
 
-既に現場運用版を使っている環境では3〜5を順に実行します。各追加移行は既存案件・工程を削除しません。実行後は次が作成されます。
+既に現場運用版を使っている環境では3〜5、`upload-project-file`のデプロイ、6の順に実行します。`202610010004_security_hardening.sql`を適用するとStorageへの直接書込みを停止します。各追加移行は既存案件・工程を削除しません。実行後は次が作成されます。
 
 - 進捗／完了報告、コメント、添付
 - 工程版と版内スナップショット
@@ -24,6 +25,7 @@ GitHub Pagesは静的フロントエンドだけを配信します。認証、�
 - ネットワーク図の共有手動配置
 - 天候休工日と遅延理由を含む変更案・影響経路・責任者承認
 - 番号付きイベント、工程矢線、ダミー線を持つ建築ネットワークと共有手動配置
+- 天候変更制約の整合、作成者情報のDB強制、添付ファイルのサーバー検査
 
 移行が未適用でも旧共同編集機能は動きますが、現場報告・工程版・管理項目・通知は表示されません。これは公開中サイトを壊さないための互換動作です。
 
@@ -60,9 +62,16 @@ Gmailアドレスは利用者のログイン先メールとして使用できま
 - Subject: `【snake site】メールアドレスの確認`
 - Body: `supabase/email-templates/confirmation.html`
 
-## 5. 招待メールEdge Function（任意）
+## 5. Edge Functions
 
-招待リンク／QRは外部メールサービスなしでも作成できます。メールを自動送信する場合だけEdge Functionをデプロイします。
+添付ファイルを利用する場合、`upload-project-file`は必須です。ログイン本人と案件権限を確認し、サイズ、実ファイル署名、危険なPDFアクションを検査してから非公開Storageへ保存します。`SUPABASE_SERVICE_ROLE_KEY`はSupabaseがEdge Function環境へ提供する値を使用し、ブラウザやGitには保存しません。
+
+```sh
+supabase functions deploy upload-project-file
+supabase secrets set PUBLIC_SITE_URL=https://mhinata2010-wq.github.io/digital-gantt-chat/
+```
+
+招待リンク／QRは外部メールサービスなしでも作成できます。メールを自動送信する場合だけ`send-invitation`もデプロイします。
 
 ```sh
 supabase functions deploy send-invitation

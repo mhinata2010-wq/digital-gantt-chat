@@ -1,5 +1,5 @@
-const CACHE='snake-shell-v4';
-const SHELL=['./','./index.html','./style.css?v=hybrid-network-1','./app.js?v=hybrid-network-1','./data-service.js','./schedule-import.js','./network-diagram.js','./schedule-engine.js','./field-dashboard.js','./field-operations.js','./offline-store.js','./config.js','./snake-site.gif','./manifest.webmanifest','./vendor/xlsx.full.min.js','./vendor/qrcode.min.js'];
+const CACHE='snake-shell-v5';
+const SHELL=['./','./index.html','./style.css?v=hybrid-network-1','./frame-guard.js','./app.js?v=hybrid-network-1','./data-service.js','./schedule-import.js','./network-diagram.js','./schedule-engine.js','./field-dashboard.js','./field-operations.js','./offline-store.js','./config.js','./snake-site.gif','./manifest.webmanifest','./vendor/xlsx.full.min.js','./vendor/qrcode.min.js'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',event=>{

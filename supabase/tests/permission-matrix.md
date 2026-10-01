@@ -40,3 +40,7 @@ Create a schedule version after reports and attachments exist, change the schedu
 - 責任者が天候変更を承認すると、対象工程の休工日と日数が同一トランザクションで更新される。
 - 天候変更案へ許可されていない列を混ぜると、DB側で拒否される。
 - 建築ネットワークのイベント配置は案件メンバーだけが参照でき、編集者以上だけが保存・リセットできる。
+- APIから`created_by`／`updated_by`へ他人のUUIDを指定しても、DBがログイン本人へ上書きする。
+- MIME名だけを偽装した画像・PDFは`upload-project-file`で拒否される。
+- JavaScript、起動アクション、埋込ファイルを含むPDFは拒否される。
+- 招待IDと異なる招待トークンをメール送信APIへ渡すと拒否される。
