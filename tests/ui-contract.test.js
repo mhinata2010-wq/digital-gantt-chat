@@ -103,3 +103,10 @@ test('master schedule mirrors the reference hierarchy without removing editing c
   assert.match(app,/function renderMasterScheduleMeta/);assert.match(app,/gantt-group-row/);assert.match(app,/data-month-boundary/);
   assert.match(app,/data-impact-task/);assert.match(app,/data-resize-task/);assert.match(css,/\.master-schedule-meta/);assert.match(css,/\.gantt-group-row/);
 });
+
+test('member invitation keeps the form reference across asynchronous work',async()=>{
+  const app=await readFile(new URL('app.js',root),'utf8');
+  assert.match(app,/async function invite\(event\)\{[\s\S]*?const form=event\.currentTarget/);
+  assert.doesNotMatch(app,/await[^\n]*;event\.currentTarget\.reset\(\)/);
+  assert.match(app,/form\.reset\(\);toast\('期限7日の招待リンクを作成しました'/);
+});

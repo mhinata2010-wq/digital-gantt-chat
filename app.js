@@ -563,13 +563,13 @@ async function renderMembers(){
   try{const members=await loadMembers(currentProject.id);$('#memberList').innerHTML=members.map(member=>`<div class="member-row" data-member-id="${member.id}"><div><b>${esc(member.email)}</b><small>${member.accepted_at?'参加済み':'招待待ち'}</small></div>${member.role==='owner'?'<span class="member-role owner">責任者</span>':`<select data-member-role aria-label="${esc(member.email)}の権限"><option value="editor" ${member.role==='editor'?'selected':''}>編集者</option><option value="viewer" ${member.role==='viewer'?'selected':''}>閲覧者</option></select><button class="button danger compact" data-remove-member type="button">削除</button>`}</div>`).join('');if(fieldOperations)await renderInvitations()}catch(error){showError(error,'#inviteMessage')}
 }
 async function invite(event){
-  event.preventDefault();const button=event.currentTarget.querySelector('button'),data=new FormData(event.currentTarget);setBusy(button,true);$('#inviteMessage').textContent='';
+  event.preventDefault();const form=event.currentTarget,button=form.querySelector('button'),data=new FormData(form);setBusy(button,true);$('#inviteMessage').textContent='';
   try{
     const email=String(data.get('email')).trim().toLowerCase(),role=data.get('role');
-    if(!fieldOperations){await inviteMember(currentProject.id,email,role);event.currentTarget.reset();toast('招待を追加しました');await renderMembers();return}
+    if(!fieldOperations){await inviteMember(currentProject.id,email,role);form.reset();toast('招待を追加しました');await renderMembers();return}
     const invitation=await createInvitation(currentProject.id,email,role,7),root=new URL('./',location.href);root.hash='';root.search='';lastInviteUrl=`${root.href}#invite=${invitation.token}`;$('#inviteLink').textContent=lastInviteUrl;$('#inviteShare').hidden=false;renderInviteQr(lastInviteUrl);
     try{const {error}=await client.functions.invoke('send-invitation',{body:{invitationId:invitation.invitation_id,inviteUrl:lastInviteUrl}});if(error)throw error;$('#inviteDeliveryState').textContent='招待メールを送信しました。'}catch{$('#inviteDeliveryState').textContent='メール送信サービスが未設定です。リンクをコピーして安全な方法で相手へ渡してください。'}
-    event.currentTarget.reset();toast('期限7日の招待リンクを作成しました');await renderInvitations();
+    form.reset();toast('期限7日の招待リンクを作成しました');await renderInvitations();
   }catch(error){showError(error,'#inviteMessage')}finally{setBusy(button,false)}
 }
 
