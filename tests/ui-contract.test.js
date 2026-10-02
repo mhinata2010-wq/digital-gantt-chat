@@ -96,3 +96,10 @@ test('architect workbook fields stay editable importable exportable and protecte
   assert.match(html,/id="preflightChecklist"/);assert.match(html,/id="weatherAllowanceInput"/);assert.match(app,/PREFLIGHT_ITEMS/);assert.match(app,/weightedProgress/);assert.match(app,/EXPORT_HEADERS/);
   assert.match(parser,/dailyOutput/);assert.match(parser,/costThousands/);assert.match(migration,/preflight_completed/);assert.match(migration,/grant update\([\s\S]*cost_thousands/);assert.match(migration,/apply_schedule_import/);assert.match(migration,/restore_schedule_version_rows/);assert.match(migration,/quantity=excluded\.quantity/);
 });
+
+test('master schedule mirrors the reference hierarchy without removing editing controls',async()=>{
+  const [html,app,css]=await Promise.all([readFile(new URL('index.html',root),'utf8'),readFile(new URL('app.js',root),'utf8'),readFile(new URL('style.css',root),'utf8')]);
+  assert.match(html,/id="masterScheduleMeta"/);assert.match(html,/総合工程表/);
+  assert.match(app,/function renderMasterScheduleMeta/);assert.match(app,/gantt-group-row/);assert.match(app,/data-month-boundary/);
+  assert.match(app,/data-impact-task/);assert.match(app,/data-resize-task/);assert.match(css,/\.master-schedule-meta/);assert.match(css,/\.gantt-group-row/);
+});

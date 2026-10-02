@@ -9,7 +9,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <title>現場工程表｜snake site</title>
   <link rel="icon" href="snake-site.gif">
-  <link rel="stylesheet" href="style.css?v=architect-schedule-1">
+  <link rel="stylesheet" href="style.css?v=master-schedule-2">
   <script src="frame-guard.js"></script>
 </head>
 <body>
@@ -152,12 +152,13 @@
 
       <section id="ganttView" class="content-view" tabindex="-1" hidden>
         <div class="section-heading">
-          <div><p class="eyebrow">MASTER SCHEDULE</p><h2>工程カレンダー</h2><p>同じ工程データを日程軸で確認します。</p></div>
+          <div><p class="eyebrow">MASTER SCHEDULE</p><h2>総合工程表</h2><p>棟・階・工種と全体日程を一枚の時間軸で確認します。</p></div>
           <div class="inline-actions">
             <button class="button secondary" id="impactButton" type="button">変更の影響を見る</button>
             <button class="button quiet" id="printButton" type="button">出力</button>
           </div>
         </div>
+        <section id="masterScheduleMeta" class="master-schedule-meta" aria-label="案件概要"></section>
         <div id="scheduleSummary" class="summary-grid"></div>
         <div class="gantt-gesture-help" id="ganttGestureHelp"><button id="ganttTodayButton" type="button">今日へ</button><button id="ganttZoomOut" type="button" aria-label="縮小">−</button><button id="resetGanttScale" type="button">標準</button><button id="ganttZoomIn" type="button" aria-label="拡大">＋</button><span>↔ 横にスワイプ</span><span>工程をタップして詳細</span><span class="edit-only">✓ で完了報告</span></div>
         <div id="ganttChart" class="gantt-shell"></div>
@@ -334,6 +335,6 @@
   <script src="config.js?v=supabase-20260928-2"></script>
   <script src="vendor/xlsx.full.min.js" defer></script>
   <script src="vendor/qrcode.min.js" defer></script>
-  <script type="module" src="app.js?v=architect-schedule-1"></script>
+  <script type="module" src="app.js?v=master-schedule-2"></script>
 </body>
 </html>
