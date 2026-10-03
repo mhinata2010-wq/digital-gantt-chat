@@ -30,6 +30,9 @@ export async function claimInvitations(){const {error}=await client.rpc('claim_p
 export async function loadProfile(){
   const {data,error}=await client.from('profiles').select('id,email,display_name').single();fail(error);return data;
 }
+export async function updateProfileName(displayName){
+  const {data,error}=await client.from('profiles').update({display_name:displayName.trim()}).eq('id',(await session()).user.id).select('id,email,display_name').single();fail(error);return data;
+}
 export async function loadProjects(){
   const {data,error}=await client.from('project_overview').select('*').order('updated_at',{ascending:false});fail(error);return data||[];
 }

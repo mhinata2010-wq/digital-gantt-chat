@@ -658,6 +658,14 @@ input,select,textarea,.button,.icon-button,.auth-card,.project-card,.content-vie
 @keyframes network-flow{to{stroke-dashoffset:-38}}
 @media(max-width:700px){.network-shell{padding:14px;min-height:0}.network-shell svg{min-height:0}.networkView .section-heading>div:first-child>p:last-child{display:none}}
 
+/* Personal details stay calm and factual: no invented profile data. */
+.profile-page{width:min(620px,calc(100% - 210px));min-height:calc(100vh - 132px);margin-left:164px;padding:132px 0 80px}
+.profile-hero{position:relative;display:grid;min-height:190px;place-items:start center;padding:34px;border-radius:32px 32px 0 0;background:#9ce3d7;color:#163a32;text-align:center}
+.profile-hero::after{position:absolute;right:-12%;bottom:-42px;width:62%;height:100px;border-radius:50%;background:var(--paper);content:""}
+.profile-hero h1{position:relative;z-index:1;margin:0;font-size:1.25rem}.profile-avatar{position:absolute;z-index:2;bottom:-56px;display:grid;width:112px;height:112px;place-items:center;border:5px solid #fff;border-radius:50%;background:#176b4d;color:#fff;font-size:2.8rem;font-weight:800}
+.profile-sheet{padding:88px 34px 34px;border:1px solid #e0e4e1;border-top:0;border-radius:0 0 28px 28px;background:#fff}.profile-details{display:grid;gap:18px}.profile-details label{gap:7px}.profile-details label>span{color:#506059;font-size:.72rem}.profile-details input[readonly]{background:#f3f5f4;color:#68736e}.profile-help{margin:-9px 0 4px;color:var(--muted);font-size:.72rem;line-height:1.6}.profile-details .button{justify-self:start}.profile-summary{display:grid;gap:0;margin:30px 0 0;border-top:1px solid var(--line)}.profile-summary div{display:grid;grid-template-columns:155px 1fr;gap:12px;padding:15px 0;border-bottom:1px solid var(--line)}.profile-summary dt{color:var(--muted);font-size:.72rem}.profile-summary dd{margin:0;font-size:.82rem;font-weight:700}.profile-sheet>.text-button{margin-left:0}
+@media(max-width:700px){.profile-page{width:calc(100% - 32px);min-height:0;margin:0 auto;padding:112px 0 132px}.profile-hero{min-height:166px;border-radius:26px 26px 0 0}.profile-avatar{width:96px;height:96px;bottom:-48px;font-size:2.35rem}.profile-sheet{padding:72px 22px 26px;border-radius:0 0 24px 24px}.profile-summary div{grid-template-columns:1fr;gap:5px}}
+
 /* Softer field surfaces and a deliberately generous mobile thumb target. */
 input,select,textarea{border-radius:14px!important}
 .button{border-radius:14px!important}

@@ -9,7 +9,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <title>現場工程表｜snake site</title>
   <link rel="icon" href="snake-site.gif">
-  <link rel="stylesheet" href="style.css?v=network-flow-1">
+  <link rel="stylesheet" href="style.css?v=profile-1">
   <script src="frame-guard.js"></script>
 </head>
 <body>
@@ -57,7 +57,7 @@
       <button class="field-nav-button" id="navToday" type="button" aria-label="今日の現場" title="今日の現場">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 10 8-6 8 6v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"></path><path d="M9 20v-6h6v6"></path></svg>
       </button>
-      <button class="field-nav-button" id="navLogout" type="button" aria-label="ログアウト" title="ログアウト">
+      <button class="field-nav-button" id="navProfile" type="button" aria-label="プロフィール" title="プロフィール">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"></circle><path d="M5 21v-2.3a5.7 5.7 0 0 1 5.7-5.7h2.6a5.7 5.7 0 0 1 5.7 5.7V21"></path></svg>
       </button>
     </nav>
@@ -78,6 +78,21 @@
         <button class="icon-button" id="dismissMigration" type="button" aria-label="閉じる">×</button>
       </aside>
       <div id="projectGrid" class="project-grid" aria-live="polite"></div>
+    </section>
+
+    <section id="profileView" class="profile-page" hidden tabindex="-1">
+      <div class="profile-hero"><h1>プロフィール</h1><span id="profileAvatar" class="profile-avatar" aria-hidden="true">—</span></div>
+      <div class="profile-sheet">
+        <form id="profileForm" class="profile-details">
+          <label><span>お名前</span><input id="profileName" name="display_name" maxlength="80" required></label>
+          <label><span>メールアドレス</span><input id="profileEmail" type="email" readonly></label>
+          <p class="profile-help">メールアドレスの変更は、ログイン用の設定で行います。</p>
+          <p id="profileMessage" class="form-message" role="alert"></p>
+          <button class="button primary" type="submit">名前を保存</button>
+        </form>
+        <dl class="profile-summary"><div><dt>利用中のアカウント</dt><dd id="profileAccount">—</dd></div><div><dt>参加中の案件</dt><dd id="profileProjects">—</dd></div></dl>
+        <button class="text-button muted" id="profileLogout" type="button">ログアウト</button>
+      </div>
     </section>
 
     <section id="projectView" class="project-page" hidden>
@@ -306,6 +321,6 @@
   <script src="config.js?v=supabase-20260928-2"></script>
   <script src="vendor/xlsx.full.min.js" defer></script>
   <script src="vendor/qrcode.min.js" defer></script>
-  <script type="module" src="app.js?v=network-flow-1"></script>
+  <script type="module" src="app.js?v=profile-1"></script>
 </body>
 </html>
