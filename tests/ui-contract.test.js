@@ -56,13 +56,14 @@ test('completion uses a report dialog and mobile UI retains field details',async
   assert.match(html,/id="historyEntityFilter"/);assert.match(app,/function renderHistory/);
 });
 
-test('public entry explains the product and offers a login-free working demo',async()=>{
-  const [html,app,css]=await Promise.all([readFile(new URL('index.html',root),'utf8'),readFile(new URL('app.js',root),'utf8'),readFile(new URL('style.css',root),'utf8')]);
-  assert.match(html,/id="landingView"/);assert.match(html,/登録なしで操作を試す/);assert.match(html,/工程変更を、/);
-  assert.match(html,/data-demo-view="today"/);assert.match(html,/data-demo-view="gantt"/);assert.match(html,/data-demo-view="network"/);
-  assert.match(html,/責任者として確定を試す/);assert.match(html,/お問い合わせ・不具合報告/);
-  assert.match(app,/function showLanding/);assert.match(app,/function completeDemoTask/);assert.match(app,/function confirmDemoImpact/);
-  assert.match(css,/\.landing-hero/);assert.match(css,/@media\(max-width:700px\)/);
+test('public entry presents the product as a construction document and A3 schedule',async()=>{
+  const [html,css,worker]=await Promise.all([readFile(new URL('index.html',root),'utf8'),readFile(new URL('style.css',root),'utf8'),readFile(new URL('sw.js',root),'utf8')]);
+  assert.match(html,/id="landingView"/);assert.match(html,/工程表見本を見る/);assert.match(html,/工程変更を、/);
+  assert.match(html,/class="schedule-paper"/);assert.match(html,/出力見本　A3横/);assert.match(html,/class="document-index"/);
+  assert.doesNotMatch(html,/data-demo-view=|demo-window-head|DEMO/);assert.match(html,/お問い合わせ・不具合報告/);
+  assert.match(css,/@font-face\{font-family:"IBM Plex Sans JP"/);assert.match(css,/@font-face\{font-family:"Shippori Mincho"/);assert.match(css,/font-family:"IBM Plex Mono"/);
+  assert.doesNotMatch(css,/border-radius:99px|backdrop-filter:blur|letter-spacing:-/);assert.doesNotMatch(css,/font-family:Inter/);
+  assert.match(worker,/fonts\/shippori-mincho-600\.woff2/);assert.match(css,/@media\(max-width:700px\)/);
 });
 
 test('hybrid import requires human review and stores manual network layout securely',async()=>{
