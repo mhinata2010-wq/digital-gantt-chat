@@ -91,13 +91,11 @@ function setAuthMode(mode){
 }
 
 function showLanding(target='home'){
-  $('#landingView').hidden=false;$('#authView').hidden=true;$('#application').hidden=true;$('#setupNotice').hidden=true;
-  if(!location.hash.startsWith('#invite='))history.replaceState(null,'',`#${target}`);
-  if(target!=='home')requestAnimationFrame(()=>document.getElementById(target)?.scrollIntoView({behavior:'smooth',block:'start'}));else window.scrollTo({top:0,behavior:'smooth'});
+  showPublicAuth('login');
 }
 
 function showPublicAuth(mode='login'){
-  setAuthMode(mode);$('#landingView').hidden=true;$('#application').hidden=true;$('#authView').hidden=false;
+  setAuthMode(mode);const landing=$('#landingView');if(landing)landing.hidden=true;$('#application').hidden=true;$('#authView').hidden=false;
   $('#setupNotice').hidden=configured;$('#authForm').querySelectorAll('input,button').forEach(node=>node.disabled=!configured);
   if(!location.hash.startsWith('#invite='))history.replaceState(null,'',`#${mode}`);
   requestAnimationFrame(()=>mode==='register'?$('#displayName').focus():$('#authEmail').focus());
@@ -127,7 +125,7 @@ async function enterApplication(){
   const inviteToken=location.hash.match(/^#invite=([a-f0-9]{64})$/i)?.[1]||sessionStorage.getItem('snake-pending-invite');
   if(inviteToken){try{const projectId=await acceptInvitation(inviteToken);sessionStorage.removeItem('snake-pending-invite');location.hash=`project=${projectId}`}catch(error){sessionStorage.setItem('snake-pending-invite',inviteToken);toast(friendlyErrorMessage(error))}}
   $('#userName').textContent=profile.display_name||profile.email;$('#userInitial').textContent=(profile.display_name||profile.email||'?').slice(0,1).toUpperCase();
-  $('#landingView').hidden=true;$('#authView').hidden=true;$('#application').hidden=false;
+  const landing=$('#landingView');if(landing)landing.hidden=true;$('#authView').hidden=true;$('#application').hidden=false;
   const requestedProject=location.hash.match(/^#project=([0-9a-f-]+)$/i)?.[1];
   if(requestedProject)await openProject(requestedProject);else await showProjects();
   if(navigator.onLine)syncOfflineQueue();
@@ -649,14 +647,14 @@ async function applyImpact(){
 
 async function boot(){
   setAuthMode('login');
-  if(!configured){$('#authForm').querySelectorAll('input,button').forEach(node=>node.disabled=true);showLanding(location.hash==='#publicDemo'?'publicDemo':'home');return}
+  if(!configured){$('#authForm').querySelectorAll('input,button').forEach(node=>node.disabled=true);showPublicAuth('login');return}
   $('#setupNotice').hidden=true;
   $('#authView').querySelectorAll('input,button').forEach(node=>node.disabled=false);
-  try{const current=await session();if(current)await enterApplication();else if(location.hash==='#login'||location.hash==='#register'||location.hash.startsWith('#invite='))showPublicAuth(location.hash==='#register'?'register':'login');else showLanding(location.hash.slice(1)||'home')}catch(error){showPublicAuth('login');showError(error,'#authMessage')}
+  try{const current=await session();if(current)await enterApplication();else showPublicAuth(location.hash==='#register'?'register':'login')}catch(error){showPublicAuth('login');showError(error,'#authMessage')}
 }
 
-$('#authForm').addEventListener('submit',handleAuth);$('#authSwitch').addEventListener('click',()=>showPublicAuth(authMode==='login'?'register':'login'));$('.auth-brand').addEventListener('click',event=>{event.preventDefault();showLanding('home')});
-for(const id of ['publicLogin','heroLogin','footerLogin'])$(`#${id}`).addEventListener('click',()=>showPublicAuth('login'));$('#publicRegister').addEventListener('click',()=>showPublicAuth('register'));$('#authBack').addEventListener('click',()=>showLanding('home'));
+$('#authForm').addEventListener('submit',handleAuth);$('#authSwitch').addEventListener('click',()=>showPublicAuth(authMode==='login'?'register':'login'));$('.auth-brand').addEventListener('click',event=>{event.preventDefault();showPublicAuth('login')});
+for(const id of ['publicLogin','heroLogin','footerLogin'])$(`#${id}`)?.addEventListener('click',()=>showPublicAuth('login'));$('#publicRegister')?.addEventListener('click',()=>showPublicAuth('register'));
 document.querySelectorAll('[data-demo-view]').forEach(button=>button.addEventListener('click',()=>switchDemo(button.dataset.demoView)));$('.demo-tabs')?.addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const tabs=[...document.querySelectorAll('[data-demo-view]')],current=tabs.indexOf(document.activeElement),next=event.key==='Home'?0:event.key==='End'?tabs.length-1:(current+(event.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length;switchDemo(tabs[next].dataset.demoView,true)});$('#demoCompleteTask')?.addEventListener('click',completeDemoTask);$('#demoShowImpact')?.addEventListener('click',showDemoImpact);$('#demoConfirmImpact')?.addEventListener('click',confirmDemoImpact);
 $('#resetPassword').addEventListener('click',async()=>{const email=$('#authEmail').value.trim();if(!email){$('#authMessage').textContent='メールアドレスを入力してください。';return}try{await sendPasswordReset(email);$('#authMessage').textContent='パスワード再設定メールを送りました。'}catch(error){showError(error,'#authMessage')}});
 $('#logoutButton').addEventListener('click',async()=>{const userId=profile?.id,pending=userId?await pendingOperations(userId).catch(()=>[]):[];if(pending.length){toast(`未同期の報告が${pending.length}件あります。接続して同期してからログアウトしてください。`);return}await signOut();if(userId)await clearOfflineUser(userId).catch(()=>{});stopRealtime?.();profile=null;projects=[];currentProject=null;showLanding('home')});

@@ -9,60 +9,22 @@
   <link rel="manifest" href="manifest.webmanifest">
   <title>現場工程表｜snake site</title>
   <link rel="icon" href="snake-site.gif">
-  <link rel="stylesheet" href="style.css?v=field-document-1">
+  <link rel="stylesheet" href="style.css?v=login-first-1">
   <script src="frame-guard.js"></script>
 </head>
 <body>
-  <a class="skip-link" href="#home">本文へ移動</a>
+  <a class="skip-link" href="#authView">本文へ移動</a>
   <div id="setupNotice" class="setup-notice" hidden>
     <strong>共同編集バックエンドが未設定です</strong>
     <span><code>config.js</code> にSupabaseのURLと公開キーを設定してください。</span>
     <a href="SETUP.md">設定手順</a>
   </div>
 
-  <main id="landingView" class="public-site">
-    <header class="public-nav">
-      <a class="public-brand" href="#home" aria-label="現場工程表 ホーム"><img src="snake-site.gif" alt=""><span><b>現場工程表</b><small>by snake site</small></span></a>
-      <nav aria-label="公開ページ"><a href="#how-it-works">使い方</a><a href="#trust">安全性</a><button class="button quiet compact" id="publicLogin" type="button">ログイン</button><button class="button primary compact" id="publicRegister" type="button">アカウント作成</button></nav>
-    </header>
-
-    <section class="landing-hero" id="home">
-      <div class="hero-copy">
-        <p class="form-code">様式 G-1　建築工程管理</p>
-        <h1>工程変更を、<br>伝わったところまで管理する。</h1>
-        <p class="hero-lead">ガントとネットワーク図を同じ工程データから作成。遅れの影響、変更前後、確認者を一つの案件台帳で共有します。</p>
-        <dl class="landing-ledger"><div><dt>監督</dt><dd>今日の遅延と変更待ちを確認</dd></div><div><dt>協力会社</dt><dd>自社の次作業日をスマートフォンで確認</dd></div><div><dt>責任者</dt><dd>後続への影響を確認して正式日程を確定</dd></div></dl>
-        <div class="hero-actions"><a class="button primary" href="#publicDemo">工程表見本を見る</a><button class="button quiet" id="heroLogin" type="button">利用者ログイン</button></div>
-        <p class="trial-note">試験提供中／見本に実在する案件データは含まれません。</p>
-      </div>
-
-      <figure class="schedule-paper" id="publicDemo" aria-labelledby="sampleScheduleTitle">
-        <figcaption><span>様式 G-1</span><strong id="sampleScheduleTitle">こども園新築工事　総合工程表</strong><small>縮尺：日単位　作成：2026年10月</small></figcaption>
-        <div class="paper-meta"><span>工期</span><b>2026.10.05 — 2027.03.31</b><span>施工者</span><b>snake site 建設</b></div>
-        <div class="paper-calendar"><b>工種・工程</b><span>10月</span><span>11月</span><span>12月</span></div>
-        <div class="paper-row"><b>A　準備・仮設</b><i style="--start:3%;--length:22%">10/05–10/20</i></div>
-        <div class="paper-row"><b>B　杭・土工事</b><i style="--start:18%;--length:30%">10/19–11/12</i></div>
-        <div class="paper-row"><b>C　基礎躯体</b><i style="--start:42%;--length:35%">11/09–12/04</i></div>
-        <div class="paper-row critical"><b>D　上部躯体</b><i style="--start:68%;--length:29%">11/30–12/24</i></div>
-        <div class="paper-legend"><span><i></i>予定工程</span><span><i></i>クリティカル</span><span>赤色は遅延・工期影響のみ</span></div>
-        <div class="paper-stamp"><span>作成</span><span>確認</span><span>承認</span></div>
-      </figure>
-    </section>
-
-    <section class="public-section" id="how-it-works"><div class="public-section-head"><p class="form-code">様式 G-2　運用手順</p><h2>確認・報告・確定を分ける。</h2></div><div class="document-index"><article><span>01</span><h3>朝、今日を見る</h3><p>今日・遅延・次の作業を一覧表示。協力会社は自社に必要な予定から確認できます。</p></article><article><span>02</span><h3>現場から報告する</h3><p>工程を開いて着手・進捗・完了を報告。写真、残日数、遅延理由を同じ記録へ残します。</p></article><article><span>03</span><h3>影響を見て確定する</h3><p>後続工程の変更案を新旧で比較。責任者の確認前に正式日程を上書きしません。</p></article></div></section>
-
-    <section class="print-specimen" aria-labelledby="printSpecimenTitle"><div><p class="form-code">出力見本　A3横</p><h2 id="printSpecimenTitle">画面で直し、紙で共有する。</h2><p>全体工程はA3横向きへ整形して出力できます。現場事務所への掲示、定例会議、協力会社との打合せでも、画面と同じ記号・日付・線種で確認できます。</p></div><div class="a3-sheet"><span>A3 / 420×297</span><strong>総合工程表</strong><i></i><i></i><i></i><small>予定・実績・変更案を同じ時間軸へ記載</small></div></section>
-
-    <section class="public-section trust-section" id="trust"><div class="public-section-head"><p class="form-code">様式 S-1　権限・記録</p><h2>見られる人と、変えられる人を案件ごとに制限。</h2></div><div class="document-index"><article><span>01</span><h3>招待された人だけ</h3><p>案件URLやIDだけでは閲覧不可。責任者・編集者・閲覧者の権限をデータベース側でも確認します。</p></article><article><span>02</span><h3>変更を戻せる</h3><p>誰が、いつ、何を変えたかを記録。確定版と復元前バックアップから工程を戻せます。</p></article><article><span>03</span><h3>持ち出せる</h3><p>印刷・PDF・CSV・Excelへ出力し、障害時にも工程情報を手元へ残せます。</p></article></div><aside class="operator-card"><div><small>開発・運営</small><b>snake site</b><p>実案件での検証を進める試験提供版です。</p></div><a href="https://github.com/mhinata2010-wq/digital-gantt-chat/issues" target="_blank" rel="noopener">お問い合わせ・不具合報告</a><a href="https://github.com/mhinata2010-wq/digital-gantt-chat" target="_blank" rel="noopener">開発情報</a></aside></section>
-
-    <footer class="public-footer"><span>現場工程表 <small>by snake site</small></span><div><a href="#trust">データと権限</a><button id="footerLogin" type="button">ログイン</button></div></footer>
-  </main>
-
   <main id="authView" class="auth-layout" hidden>
     <section class="auth-panel">
       <div class="auth-card">
-        <button class="auth-back" id="authBack" type="button">← サービス紹介へ戻る</button><a class="auth-brand" href="#home"><img src="snake-site.gif" alt="snake site"></a>
-        <h1 id="authTitle">現場工程表にログイン</h1>
+        <a class="auth-brand" href="#login"><img src="snake-site.gif" alt="snake site"></a>
+        <h1 id="authTitle">ログイン</h1>
         <p id="authDescription">参加している案件を開きます。</p>
         <form id="authForm">
           <label id="displayNameField" hidden><span>お名前</span><input id="displayName" autocomplete="name" maxlength="80"></label>
@@ -332,6 +294,6 @@
   <script src="config.js?v=supabase-20260928-2"></script>
   <script src="vendor/xlsx.full.min.js" defer></script>
   <script src="vendor/qrcode.min.js" defer></script>
-  <script type="module" src="app.js?v=field-document-1"></script>
+  <script type="module" src="app.js?v=login-first-1"></script>
 </body>
 </html>

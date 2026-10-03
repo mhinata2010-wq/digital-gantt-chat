@@ -56,14 +56,12 @@ test('completion uses a report dialog and mobile UI retains field details',async
   assert.match(html,/id="historyEntityFilter"/);assert.match(app,/function renderHistory/);
 });
 
-test('public entry presents the product as a construction document and A3 schedule',async()=>{
-  const [html,css,worker]=await Promise.all([readFile(new URL('index.html',root),'utf8'),readFile(new URL('style.css',root),'utf8'),readFile(new URL('sw.js',root),'utf8')]);
-  assert.match(html,/id="landingView"/);assert.match(html,/工程表見本を見る/);assert.match(html,/工程変更を、/);
-  assert.match(html,/class="schedule-paper"/);assert.match(html,/出力見本　A3横/);assert.match(html,/class="document-index"/);
-  assert.doesNotMatch(html,/data-demo-view=|demo-window-head|DEMO/);assert.match(html,/お問い合わせ・不具合報告/);
-  assert.match(css,/@font-face\{font-family:"IBM Plex Sans JP"/);assert.match(css,/@font-face\{font-family:"Shippori Mincho"/);assert.match(css,/font-family:"IBM Plex Mono"/);
-  assert.doesNotMatch(css,/border-radius:99px|backdrop-filter:blur|letter-spacing:-/);assert.doesNotMatch(css,/font-family:Inter/);
-  assert.match(worker,/fonts\/shippori-mincho-600\.woff2/);assert.match(css,/@media\(max-width:700px\)/);
+test('entry opens with a focused login screen and uses system typography',async()=>{
+  const [html,app,css,worker]=await Promise.all([readFile(new URL('index.html',root),'utf8'),readFile(new URL('app.js',root),'utf8'),readFile(new URL('style.css',root),'utf8'),readFile(new URL('sw.js',root),'utf8')]);
+  assert.match(html,/id="authView"/);assert.match(html,/<h1 id="authTitle">ログイン<\/h1>/);
+  assert.doesNotMatch(html,/landingView|authBack|工程変更を、/);assert.match(app,/else showPublicAuth\(location\.hash==='#register'\?'register':'login'\)/);
+  assert.match(css,/font-family:-apple-system,BlinkMacSystemFont/);assert.doesNotMatch(css,/Shippori|IBM Plex|font-family:Inter|border-radius:99px|backdrop-filter:blur|letter-spacing:-/);
+  assert.doesNotMatch(worker,/fonts\//);assert.match(css,/@media\(max-width:700px\)/);
 });
 
 test('hybrid import requires human review and stores manual network layout securely',async()=>{
