@@ -644,6 +644,20 @@ input,select,textarea,.button,.icon-button,.auth-card,.project-card,.content-vie
   .project-toolbar{margin-bottom:18px}.project-title-wrap{text-align:left}.project-actions{flex-wrap:wrap}.project-actions .button{flex:1 1 auto}
 }
 
+/* Use the full desktop canvas, and let the network travel right as the wheel moves down. */
+@media(min-width:701px){
+  .project-toolbar{grid-template-columns:minmax(320px,1fr) auto;grid-template-areas:"title actions" "back back";align-items:start;gap:18px 28px;margin-bottom:36px}
+  .project-title-wrap{grid-area:title;min-width:0;text-align:left}.project-title-wrap h1{font-size:clamp(2.2rem,3.8vw,4.4rem);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .project-actions{grid-area:actions;justify-content:flex-end;flex-wrap:wrap}.project-toolbar>#backButton{grid-area:back;justify-self:start}
+  .project-page>.view-tabs{position:sticky;z-index:25;bottom:22px;margin:28px auto 24px;padding:7px;background:rgba(255,255,255,.94);border:1px solid #e1e5e2;border-radius:22px!important;box-shadow:0 8px 22px rgba(22,52,40,.12)!important}
+  .project-page>.view-tabs button{min-width:140px;height:48px;border-radius:16px!important}
+  .network-shell{padding:28px;min-height:0;max-height:calc(100vh - 230px);background:linear-gradient(90deg,#fbfcfb,#f5f8f6);scroll-behavior:smooth;scroll-snap-type:x proximity}
+  .network-shell svg{min-width:max-content;min-height:0}.network-shell.is-scrolling .event-edge,.network-shell.is-scrolling .edge{stroke-dasharray:10 9;animation:network-flow .65s linear infinite!important}
+}
+.network-shell{overscroll-behavior:contain}.network-shell svg{display:block;min-height:0}.networkView .section-heading>div:first-child>p:last-child{max-width:680px}.networkView .caption{margin:12px 4px 0}
+@keyframes network-flow{to{stroke-dashoffset:-38}}
+@media(max-width:700px){.network-shell{padding:14px;min-height:0}.network-shell svg{min-height:0}.networkView .section-heading>div:first-child>p:last-child{display:none}}
+
 /* Softer field surfaces and a deliberately generous mobile thumb target. */
 input,select,textarea{border-radius:14px!important}
 .button{border-radius:14px!important}
