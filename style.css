@@ -643,3 +643,18 @@ input,select,textarea,.button,.icon-button,.auth-card,.project-card,.content-vie
   .field-nav-button{width:64px;height:56px;justify-self:center}.field-nav-button[aria-current="page"]{width:58px;height:58px}
   .project-toolbar{margin-bottom:18px}.project-title-wrap{text-align:left}.project-actions{flex-wrap:wrap}.project-actions .button{flex:1 1 auto}
 }
+
+/* Softer field surfaces and a deliberately generous mobile thumb target. */
+input,select,textarea{border-radius:14px!important}
+.button{border-radius:14px!important}
+.project-card,.content-view,.summary-grid,.gantt-shell,.network-shell,.project-controls,.project-settings,.field-group,.history-list,.impact-result,.notification-preferences,.conflict-compare section,.migration-banner,.empty-state{border-radius:20px!important}
+.dialog{border-radius:24px!important}.task-code{border-radius:12px!important}.view-tabs{border-radius:16px!important}.view-tabs button{border-radius:12px!important}.gantt-bar{border-radius:10px!important}.status-badge,.role-pill,.timing-badge,.priority{border-radius:8px!important}
+@media(max-width:700px){
+  #application>.page-shell,#application>.project-page{padding-bottom:132px}
+  .field-nav{right:16px;bottom:calc(12px + env(safe-area-inset-bottom));left:16px;min-height:82px;padding:6px 10px;border-radius:42px;box-shadow:0 8px 22px rgba(9,64,45,.25)!important}
+  .field-nav-button{width:100%;height:70px;min-width:70px;border-radius:34px}
+  .field-nav-button svg{width:31px;height:31px}
+  .field-nav-button[aria-current="page"]{width:70px;height:70px;border-radius:50%}
+  .field-nav-button:active{background:rgba(255,255,255,.18);transform:scale(.96)}
+  .field-nav-button[aria-current="page"]:active{background:#fff}
+}
