@@ -9,7 +9,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <title>現場工程表｜snake site</title>
   <link rel="icon" href="snake-site.gif">
-  <link rel="stylesheet" href="style.css?v=login-first-1">
+  <link rel="stylesheet" href="style.css?v=field-nav-1">
   <script src="frame-guard.js"></script>
 </head>
 <body>
@@ -41,7 +41,7 @@
 
   <div id="application" hidden>
     <header class="topbar">
-      <a class="brand" href="#projects" id="brandLink"><img src="snake-site.gif" alt=""><span>現場工程表</span></a>
+      <a class="brand" href="#projects" id="brandLink" aria-label="案件一覧"><img src="snake-site.gif" alt="snake site"><span>現場工程表</span></a>
       <div class="topbar-actions">
         <span id="connectionState" class="connection-state" data-state="connecting">接続中</span>
         <button class="notification-button" id="notificationsButton" type="button" aria-label="通知" hidden><span aria-hidden="true">●</span><b id="notificationCount">0</b></button>
@@ -49,6 +49,18 @@
         <button class="button quiet compact" id="logoutButton" type="button">ログアウト</button>
       </div>
     </header>
+
+    <nav class="field-nav" aria-label="主要な操作">
+      <button class="field-nav-button" id="navProjects" type="button" aria-label="案件一覧" title="案件一覧">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v9l6 3"></path><circle cx="12" cy="12" r="8.5"></circle></svg>
+      </button>
+      <button class="field-nav-button" id="navToday" type="button" aria-label="今日の現場" title="今日の現場">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 10 8-6 8 6v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"></path><path d="M9 20v-6h6v6"></path></svg>
+      </button>
+      <button class="field-nav-button" id="navLogout" type="button" aria-label="ログアウト" title="ログアウト">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"></circle><path d="M5 21v-2.3a5.7 5.7 0 0 1 5.7-5.7h2.6a5.7 5.7 0 0 1 5.7 5.7V21"></path></svg>
+      </button>
+    </nav>
 
     <section id="projectsView" class="page-shell">
       <div class="page-heading">
@@ -294,6 +306,6 @@
   <script src="config.js?v=supabase-20260928-2"></script>
   <script src="vendor/xlsx.full.min.js" defer></script>
   <script src="vendor/qrcode.min.js" defer></script>
-  <script type="module" src="app.js?v=login-first-1"></script>
+  <script type="module" src="app.js?v=field-nav-1"></script>
 </body>
 </html>

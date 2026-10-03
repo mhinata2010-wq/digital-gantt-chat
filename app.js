@@ -134,7 +134,14 @@ async function enterApplication(){
 async function showProjects(){
   stopRealtime?.();stopRealtime=null;currentProject=null;tasks=[];managementItems=[];versions=[];changeRequests=[];networkLayouts=[];networkEventLayouts=[];todayCompany='all';fieldOperations=false;location.hash='projects';
   $('#projectView').hidden=true;$('#projectsView').hidden=false;setConnection('online','同期済み');
+  setFieldNav('projects');
   projects=await loadProjects();renderProjects();renderMigration();
+}
+
+function setFieldNav(active){
+  for(const [name,id] of Object.entries({projects:'navProjects',today:'navToday'})){
+    const button=$(`#${id}`);button?.setAttribute('aria-current',name===active?'page':'false');
+  }
 }
 
 function renderProjects(){
@@ -218,6 +225,7 @@ function renderProject(){
 
 function switchView(view,scroll=true){
   activeView=view;
+  if(currentProject)setFieldNav('today');
   const tabs=document.querySelector('.view-tabs');if(tabs)tabs.dataset.active=view;
   document.querySelectorAll('[data-view]').forEach(button=>{
     const selected=button.dataset.view===view;
@@ -659,6 +667,7 @@ document.querySelectorAll('[data-demo-view]').forEach(button=>button.addEventLis
 $('#resetPassword').addEventListener('click',async()=>{const email=$('#authEmail').value.trim();if(!email){$('#authMessage').textContent='メールアドレスを入力してください。';return}try{await sendPasswordReset(email);$('#authMessage').textContent='パスワード再設定メールを送りました。'}catch(error){showError(error,'#authMessage')}});
 $('#logoutButton').addEventListener('click',async()=>{const userId=profile?.id,pending=userId?await pendingOperations(userId).catch(()=>[]):[];if(pending.length){toast(`未同期の報告が${pending.length}件あります。接続して同期してからログアウトしてください。`);return}await signOut();if(userId)await clearOfflineUser(userId).catch(()=>{});stopRealtime?.();profile=null;projects=[];currentProject=null;showLanding('home')});
 $('#backButton').addEventListener('click',showProjects);$('#brandLink').addEventListener('click',event=>{event.preventDefault();showProjects()});
+$('#navProjects').addEventListener('click',showProjects);$('#navToday').addEventListener('click',()=>{if(currentProject)switchView('today');else showProjects()});$('#navLogout').addEventListener('click',()=>$('#logoutButton').click());
 $('#newProjectButton').addEventListener('click',()=>{const form=$('#projectForm');form.reset();form.elements.start_date.value=new Date().toISOString().slice(0,10);$('#projectDialog').showModal()});
 $('#projectForm').addEventListener('submit',async event=>{event.preventDefault();const form=event.currentTarget,button=form.querySelector('[type="submit"]'),data=new FormData(form);setBusy(button,true,'案件を作成中…');try{const id=await createProject(data.get('name'),data.get('start_date'));if(data.has('use_template'))await addStandardTemplate(id,button);$('#projectDialog').close();await openProject(id);if(data.has('use_template'))toast('標準工程を作成しました。日数や順序は自由に編集できます。')}catch(error){showError(error)}finally{setBusy(button,false)}});
 $('#projectGrid').addEventListener('click',event=>{const card=event.target.closest('[data-project-id]');if(card)openProject(card.dataset.projectId)});$('#projectGrid').addEventListener('keydown',event=>{if(['Enter',' '].includes(event.key)){const card=event.target.closest('[data-project-id]');if(card){event.preventDefault();openProject(card.dataset.projectId)}}});
