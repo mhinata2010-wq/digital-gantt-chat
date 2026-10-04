@@ -244,7 +244,7 @@ function renderProject(){
 
 function switchView(view,scroll=true){
   activeView=view;
-  if(currentProject)setFieldNav('today');
+  if(currentProject)setFieldNav('projects');
   const tabs=document.querySelector('.view-tabs');if(tabs)tabs.dataset.active=view;
   document.querySelectorAll('[data-view]').forEach(button=>{
     const selected=button.dataset.view===view;
