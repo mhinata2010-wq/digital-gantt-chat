@@ -9,7 +9,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <title>現場工程表｜snake site</title>
   <link rel="icon" href="snake-site.gif">
-  <link rel="stylesheet" href="style.css?v=profile-1">
+  <link rel="stylesheet" href="style.css?v=personal-home-1">
   <script src="frame-guard.js"></script>
 </head>
 <body>
@@ -78,6 +78,13 @@
         <button class="icon-button" id="dismissMigration" type="button" aria-label="閉じる">×</button>
       </aside>
       <div id="projectGrid" class="project-grid" aria-live="polite"></div>
+    </section>
+
+    <section id="homeView" class="home-page" hidden tabindex="-1">
+      <header class="home-heading"><p>今日の現場</p><h1 id="homeDate">—</h1><span id="homeProjectCount">—</span></header>
+      <section class="home-now" aria-labelledby="homeNowTitle"><div><p>今日の予定</p><h2 id="homeNowTitle">確認する作業はありません</h2><small id="homeNowMeta">参加中の現場から表示します</small></div><button id="homeNowOpen" type="button" hidden>現場を開く</button></section>
+      <section class="home-section" aria-labelledby="homeUpcomingTitle"><div class="home-section-heading"><h2 id="homeUpcomingTitle">次の予定</h2><span>予定順</span></div><div id="homeAgenda" class="home-agenda" aria-live="polite"></div></section>
+      <section class="home-section" aria-labelledby="homeSitesTitle"><div class="home-section-heading"><h2 id="homeSitesTitle">参加中の現場</h2><button class="text-button" id="homeAllProjects" type="button">案件一覧</button></div><div id="homeProjectGrid" class="home-project-grid" aria-live="polite"></div></section>
     </section>
 
     <section id="profileView" class="profile-page" hidden tabindex="-1">
@@ -321,6 +328,6 @@
   <script src="config.js?v=supabase-20260928-2"></script>
   <script src="vendor/xlsx.full.min.js" defer></script>
   <script src="vendor/qrcode.min.js" defer></script>
-  <script type="module" src="app.js?v=profile-1"></script>
+  <script type="module" src="app.js?v=personal-home-1"></script>
 </body>
 </html>

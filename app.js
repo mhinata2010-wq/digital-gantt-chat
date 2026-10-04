@@ -133,21 +133,34 @@ async function enterApplication(){
 
 async function showProjects(){
   stopRealtime?.();stopRealtime=null;currentProject=null;tasks=[];managementItems=[];versions=[];changeRequests=[];networkLayouts=[];networkEventLayouts=[];todayCompany='all';fieldOperations=false;location.hash='projects';
-  $('#projectView').hidden=true;$('#profileView').hidden=true;$('#projectsView').hidden=false;setConnection('online','同期済み');
+  $('#projectView').hidden=true;$('#profileView').hidden=true;$('#homeView').hidden=true;$('#projectsView').hidden=false;setConnection('online','同期済み');
   setFieldNav('projects');
   projects=await loadProjects();renderProjects();renderMigration();
 }
 
 function setFieldNav(active){
-  for(const [name,id] of Object.entries({projects:'navProjects',today:'navToday',profile:'navProfile'})){
+  for(const [name,id] of Object.entries({projects:'navProjects',home:'navToday',profile:'navProfile'})){
     const button=$(`#${id}`);button?.setAttribute('aria-current',name===active?'page':'false');
   }
 }
 
 function showProfile(){
-  if(!profile)return;$('#projectsView').hidden=true;$('#projectView').hidden=true;$('#profileView').hidden=false;location.hash='profile';
+  if(!profile)return;$('#projectsView').hidden=true;$('#projectView').hidden=true;$('#homeView').hidden=true;$('#profileView').hidden=false;location.hash='profile';
   const name=profile.display_name||profile.email||'—';$('#profileAvatar').textContent=name.slice(0,1).toUpperCase();$('#profileName').value=profile.display_name||'';$('#profileEmail').value=profile.email||'';$('#profileAccount').textContent=profile.email||'—';$('#profileProjects').textContent=`${projects.length}件`;
   $('#profileMessage').textContent='';setFieldNav('profile');$('#profileView').focus();
+}
+
+async function showHome(){
+  if(!profile)return;$('#projectsView').hidden=true;$('#projectView').hidden=true;$('#profileView').hidden=true;$('#homeView').hidden=false;location.hash='home';setFieldNav('home');
+  if(!projects.length)projects=await loadProjects();
+  $('#homeDate').textContent=new Intl.DateTimeFormat('ja-JP',{month:'long',day:'numeric',weekday:'short'}).format(new Date());$('#homeProjectCount').textContent=`${projects.length}現場`;
+  $('#homeProjectGrid').innerHTML=projects.length?projects.map(project=>`<button class="home-project-card" data-home-project="${project.id}" type="button"><span>${esc(project.manager||'責任者未設定')}</span><b>${esc(project.name)}</b><small>${Number(project.completed_count||0)}/${Number(project.task_count||0)}工程 完了</small></button>`).join(''):'<p class="home-empty">参加中の現場はありません。</p>';
+  $('#homeAgenda').innerHTML='<p class="home-empty">予定を読み込んでいます。</p>';$('#homeNowOpen').hidden=true;
+  const plans=(await Promise.all(projects.map(async project=>{try{const loaded=await loadProject(project.id),schedule=computeSchedule(loaded.project,loaded.tasks);return loaded.tasks.filter(task=>progressOf(task)<100).map(task=>({project,task,node:schedule.nodes.get(task.id)})).filter(item=>item.node)}catch{return []}}))).flat(),today=todayISO();
+  const current=plans.filter(item=>item.node.startDate<=today&&item.node.endDate>=today).sort((a,b)=>a.node.endDate.localeCompare(b.node.endDate))[0],upcoming=plans.filter(item=>item.node.startDate>today).sort((a,b)=>a.node.startDate.localeCompare(b.node.startDate)).slice(0,5);
+  $('#homeNowTitle').textContent=current?current.task.name:'今日予定されている作業はありません';$('#homeNowMeta').textContent=current?`${current.project.name} ・ ${current.task.company||'担当未設定'}`:'次の作業を下に表示しています';$('#homeNowOpen').hidden=!current;if(current)$('#homeNowOpen').dataset.projectId=current.project.id;
+  $('#homeAgenda').innerHTML=upcoming.length?upcoming.map(item=>`<button class="home-agenda-item" data-home-project="${item.project.id}" type="button"><time>${formatDate(item.node.startDate)}</time><span><b>${esc(item.task.name)}</b><small>${esc(item.project.name)} ・ ${esc(item.task.company||'担当未設定')}</small></span><i>›</i></button>`).join(''):'<p class="home-empty">次に予定されている作業はありません。</p>';
+  $('#homeView').focus();
 }
 
 function renderProjects(){
@@ -195,9 +208,9 @@ async function openProject(id){
     setConnection('connecting','読込中');
     const loaded=await loadProject(id);currentProject=loaded.project;tasks=loaded.tasks;managementItems=loaded.managementItems||[];versions=loaded.versions||[];changeRequests=loaded.changeRequests||[];networkLayouts=loaded.networkLayouts||[];networkEventLayouts=loaded.networkEventLayouts||[];fieldOperations=Boolean(loaded.fieldOperations);todayCompany=loadCompanyFilter(id);
     await cacheProject(profile.id,loaded).catch(()=>{});await hydrateBaseline();
-    $('#projectsView').hidden=true;$('#profileView').hidden=true;$('#projectView').hidden=false;location.hash=`project=${id}`;
+    $('#projectsView').hidden=true;$('#profileView').hidden=true;$('#homeView').hidden=true;$('#projectView').hidden=false;location.hash=`project=${id}`;
     activeView='today';renderProject();startRealtime(id);setConnection('online','同期済み');
-  }catch(error){const cached=profile?await readCachedProject(profile.id,id).catch(()=>null):null;if(!cached){showError(error);await showProjects();return}const loaded=cached.payload;currentProject=loaded.project;tasks=loaded.tasks;managementItems=loaded.managementItems||[];versions=loaded.versions||[];changeRequests=loaded.changeRequests||[];networkLayouts=loaded.networkLayouts||[];networkEventLayouts=loaded.networkEventLayouts||[];fieldOperations=Boolean(loaded.fieldOperations);todayCompany=loadCompanyFilter(id);$('#projectsView').hidden=true;$('#profileView').hidden=true;$('#projectView').hidden=false;location.hash=`project=${id}`;activeView='today';renderProject();setConnection('offline',`オフライン・最終同期 ${formatDateTime(cached.cachedAt)}`);toast('保存済みの工程表を表示しています')}
+  }catch(error){const cached=profile?await readCachedProject(profile.id,id).catch(()=>null):null;if(!cached){showError(error);await showProjects();return}const loaded=cached.payload;currentProject=loaded.project;tasks=loaded.tasks;managementItems=loaded.managementItems||[];versions=loaded.versions||[];changeRequests=loaded.changeRequests||[];networkLayouts=loaded.networkLayouts||[];networkEventLayouts=loaded.networkEventLayouts||[];fieldOperations=Boolean(loaded.fieldOperations);todayCompany=loadCompanyFilter(id);$('#projectsView').hidden=true;$('#profileView').hidden=true;$('#homeView').hidden=true;$('#projectView').hidden=false;location.hash=`project=${id}`;activeView='today';renderProject();setConnection('offline',`オフライン・最終同期 ${formatDateTime(cached.cachedAt)}`);toast('保存済みの工程表を表示しています')}
 }
 
 function startRealtime(projectId){
@@ -673,7 +686,8 @@ document.querySelectorAll('[data-demo-view]').forEach(button=>button.addEventLis
 $('#resetPassword').addEventListener('click',async()=>{const email=$('#authEmail').value.trim();if(!email){$('#authMessage').textContent='メールアドレスを入力してください。';return}try{await sendPasswordReset(email);$('#authMessage').textContent='パスワード再設定メールを送りました。'}catch(error){showError(error,'#authMessage')}});
 $('#logoutButton').addEventListener('click',async()=>{const userId=profile?.id,pending=userId?await pendingOperations(userId).catch(()=>[]):[];if(pending.length){toast(`未同期の報告が${pending.length}件あります。接続して同期してからログアウトしてください。`);return}await signOut();if(userId)await clearOfflineUser(userId).catch(()=>{});stopRealtime?.();profile=null;projects=[];currentProject=null;showLanding('home')});
 $('#backButton').addEventListener('click',showProjects);$('#brandLink').addEventListener('click',event=>{event.preventDefault();showProjects()});
-$('#navProjects').addEventListener('click',showProjects);$('#navToday').addEventListener('click',()=>{if(currentProject){$('#profileView').hidden=true;$('#projectView').hidden=false;switchView('today')}else showProjects()});$('#navProfile').addEventListener('click',showProfile);
+$('#navProjects').addEventListener('click',showProjects);$('#navToday').addEventListener('click',showHome);$('#navProfile').addEventListener('click',showProfile);
+$('#homeAllProjects').addEventListener('click',showProjects);$('#homeProjectGrid').addEventListener('click',event=>{const card=event.target.closest('[data-home-project]');if(card)openProject(card.dataset.homeProject)});$('#homeAgenda').addEventListener('click',event=>{const item=event.target.closest('[data-home-project]');if(item)openProject(item.dataset.homeProject)});$('#homeNowOpen').addEventListener('click',event=>openProject(event.currentTarget.dataset.projectId));
 $('#profileForm').addEventListener('submit',async event=>{event.preventDefault();const form=event.currentTarget,name=form.elements.display_name.value.trim(),button=form.querySelector('[type="submit"]');if(!name){$('#profileMessage').textContent='お名前を入力してください。';return}setBusy(button,true,'保存中');try{profile=await updateProfileName(name);$('#userName').textContent=profile.display_name||profile.email;$('#userInitial').textContent=(profile.display_name||profile.email||'?').slice(0,1).toUpperCase();$('#profileAvatar').textContent=$('#userInitial').textContent;$('#profileMessage').textContent='保存しました。'}catch(error){showError(error,'#profileMessage')}finally{setBusy(button,false)}});$('#profileLogout').addEventListener('click',()=>$('#logoutButton').click());
 $('#newProjectButton').addEventListener('click',()=>{const form=$('#projectForm');form.reset();form.elements.start_date.value=new Date().toISOString().slice(0,10);$('#projectDialog').showModal()});
 $('#projectForm').addEventListener('submit',async event=>{event.preventDefault();const form=event.currentTarget,button=form.querySelector('[type="submit"]'),data=new FormData(form);setBusy(button,true,'案件を作成中…');try{const id=await createProject(data.get('name'),data.get('start_date'));if(data.has('use_template'))await addStandardTemplate(id,button);$('#projectDialog').close();await openProject(id);if(data.has('use_template'))toast('標準工程を作成しました。日数や順序は自由に編集できます。')}catch(error){showError(error)}finally{setBusy(button,false)}});
