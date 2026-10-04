@@ -127,7 +127,7 @@ async function enterApplication(){
   $('#userName').textContent=profile.display_name||profile.email;$('#userInitial').textContent=(profile.display_name||profile.email||'?').slice(0,1).toUpperCase();
   const landing=$('#landingView');if(landing)landing.hidden=true;$('#authView').hidden=true;$('#application').hidden=false;
   const requestedProject=location.hash.match(/^#project=([0-9a-f-]+)$/i)?.[1];
-  if(requestedProject)await openProject(requestedProject);else await showProjects();
+  if(requestedProject)await openProject(requestedProject);else if(location.hash==='#projects')await showProjects();else if(location.hash==='#profile')showProfile();else await showHome();
   if(navigator.onLine)syncOfflineQueue();
 }
 
