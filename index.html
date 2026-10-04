@@ -9,7 +9,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <title>現場工程表｜snake site</title>
   <link rel="icon" href="snake-site.gif">
-  <link rel="stylesheet" href="style.css?v=compact-gantt-label-1">
+  <link rel="stylesheet" href="style.css?v=home-overview-1">
   <script src="frame-guard.js"></script>
 </head>
 <body>
@@ -81,9 +81,12 @@
     </section>
 
     <section id="homeView" class="home-page" hidden tabindex="-1">
-      <header class="home-heading"><p>今日の現場</p><h1 id="homeDate">—</h1><span id="homeProjectCount">—</span></header>
-      <section class="home-now" id="homeNowCard" aria-labelledby="homeNowTitle" tabindex="-1"><div><p>今日の予定</p><h2 id="homeNowTitle">確認する作業はありません</h2><small id="homeNowMeta">参加中の現場から表示します</small></div></section>
-      <section class="home-section" aria-labelledby="homeUpcomingTitle"><div class="home-section-heading"><h2 id="homeUpcomingTitle">次の予定</h2><span>予定順</span></div><div id="homeAgenda" class="home-agenda" aria-live="polite"></div></section>
+      <header class="home-overview">
+        <div class="home-date-tile"><time id="homeDate">—</time><small>今日</small></div>
+        <section class="home-now" id="homeNowCard" aria-labelledby="homeNowTitle" tabindex="-1"><div><p>今日の現場</p><h2 id="homeNowTitle">確認する作業はありません</h2><small id="homeNowMeta">参加中の現場から表示します</small></div></section>
+        <section class="home-participating"><p>参加中のもの</p><b id="homeProjectCount">—</b><small>現場</small></section>
+      </header>
+      <section class="home-calendar" aria-labelledby="homeUpcomingTitle"><div class="home-calendar-heading"><h2 id="homeUpcomingTitle">今後の予定</h2><span>予定順</span></div><div id="homeAgenda" class="home-agenda" aria-live="polite"></div></section>
       <section class="home-section" aria-labelledby="homeSitesTitle"><div class="home-section-heading"><h2 id="homeSitesTitle">参加中の現場</h2><button class="text-button" id="homeAllProjects" type="button">案件一覧</button></div><div id="homeProjectGrid" class="home-project-grid" aria-live="polite"></div></section>
     </section>
 
@@ -328,6 +331,6 @@
   <script src="config.js?v=supabase-20260928-2"></script>
   <script src="vendor/xlsx.full.min.js" defer></script>
   <script src="vendor/qrcode.min.js" defer></script>
-  <script type="module" src="app.js?v=project-clock-1"></script>
+  <script type="module" src="app.js?v=home-overview-1"></script>
 </body>
 </html>

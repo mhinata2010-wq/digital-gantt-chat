@@ -153,7 +153,7 @@ function showProfile(){
 async function showHome(){
   if(!profile)return;$('#projectsView').hidden=true;$('#projectView').hidden=true;$('#profileView').hidden=true;$('#homeView').hidden=false;location.hash='home';setFieldNav('home');
   if(!projects.length)projects=await loadProjects();
-  $('#homeDate').textContent=new Intl.DateTimeFormat('ja-JP',{month:'long',day:'numeric',weekday:'short'}).format(new Date());$('#homeProjectCount').textContent=`${projects.length}現場`;
+  $('#homeDate').textContent=new Intl.DateTimeFormat('ja-JP',{month:'numeric',day:'numeric'}).format(new Date());$('#homeProjectCount').textContent=String(projects.length);
   $('#homeProjectGrid').innerHTML=projects.length?projects.map(project=>`<button class="home-project-card" data-home-project="${project.id}" type="button"><span>${esc(project.manager||'責任者未設定')}</span><b>${esc(project.name)}</b><small>${Number(project.completed_count||0)}/${Number(project.task_count||0)}工程 完了</small></button>`).join(''):'<p class="home-empty">参加中の現場はありません。</p>';
   $('#homeAgenda').innerHTML='<p class="home-empty">予定を読み込んでいます。</p>';
   const plans=(await Promise.all(projects.map(async project=>{try{const loaded=await loadProject(project.id),schedule=computeSchedule(loaded.project,loaded.tasks);return loaded.tasks.filter(task=>progressOf(task)<100).map(task=>({project,task,node:schedule.nodes.get(task.id)})).filter(item=>item.node)}catch{return []}}))).flat(),today=todayISO();
