@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f8f5">
+  <title>工程表 | snake site</title>
+  <meta name="description" content="工程を並べ、日付を決め、ひとつの工程表をつくる試作です。">
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="mark" aria-hidden="true">S</span><strong>snake site</strong><span class="division">工程表</span></div>
+    <button id="print" class="quiet print-action" type="button">印刷・PDF</button>
+  </header>
+  <main>
+    <div class="page-head">
+      <div class="page-name"><span class="eyebrow">工程表 / 試作</span><h1 id="displayName">現場の工程表</h1><p id="projectMeta">工程を追加して予定を組みましょう。</p></div>
+      <button class="primary" id="addTask" type="button">＋ 工程を追加</button>
+    </div>
+    <section class="project-controls" aria-label="工程表の設定">
+      <label>工事名<input id="projectName" maxlength="80" autocomplete="off"></label>
+      <label>表示開始日<input id="viewStart" type="date"></label>
+      <div class="period-control" aria-label="表示期間"><span>表示期間</span><div class="segmented"><button type="button" data-days="14" aria-pressed="true">2週間</button><button type="button" data-days="28" aria-pressed="false">4週間</button></div></div>
+    </section>
+    <section class="board" aria-label="ガントチャート">
+      <div class="board-toolbar"><div><strong id="periodLabel">工程表</strong><span id="todayLabel"></span></div><div class="board-actions"><button id="prev" type="button" aria-label="前の期間">‹</button><button id="today" type="button">今日</button><button id="next" type="button" aria-label="次の期間">›</button></div></div>
+      <div class="board-scroll" id="boardScroll"><div class="board-grid" id="boardGrid"></div></div>
+      <div class="board-foot"><span>工程の棒を左右に動かすと開始日を変更できます。</span><span><i class="legend-done"></i>完了　<i class="legend-open"></i>未完了</span></div>
+    </section>
+    <div class="below-board"><span id="saveState" role="status">この端末に保存しました</span><div><button id="export" class="text-action" type="button">データを保存</button><label class="text-action file-action">データを読み込む<input id="import" type="file" accept="application/json,.json"></label><button id="newProject" class="text-action" type="button">新しい工程表</button></div></div>
+  </main>
+  <dialog id="taskDialog" aria-labelledby="dialogTitle"><form id="taskForm">
+    <div class="dialog-head"><div><span class="eyebrow">工程</span><h2 id="dialogTitle">工程を追加</h2></div><button type="button" id="closeDialog" class="close" aria-label="閉じる">×</button></div>
+    <label>工程名<input name="name" required maxlength="80" placeholder="例：基礎工事"></label>
+    <label>担当会社・担当<input name="company" maxlength="80" placeholder="例：基礎業者"></label>
+    <div class="dialog-row"><label>開始日<input name="start" type="date" required></label><label>所要日数（暦日）<input name="days" type="number" min="1" max="365" required></label></div>
+    <label class="check"><input name="complete" type="checkbox"> 完了した工程</label>
+    <div class="dialog-actions"><button id="deleteTask" type="button" class="danger">この工程を削除</button><button type="submit" class="primary">工程表に反映</button></div>
+  </form></dialog>
+  <div id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
