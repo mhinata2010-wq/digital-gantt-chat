@@ -10,22 +10,34 @@
   <script src="app.js" defer></script>
 </head>
 <body>
+  <nav class="mobile-nav" aria-label="画面の切り替え">
+    <button type="button" data-view-button="schedule" aria-label="工程表を見る" title="工程表"><span aria-hidden="true">◷</span><small>工程表</small></button>
+    <button type="button" data-view-button="home" aria-label="ホームを見る" title="ホーム"><span aria-hidden="true">⌂</span><small>ホーム</small></button>
+    <button type="button" data-view-button="settings" aria-label="工程表の設定" title="設定"><span aria-hidden="true">⚙</span><small>設定</small></button>
+  </nav>
   <header class="topbar">
     <div class="brand"><span class="mark" aria-hidden="true">S</span><strong>snake site</strong><span class="division">工程表</span></div>
     <button id="print" class="quiet print-action" type="button">印刷・PDF</button>
   </header>
   <main>
+    <section class="mobile-home" id="mobileHome" aria-label="現場のホーム">
+      <span class="eyebrow">今日の現場</span>
+      <button type="button" class="home-card" id="openSchedule"><span>工程表を開く</span><strong id="homeProjectName">サンプル工事</strong><span id="homePeriod">予定を確認する <b aria-hidden="true">↗</b></span></button>
+      <div class="home-section-heading"><div><span class="eyebrow">工程一覧</span><h2>担当中の工程</h2></div><button type="button" id="homeAddTask">＋ 追加</button></div>
+      <div class="home-tasks" id="homeTasks"></div>
+      <p class="rotate-tip"><span aria-hidden="true">↻</span> スマートフォンを横向きにすると工程表が広く表示されます。</p>
+    </section>
     <div class="page-head">
       <div class="page-name"><span class="eyebrow">工程表 / 試作</span><h1 id="displayName">現場の工程表</h1><p id="projectMeta">工程を追加して予定を組みましょう。</p></div>
       <button class="primary" id="addTask" type="button">＋ 工程を追加</button>
     </div>
-    <section class="project-controls" aria-label="工程表の設定">
+    <section class="project-controls" id="projectControls" aria-label="工程表の設定">
       <label>工事名<input id="projectName" maxlength="80" autocomplete="off"></label>
       <label>表示開始日<input id="viewStart" type="date"></label>
       <div class="period-control" aria-label="表示期間"><span>表示期間</span><div class="segmented"><button type="button" data-days="14" aria-pressed="true">2週間</button><button type="button" data-days="28" aria-pressed="false">4週間</button></div></div>
     </section>
     <section class="board" aria-label="ガントチャート">
-      <div class="board-toolbar"><div><strong id="periodLabel">工程表</strong><span id="todayLabel"></span></div><div class="board-actions"><button id="prev" type="button" aria-label="前の期間">‹</button><button id="today" type="button">今日</button><button id="next" type="button" aria-label="次の期間">›</button></div></div>
+      <div class="board-toolbar"><div><small class="board-project-name" id="boardProjectName"></small><strong id="periodLabel">工程表</strong><span id="todayLabel"></span></div><div class="board-actions"><button id="prev" type="button" aria-label="前の期間">‹</button><button id="today" type="button">今日</button><button id="next" type="button" aria-label="次の期間">›</button></div></div>
       <div class="board-scroll" id="boardScroll"><div class="board-grid" id="boardGrid"></div></div>
       <div class="board-foot"><span>工程の棒を左右に動かすと開始日を変更できます。</span><span><i class="legend-done"></i>完了　<i class="legend-open"></i>未完了</span></div>
     </section>
