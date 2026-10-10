@@ -1,0 +1,135 @@
+:root {
+  --snake: #208965;
+  --snake-dark: #146e4d;
+  --snake-ink: #183d2d;
+  --snake-soft: #58a887;
+  --paper: #fffefd;
+  --rule: #e0e8e1;
+  background: var(--paper);
+  color: #1f3026;
+}
+body { background: var(--paper); }
+.icon-library { position: absolute; width: 0; height: 0; overflow: hidden; }
+button { -webkit-tap-highlight-color: transparent; }
+button:focus-visible, input:focus-visible, .bar:focus-visible {
+  outline: 3px solid #72bc98;
+  outline-offset: 3px;
+}
+.topbar { background: var(--paper); }
+.brand { display: flex; align-items: center; gap: 15px; width: max-content; height: 52px; padding: 0; letter-spacing: 0; }
+.brand img { display: block; flex: 0 0 120px; width: 120px; height: 51px; max-width: none; object-fit: contain; }
+.brand .division { margin-left: 0; padding-left: 15px; }
+.primary { background: var(--snake-dark); border-color: var(--snake-dark); }
+.primary:hover { background: #0b593d; }
+.eyebrow { color: var(--snake-ink); letter-spacing: .04em; }
+.project-controls, .board { border-color: var(--rule); }
+.bar { background: #397e5c; }
+.bar.done { background: #aed0b9; }
+.legend-open { background: #397e5c; }
+.legend-done { background: #aed0b9; }
+
+@media (max-width: 900px) {
+  .topbar { background: var(--paper); }
+  .brand img { width: 120px; height: 51px; }
+  .mobile-nav {
+    background: var(--snake);
+    box-shadow: 0 10px 28px #164d3426;
+  }
+  .mobile-nav button {
+    flex: 1;
+    color: #fff;
+    padding: 0;
+    transition: color .32s ease, transform .38s cubic-bezier(.22,1,.36,1);
+  }
+  .mobile-nav button svg {
+    width: 25px; height: 25px; fill: none; stroke: currentColor; stroke-width: 1.8;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .mobile-nav button small { display: none; }
+  .mobile-nav button[aria-current="page"] {
+    flex: 0 0 49px; width: 49px; height: 49px;
+    color: #172b1f; background: #fff;
+    border: 1px solid #22382a; border-radius: 50%;
+    box-shadow: 0 3px 0 #123d2a1f;
+    transform: scale(1.07);
+  }
+  .mobile-nav button[aria-current="page"] svg { width: 27px; height: 27px; stroke-width: 1.9; }
+  .mobile-nav button:active, .home-card:active, .project-tile:active { transform: scale(.97); }
+}
+@media (max-width: 900px) and (orientation: portrait) {
+  body { background: var(--paper); }
+  .topbar { height: 75px; padding: 17px 27px 8px; }
+  main { max-width: 560px; padding: 0 29px 118px; }
+  .mobile-home { padding: 16px 0 0; }
+  .mobile-home > .eyebrow { display: block; margin: 4px 0 0; font-size: 12px; font-weight: 750; color: #243c2c; }
+  .home-card {
+    min-height: 144px; margin: 12px 0 31px; padding: 21px 22px;
+    border-radius: 11px; background: var(--snake); box-shadow: none;
+    transition: transform .38s cubic-bezier(.22,1,.36,1), background .28s ease;
+  }
+  .home-card:hover { background: #187f5b; }
+  .home-card > span:first-child { font-size: 11px; font-weight: 650; opacity: .93; }
+  .home-card strong { font-size: clamp(19px,5vw,24px); font-weight: 800; letter-spacing: -.05em; }
+  .home-card .card-footer { display: flex; justify-content: space-between; align-items: end; gap: 8px; font-size: 11px; }
+  .card-footer svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .home-section-heading { align-items: center; margin-bottom: 13px; }
+  .home-section-heading h2 { margin: 0; font-size: 15px; letter-spacing: -.025em; font-weight: 750; }
+  .home-section-heading button {
+    padding: 8px 0 8px 8px; color: var(--snake-dark);
+    font-size: 12px; font-weight: 750;
+  }
+  .home-tasks { gap: 10px; }
+  .project-tile {
+    min-height: 99px; gap: 14px; padding: 10px;
+    border-radius: 10px; background: var(--snake-soft); box-shadow: none;
+    transition: background .28s ease, transform .38s cubic-bezier(.22,1,.36,1);
+  }
+  .project-tile:hover, .project-tile.selected { background: #4d9e7b; }
+  .project-tile-icon {
+    flex: 0 0 73px; height: 77px; display: block; padding: 18px 12px;
+    border-radius: 8px; background: #16845b;
+  }
+  .project-tile-icon i { display: block; height: 5px; border-radius: 4px; margin: 0 0 8px; background: #a4d0b4; }
+  .project-tile-icon i:nth-child(2) { width: 68%; margin-left: 22%; }
+  .project-tile-icon i:nth-child(3) { width: 58%; margin-left: 37%; }
+  .project-tile-copy strong { font-size: 14px; line-height: 1.45; }
+  .project-tile-copy small { font-size: 10px; }
+  .project-tile-arrow { align-self: center; flex: 0 0 18px; width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .mobile-nav {
+    bottom: max(16px,env(safe-area-inset-bottom)); height: 60px;
+    width: min(320px,calc(100vw - 48px)); border-radius: 35px;
+    padding: 5px 7px;
+  }
+  .mobile-nav button { min-width: 0; height: 49px; }
+  .rotate-tip { margin-top: 19px; font-size: 11px; color: #6c8272; }
+  .board { border-color: var(--rule); }
+}
+@media (max-width: 900px) and (orientation: landscape) and (max-height: 650px) {
+  .mobile-nav {
+    width: 62px; border-radius: 0 16px 16px 0;
+    align-items: center; justify-content: space-around;
+    padding: max(12px,env(safe-area-inset-top)) 6px max(12px,env(safe-area-inset-bottom));
+  }
+  .mobile-nav button { flex: 0 0 49px; }
+  .mobile-nav button[aria-current="page"] { flex: 0 0 49px; }
+  .board { background: var(--paper); }
+  .board-toolbar { background: var(--paper); }
+  .board-grid { background: var(--paper); }
+  .month-row { background: #eaf3ec; }
+  .task-label { background: var(--paper); }
+  .date-row { background: #f7faf7; }
+  body[data-view="home"] .home-card {
+    box-shadow: none; border: 0; border-radius: 9px; background: var(--snake);
+  }
+  body[data-view="home"] .project-tile { border-radius: 9px; background: var(--snake-soft); }
+  body[data-view="home"] .project-tile-icon { flex: 0 0 42px; width: 42px; height: 42px; padding: 10px 7px; border-radius: 6px; }
+  body[data-view="home"] .project-tile-icon i { height: 3px; margin-bottom: 5px; }
+  body[data-view="home"] .project-tile-arrow { width: 15px; height: 15px; }
+}
+@media print {
+  :root, body { background: #fff; }
+  .icon-library { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mobile-nav button, .home-card, .project-tile { transition: none; }
+}
