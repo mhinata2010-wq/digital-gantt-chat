@@ -22,10 +22,10 @@
   <main>
     <section class="mobile-home" id="mobileHome" aria-label="現場のホーム">
       <span class="eyebrow">今日の現場</span>
-      <button type="button" class="home-card" id="openSchedule"><span>工程表を開く</span><strong id="homeProjectName">サンプル工事</strong><span id="homePeriod">予定を確認する <b aria-hidden="true">↗</b></span></button>
-      <div class="home-section-heading"><div><span class="eyebrow">工程一覧</span><h2>担当中の工程</h2></div><button type="button" id="homeAddTask">＋ 追加</button></div>
+      <button type="button" class="home-card" id="openSchedule"><span>前回開いた工程表</span><strong id="homeProjectName">サンプル工事</strong><span id="homePeriod">予定を確認する <b aria-hidden="true">↗</b></span></button>
+      <div class="home-section-heading"><div><span class="eyebrow">工程表一覧</span><h2>現場の工程表</h2></div><button type="button" id="homeAddTask">＋ 新規</button></div>
       <div class="home-tasks" id="homeTasks"></div>
-      <p class="rotate-tip"><span aria-hidden="true">↻</span> スマートフォンを横向きにすると工程表が広く表示されます。</p>
+      <p class="rotate-tip"><span aria-hidden="true">↻</span> 工程表を選んで、横向きで日程を確認できます。</p>
     </section>
     <div class="page-head">
       <div class="page-name"><span class="eyebrow">工程表 / 試作</span><h1 id="displayName">現場の工程表</h1><p id="projectMeta">工程を追加して予定を組みましょう。</p></div>
@@ -41,8 +41,14 @@
       <div class="board-scroll" id="boardScroll"><div class="board-grid" id="boardGrid"></div></div>
       <div class="board-foot"><span>工程の棒を左右に動かすと開始日を変更できます。</span><span><i class="legend-done"></i>完了　<i class="legend-open"></i>未完了</span></div>
     </section>
+    <p class="orientation-hint">↻ 横向きにすると日付と工程を広く見られます。端末の回転ロックが有効な場合は解除してください。</p>
     <div class="below-board"><span id="saveState" role="status">この端末に保存しました</span><div><button id="export" class="text-action" type="button">データを保存</button><label class="text-action file-action">データを読み込む<input id="import" type="file" accept="application/json,.json"></label><button id="newProject" class="text-action" type="button">新しい工程表</button></div></div>
   </main>
+  <dialog id="projectDialog" aria-labelledby="projectDialogTitle"><form id="projectForm">
+    <div class="dialog-head"><div><span class="eyebrow">現場</span><h2 id="projectDialogTitle">工程表を作成</h2></div><button type="button" id="closeProjectDialog" class="close" aria-label="閉じる">×</button></div>
+    <label>工事名<input id="newProjectName" name="projectName" required maxlength="80" placeholder="例：中央通り改修工事"></label>
+    <div class="dialog-actions"><span></span><button type="submit" class="primary">工程表を作る</button></div>
+  </form></dialog>
   <dialog id="taskDialog" aria-labelledby="dialogTitle"><form id="taskForm">
     <div class="dialog-head"><div><span class="eyebrow">工程</span><h2 id="dialogTitle">工程を追加</h2></div><button type="button" id="closeDialog" class="close" aria-label="閉じる">×</button></div>
     <label>工程名<input name="name" required maxlength="80" placeholder="例：基礎工事"></label>
