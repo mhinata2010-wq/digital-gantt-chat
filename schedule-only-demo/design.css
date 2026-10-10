@@ -16,19 +16,9 @@ button:focus-visible, input:focus-visible, .bar:focus-visible {
   outline-offset: 3px;
 }
 .topbar { background: var(--paper); }
-.brand { gap: 0; position: relative; width: max-content; height: 43px; padding-left: 8px; letter-spacing: -.065em; }
-.brand-symbol {
-  position: absolute; left: 0; top: 21px; width: 48px; height: 1.5px;
-  background: #22382a;
-}
-.brand-symbol::before {
-  content: ""; position: absolute; left: 7px; top: -17px; width: 1.5px; height: 37px;
-  background: #22382a;
-}
-.brand-word { position: relative; display: block; margin: 2px 0 0 14px; line-height: 1; color: var(--snake-dark); }
-.brand-word strong { display: block; font-size: 22px; font-weight: 850; letter-spacing: -.09em; }
-.brand-word small { display: block; margin: -1px 0 0 36px; color: #1f3026; font-size: 10px; font-weight: 800; letter-spacing: -.08em; }
-.brand .division { margin-left: 24px; }
+.brand { display: flex; align-items: center; gap: 15px; width: max-content; height: 52px; padding: 0; letter-spacing: 0; }
+.brand img { display: block; flex: 0 0 120px; width: 120px; height: 51px; max-width: none; object-fit: contain; }
+.brand .division { margin-left: 0; padding-left: 15px; }
 .primary { background: var(--snake-dark); border-color: var(--snake-dark); }
 .primary:hover { background: #0b593d; }
 .eyebrow { color: var(--snake-ink); letter-spacing: .04em; }
@@ -40,7 +30,7 @@ button:focus-visible, input:focus-visible, .bar:focus-visible {
 
 @media (max-width: 900px) {
   .topbar { background: var(--paper); }
-  .brand-word strong { font-size: 22px; }
+  .brand img { width: 120px; height: 51px; }
   .mobile-nav {
     background: var(--snake);
     box-shadow: 0 10px 28px #164d3426;
