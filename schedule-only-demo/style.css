@@ -2,6 +2,7 @@
 /* Rotation-aware mobile workspace */
 .mobile-nav,.mobile-home{display:none}
 .board-project-name{display:none}
+.orientation-hint{display:none}
 @media (max-width:900px){
   body{background:#fff}
   .topbar{height:58px;padding:0 22px;border:0}
@@ -32,6 +33,15 @@
   .home-section-heading h2{font-size:20px;letter-spacing:-.04em;margin:6px 0 0}
   .home-section-heading button{background:none;border:0;color:#168053;font-weight:700;padding:9px}
   .home-tasks{display:grid;gap:9px}
+  .project-tile{display:flex;align-items:center;gap:13px;width:100%;min-height:88px;padding:12px;border:0;border-radius:11px;text-align:left;background:#65ad91;color:#fff;transition:transform .2s,background .2s}
+  .project-tile:hover{background:#3f9c78;transform:translateY(-2px)}
+  .project-tile.selected{background:#398d6e}
+  .project-tile-icon{display:grid;place-items:center;flex:0 0 63px;height:63px;border-radius:8px;background:#178157;color:#fff;font-size:27px}
+  .project-tile-copy{min-width:0;flex:1}
+  .project-tile-copy strong,.project-tile-copy small{display:block;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .project-tile-copy strong{font-size:15px}
+  .project-tile-copy small{margin-top:6px;font-size:11px;opacity:.88}
+  .project-tile-arrow{font-size:19px;align-self:flex-start}
   .home-task{display:flex;width:100%;border:1px solid #e6eee7;border-radius:11px;background:#eef7f1;padding:15px 16px;text-align:left;align-items:center;justify-content:space-between;gap:15px;color:#243e30}
   .home-task strong,.home-task small{display:block}
   .home-task strong{font-size:15px}
@@ -55,6 +65,7 @@
   .board-toolbar span{display:block;margin-left:0}
   .board-foot{display:flex}
   .below-board{margin-left:0;margin-right:0}
+  body[data-view="schedule"] .orientation-hint{display:block;margin:13px 17px;color:#56745e;font-size:12px;line-height:1.5}
 }
 @media (max-width:900px) and (orientation:landscape) and (max-height:650px){
   html,body{height:100%}
@@ -77,10 +88,16 @@
   body[data-view="home"] .home-task strong,body[data-view="home"] .home-task small{display:block}
   body[data-view="home"] .home-task small{font-size:10px;color:#607b67}
   body[data-view="home"] .home-task em{font-size:10px;color:#367955;font-style:normal;white-space:nowrap}
+  body[data-view="home"] .project-tile{display:flex;align-items:center;gap:12px;width:100%;min-height:60px;padding:10px 14px;border:0;border-radius:8px;background:#58a988;color:#fff;text-align:left}
+  body[data-view="home"] .project-tile-icon{display:grid;place-items:center;width:40px;height:40px;background:#198057;border-radius:5px;font-size:22px}
+  body[data-view="home"] .project-tile-copy{flex:1}
+  body[data-view="home"] .project-tile-copy strong,body[data-view="home"] .project-tile-copy small{display:block}
+  body[data-view="home"] .project-tile-copy small{font-size:10px}
   body[data-view="home"] .rotate-tip{display:none}
   body[data-view="settings"] .page-head{display:flex;margin:20px}
   body[data-view="settings"] .project-controls{display:flex;margin:20px;flex-wrap:wrap}
   body[data-view="settings"] .below-board{display:flex;margin:20px}
+  .orientation-hint{display:none!important}
   .board-toolbar{position:sticky;top:0;z-index:9;padding:7px 14px;background:#fff;min-height:56px}
   .board-project-name{display:block;font-size:11px;color:#288058;font-weight:700;line-height:1.3}
   .board-toolbar strong{display:inline;font-size:14px}
@@ -101,7 +118,7 @@
   dialog{max-height:calc(100dvh - 16px);overflow:auto}
 }
 @media print{
-  .mobile-nav,.mobile-home{display:none!important}
+  .mobile-nav,.mobile-home,.orientation-hint{display:none!important}
   .page-head,.board{display:flex!important}
   .page-head{display:block!important}
   .board{display:block!important}
