@@ -104,6 +104,64 @@ button:focus-visible, input:focus-visible, .bar:focus-visible {
   .rotate-tip { margin-top: 19px; font-size: 11px; color: #6c8272; }
   .board { border-color: var(--rule); }
 }
+/* The portrait dashboard follows the snake site home composition. */
+@media (max-width: 900px) and (orientation: portrait) {
+  .topbar { height: 112px; padding: 34px 35px 0; align-items: flex-start; }
+  .brand { height: 56px; }
+  .brand img { width: 120px; height: 51px; }
+  main { padding: 0 44px 112px; max-width: 650px; }
+  .mobile-home { padding: 0; }
+  .home-card {
+    min-height: 142px; margin: 25px 0 56px; padding: 16px 20px 14px;
+    border-radius: 10px; background: #208967;
+  }
+  .home-card > span:first-child { font-size: 12px; font-weight: 500; }
+  .home-card strong { font-size: clamp(23px, 6.8vw, 31px); line-height: 1.2; letter-spacing: -.055em; }
+  .home-card .card-footer { font-size: 11px; }
+  .home-card .card-footer svg { display: none; }
+  .home-section-heading { margin: 0 0 43px; }
+  .home-section-heading h2 { font-size: 15px; font-weight: 800; }
+  .home-section-heading button { font-size: 11px; }
+  .home-tasks { gap: 11px; }
+  .project-tile {
+    position: relative; min-height: 104px; padding: 0;
+    background: #58a987; border-radius: 10px; overflow: hidden;
+    transition: transform .35s cubic-bezier(.22,1,.36,1), background .25s ease;
+  }
+  .project-tile:hover { background: #4e9e7c; }
+  .project-open {
+    display: flex; align-items: center; width: 100%; min-height: 104px;
+    padding: 10px 47px 10px 10px; gap: 15px;
+    border: 0; background: transparent; color: #fff; text-align: left;
+  }
+  .project-tile-icon { flex: 0 0 77px; height: 84px; padding: 21px 13px; border-radius: 8px; }
+  .project-tile-copy strong { font-size: 15px; }
+  .project-tile-copy small { margin-top: 7px; font-size: 10px; }
+  .favorite-button {
+    position: absolute; right: 11px; bottom: 10px; display: grid; place-items: center;
+    width: 36px; height: 36px; padding: 5px; border: 0; border-radius: 8px;
+    background: transparent; color: #fff;
+  }
+  .favorite-button svg { width: 24px; height: 24px; stroke: currentColor; stroke-width: 1.7; fill: none; }
+  .favorite-button.is-favorite { color: #e7f263; }
+  .favorite-button.is-favorite svg { fill: currentColor; }
+  .favorite-button:hover { background: #ffffff24; }
+  .mobile-nav { width: min(292px,calc(100vw - 80px)); bottom: max(22px,env(safe-area-inset-bottom)); }
+  .rotate-tip { display: none; }
+}
+@media (max-width: 900px) and (orientation: portrait) and (max-width: 370px) {
+  .topbar { padding-left: 25px; }
+  main { padding-left: 25px; padding-right: 25px; }
+  .home-section-heading { margin-bottom: 28px; }
+}
+@media (max-width: 900px) and (orientation: landscape) and (max-height: 650px) {
+  body[data-view="home"] .project-tile { position: relative; padding: 0; overflow: hidden; }
+  body[data-view="home"] .project-open { display: flex; align-items: center; width: 100%; min-height: 60px; gap: 12px; padding: 9px 40px 9px 10px; border: 0; background: transparent; color: #fff; text-align: left; }
+  body[data-view="home"] .favorite-button { position: absolute; right: 4px; bottom: 8px; width: 34px; height: 34px; border: 0; background: transparent; color: #fff; }
+  body[data-view="home"] .favorite-button svg { width: 22px; height: 22px; stroke: currentColor; fill: none; }
+  body[data-view="home"] .favorite-button.is-favorite { color: #e7f263; }
+  body[data-view="home"] .favorite-button.is-favorite svg { fill: currentColor; }
+}
 @media (max-width: 900px) and (orientation: landscape) and (max-height: 650px) {
   .mobile-nav {
     width: 62px; border-radius: 0 16px 16px 0;
