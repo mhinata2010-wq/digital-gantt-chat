@@ -191,3 +191,93 @@ button:focus-visible, input:focus-visible, .bar:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   .mobile-nav button, .home-card, .project-tile { transition: none; }
 }
+
+/* Master schedule: a readable screen adaptation of the supplied A3 construction plan. */
+.sheet-heading {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: end; gap: 24px; padding: 18px 21px 15px;
+  border-bottom: 1px solid #aeb7b1; background: #fff;
+}
+.sheet-heading small { display: block; font-size: 10px; font-weight: 750; letter-spacing: .16em; color: #61746a; }
+.sheet-heading h2 { margin: 4px 0 0; font-size: 19px; letter-spacing: -.04em; color: #172c21; }
+.sheet-heading > strong { font-size: 18px; letter-spacing: .08em; color: #172c21; white-space: nowrap; }
+.sheet-heading > span { font-size: 11px; color: #5c6b62; white-space: nowrap; }
+.board { border-color: #b9c3bc; border-radius: 2px; }
+.board-toolbar { background: #f9faf8; border-color: #c8d0ca; }
+.board-toolbar strong { font-variant-numeric: tabular-nums; }
+.board-row { min-height: 64px; border-bottom: 1px dashed #aab6ae; }
+.task-label { background: #fff; border-right: 1px solid #aeb7b1; box-shadow: none; }
+.task-label .row-number { flex: 0 0 20px; color: #7f8d83; font: 11px ui-monospace,SFMono-Regular,monospace; }
+.task-label .drag-handle { font-size: 15px; padding: 6px 3px; color: #92a498; }
+.task-name strong { font-size: 13px; }
+.task-name small { font-size: 11px; }
+.status-badge { flex: 0 0 auto; padding: 3px 5px; border: 1px solid #b8c3bb; border-radius: 2px; color: #526358; font-size: 10px; font-style: normal; white-space: nowrap; }
+.status-badge.is-done { border-color: #7aa78b; color: #17613c; background: #e5f1e7; }
+.timeline { height: 64px; }
+.year-row, .year-row .task-label { min-height: 24px; height: 24px; background: #e9efea; }
+.year-span { display: inline-flex; align-items: center; height: 24px; padding-left: 12px; border-right: 1px solid #b6c2b9; font-size: 11px; font-weight: 800; color: #244b35; }
+.month-row, .month-row .task-label { min-height: 30px; height: 30px; background: #f5f7f4; }
+.month-span { height: 30px; padding-left: 12px; border-color: #b6c2b9; background: #f5f7f4; color: #243a2d; font-weight: 750; }
+.date-row, .date-row .task-label, .date-row .timeline { min-height: 42px; height: 42px; background: #fff; }
+.date-row .date-label { font-size: 12px; }
+.date-cell { padding-top: 5px; border-right: 0; color: #334c3b; font-size: 12px; font-variant-numeric: tabular-nums; }
+.date-cell.off { background: transparent; color: #839087; }
+.date-cell .weekday { margin-top: 1px; }
+.day-cell { border-right: 0; background: transparent; }
+.day-cell.off { background: transparent; }
+.day-cell.week-start { border-left: 1px dashed #b4bfb7; }
+.day-cell.month-start { background: linear-gradient(90deg,#edd6d0 0 7px,transparent 7px); border-left: 1px solid #d7a89e; }
+.day-cell.today { box-shadow: inset 2px 0 #bb634b; }
+.day-cell.today::after { left: -2px; background: #bb634b; }
+.date-cell.today { color: #9b4331; box-shadow: inset 2px 0 #bb634b; }
+.bar, .bar.done {
+  top: 18px; height: 30px; padding: 0 4px 9px; border: 0; border-bottom: 3px solid #33483a;
+  border-radius: 0; background: transparent; box-shadow: none; color: #263a2d;
+  font-size: 12px; font-weight: 700; line-height: 17px;
+}
+.bar.done { border-bottom-color: #19815a; color: #17613e; }
+.bar:hover, .bar.done:hover { background: #e8f2ea; }
+.bar::before, .bar::after { content: ''; position: absolute; bottom: -5px; width: 7px; height: 7px; border: 2px solid currentColor; border-radius: 50%; background: #fff; }
+.bar::before { left: 0; }
+.bar::after { right: 0; }
+.bar.dragging { background: #f0f6ef; opacity: .92; }
+.board-foot { color: #607369; background: #fff; border-top: 1px solid #aeb7b1; }
+.board-foot i { width: 15px; height: 3px; vertical-align: middle; border-radius: 0; }
+.board-foot .legend-open { background: #33483a; }
+.board-foot .legend-done { background: #19815a; }
+.board-foot .legend-today { width: 2px; height: 15px; background: #bb634b; }
+@media (max-width: 900px) and (orientation: portrait) {
+  .sheet-heading { display: none; }
+  .task-label .row-number { display: none; }
+  .task-label .status-badge { position: absolute; right: 20px; bottom: 2px; padding: 0 3px; font-size: 9px; }
+  .task-label .task-name { padding-bottom: 10px; }
+}
+@media (max-width: 900px) and (orientation: landscape) and (max-height: 650px) {
+  .sheet-heading { display: none; }
+  .board-row, .board-row .timeline { min-height: 53px; height: 53px; }
+  .year-row, .year-row .task-label { min-height: 22px; height: 22px; }
+  .year-span { height: 22px; }
+  .month-row, .month-row .task-label { min-height: 24px; height: 24px; }
+  .month-span { height: 24px; }
+  .date-row, .date-row .task-label, .date-row .timeline { min-height: 36px; height: 36px; }
+  .board-scroll { max-height: calc(100dvh - 57px); }
+  .task-label { width: 175px; min-width: 175px; }
+  .task-label .row-number { display: none; }
+  .task-label .status-badge { position: absolute; right: 13px; bottom: 1px; padding: 0 2px; font-size: 9px; }
+  .task-name { padding-bottom: 8px; }
+  .bar, .bar.done { top: 12px; height: 28px; padding: 0 3px 8px; font-size: 10px; line-height: 15px; }
+}
+@media print {
+  @page { size: A4 landscape; margin: 7mm; }
+  .sheet-heading { display: grid !important; padding: 3mm 2mm; gap: 10mm; }
+  .sheet-heading h2 { font-size: 16px; }
+  .board-toolbar { display: none; }
+  .board { display: block !important; width: 100%; border: 1px solid #aeb7b1; }
+  .board-scroll { overflow: visible !important; max-height: none !important; }
+  .board-grid { min-width: 0; width: max-content !important; zoom: var(--sheet-print-scale, 1); }
+  .board-row { break-inside: avoid; }
+  .bar, .bar.done, .day-cell.month-start, .status-badge { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .task-label { position: static; }
+}
+@media (prefers-reduced-motion: reduce) { .bar { transition: none; } }
+.timeline::after { content: ''; position: absolute; right: 0; top: 0; bottom: 0; border-right: 1px solid #aeb7b1; pointer-events: none; }
