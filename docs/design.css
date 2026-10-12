@@ -423,3 +423,35 @@ dialog label.receipt-required { display: flex; align-items: center; gap: 9px; ma
 .receipt-pin { z-index: 3; }
 dialog select { display: block; width: 100%; min-height: 44px; margin-top: 7px; padding: 8px 11px; border: 1px solid #cddccf; border-radius: 4px; background: #fff; color: #203327; font: inherit; }
 @media print { .dependency-path { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+
+/* Connect a bar to its successor, or swipe the bar to move its start date. */
+.bar { touch-action: pan-y; }
+.link-handle { position: absolute; top: 34px; z-index: 4; display: grid; place-items: center; width: 22px; height: 22px; padding: 0; border: 2px solid #fff; border-radius: 50%; background: #24764f; box-shadow: 0 0 0 1px #24764f; color: #fff; font-size: 15px; font-weight: 700; line-height: 1; cursor: crosshair; touch-action: none; opacity: .8; transition: transform .16s ease, opacity .16s ease; }
+.link-handle:hover,.link-handle:focus-visible,.link-handle.is-connecting { opacity: 1; transform: scale(1.18); }
+.link-handle.is-connecting { background: #153e2b; box-shadow: 0 0 0 3px #98c6ab; }
+.link-preview-layer { position: absolute; inset: 0; z-index: 3; overflow: visible; pointer-events: none; }
+.link-preview-path { fill: none; stroke: #24764f; stroke-width: 2; stroke-dasharray: 5 4; }
+.board-row.link-target .timeline { background: #eaf4eb; }
+.month-scale .link-handle { top: 10px; width: 20px; height: 20px; font-size: 13px; }
+@media (max-width: 900px) and (orientation: landscape) and (max-height: 650px) { .link-handle { top: 23px; } .month-scale .link-handle { top: 10px; } }
+@media print { .link-handle,.link-preview-layer { display: none !important; } }
+
+/* A compact, searchable multi-select keeps large schedules manageable. */
+#taskDialog { max-height: calc(100dvh - 24px); overflow: auto; }
+.dependency-editor { margin: 18px 0; padding: 13px; border: 1px solid #d1ddd3; border-radius: 5px; background: #f8faf7; }
+.dependency-editor-head { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; color: #274b35; font-size: 13px; }
+.dependency-editor-head small,.dependency-help,.dependency-more { color: #65786a; font-size: 11px; font-weight: 400; }
+.selected-dependencies { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; min-height: 33px; margin: 9px 0; color: #768579; font-size: 12px; }
+.selected-dependencies button { border: 1px solid #98bea1; border-radius: 3px; background: #e8f3e9; color: #245b39; padding: 5px 8px; font-size: 11px; cursor: pointer; }
+.selected-dependencies button span { margin-left: 4px; font-size: 14px; }
+dialog label.dependency-search-label { margin: 7px 0; font-size: 11px; }
+dialog .dependency-search-label input { min-height: 38px !important; margin-top: 4px; }
+.dependency-options { display: grid; max-height: 150px; overflow-y: auto; border: 1px solid #d8e1d8; border-radius: 3px; background: #fff; }
+dialog label.dependency-choice { display: flex; align-items: center; gap: 9px; min-height: 39px; margin: 0; padding: 6px 9px; border-bottom: 1px solid #e9efe9; cursor: pointer; }
+.dependency-choice:last-child { border-bottom: 0; }
+.dependency-choice:hover { background: #f2f7f1; }
+.dependency-choice input { flex: none; width: 17px; height: 17px; accent-color: #24764f; }
+.dependency-choice span { display: flex; min-width: 0; align-items: baseline; gap: 7px; }
+.dependency-choice strong { color: #263c2d; font-size: 12px; }
+.dependency-choice small { color: #7c887d; font-size: 10px; }
+.dependency-more { display: block; padding: 8px; }
