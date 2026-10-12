@@ -8,10 +8,10 @@
   <meta name="description" content="工程を並べ、日付を決め、ひとつの工程表をつくる試作です。">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="design.css?v=20261012-8">
+  <link rel="stylesheet" href="design.css?v=20261013-1">
   <script src="sato-data.js?v=20261012-7" defer></script>
   <script src="receipts.js?v=20261012-8" defer></script>
-  <script src="app.js?v=20261012-8" defer></script>
+  <script src="app.js?v=20261013-1" defer></script>
 </head>
 <body>
   <svg class="icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
@@ -50,7 +50,7 @@
       <div class="board-toolbar"><div><small class="board-project-name" id="boardProjectName"></small><strong id="periodLabel">工程表</strong><span id="todayLabel"></span></div><div class="board-actions"><button id="prev" type="button" aria-label="前の期間">‹</button><button id="today" type="button">今日</button><button id="next" type="button" aria-label="次の期間">›</button></div></div>
       <details id="sourceDetails" class="source-disclosure" hidden><summary>元資料と日付の扱い</summary><p id="sourceNote" class="source-note"></p></details>
       <div class="board-scroll" id="boardScroll"><div class="board-grid" id="boardGrid"></div></div>
-      <div class="board-foot"><span id="boardInstruction">線を左右に動かすと開始日を変更できます。</span><span><i class="legend-done"></i>完了　<i class="legend-open"></i>未完了　<i class="legend-unknown"></i>実績未確認　<i class="legend-today"></i>今日　／　領収書：<b class="legend-receipt-missing">!</b> 未添付　<b class="legend-receipt-attached">●</b> 確認待ち　<b class="legend-receipt-reviewed">✓</b> 確認済み</span></div>
+      <div class="board-foot"><span id="boardInstruction">線を左右に動かすと開始日を変更できます。</span><span><b class="legend-dependency">→</b> 前提工程　<b class="legend-dependency-conflict">→</b> 日付が重複　／　<i class="legend-done"></i>完了　<i class="legend-open"></i>未完了　<i class="legend-unknown"></i>実績未確認　<i class="legend-today"></i>今日　／　領収書：<b class="legend-receipt-missing">!</b> 未添付　<b class="legend-receipt-attached">●</b> 確認待ち　<b class="legend-receipt-reviewed">✓</b> 確認済み</span></div>
     </section>
     <p class="orientation-hint">↻ 横向きにすると日付と工程を広く見られます。端末の回転ロックが有効な場合は解除してください。</p>
     <div class="below-board"><span id="saveState" role="status">この端末に保存しました</span><div><button id="export" class="text-action" type="button">データを保存</button><label class="text-action file-action">データを読み込む<input id="import" type="file" accept="application/json,.json"></label><button id="newProject" class="text-action" type="button">新しい工程表</button></div></div>
@@ -65,12 +65,13 @@
     <label>工程名<input name="name" required maxlength="80" placeholder="例：基礎工事"></label>
     <label>担当会社・担当<input name="company" maxlength="80" placeholder="例：基礎業者"></label>
     <div class="dialog-row"><label>開始日<input name="start" type="date" required></label><label>所要日数（暦日）<input name="days" type="number" min="1" max="365" required></label></div>
+    <label>前提工程<select name="predecessor"><option value="">指定なし</option></select></label>
     <label>実績状態<select name="status"><option value="unknown">実績未確認</option><option value="open">未完了</option><option value="done">完了</option></select></label>
     <section id="receiptSection" class="receipt-section" hidden aria-label="この工程の領収書">
       <div class="receipt-heading"><strong>領収書</strong><span id="receiptState" role="status"></span></div>
       <label class="receipt-required"><input id="receiptRequired" type="checkbox">この工程では領収書を確認する</label>
       <div id="receiptActions" hidden>
-        <div class="receipt-buttons"><label class="receipt-upload">📷 撮影・写真を選ぶ<input id="receiptInput" type="file" accept="image/*" capture="environment" aria-label="領収書を撮影・選択"></label><button type="button" id="receiptReview" class="quiet"></button></div>
+        <div class="receipt-buttons"><label class="receipt-upload"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><path d="M8.1 3.5h7.8l1.45 2.2H20a2 2 0 0 1 2 2v10.8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7.7a2 2 0 0 1 2-2h2.65L8.1 3.5ZM12 8.3a4.55 4.55 0 1 0 0 9.1 4.55 4.55 0 0 0 0-9.1Zm0 2a2.55 2.55 0 1 1 0 5.1 2.55 2.55 0 0 1 0-5.1Z"/></svg><span>撮影・写真を選ぶ</span><input id="receiptInput" type="file" accept="image/*" capture="environment" aria-label="領収書を撮影・選択"></label><button type="button" id="receiptReview" class="quiet"></button></div>
         <ul id="receiptList" class="receipt-list"></ul>
       </div>
       <small class="receipt-help">写真はこの端末に保存されます。共有やJSON書き出しには含まれません。</small>
