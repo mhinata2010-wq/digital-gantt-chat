@@ -8,8 +8,8 @@
   <meta name="description" content="工程を並べ、日付を決め、ひとつの工程表をつくる試作です。">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="design.css?v=20261012-1">
-  <script src="app.js?v=20261012-1" defer></script>
+  <link rel="stylesheet" href="design.css?v=20261012-2">
+  <script src="app.js?v=20261012-2" defer></script>
 </head>
 <body>
   <svg class="icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
@@ -43,10 +43,11 @@
       <label>表示開始日<input id="viewStart" type="date"></label>
       <div class="period-control" aria-label="表示期間"><span>表示期間</span><div class="segmented"><button type="button" data-days="14" aria-pressed="true">2週間</button><button type="button" data-days="28" aria-pressed="false">4週間</button></div></div>
     </section>
-    <section class="board" aria-label="ガントチャート">
+    <section class="board" aria-label="総合工程表">
+      <div class="sheet-heading"><div><small>工事工程</small><h2 id="sheetProjectName">工事名</h2></div><strong>総合工程表</strong><span id="sheetRange">表示期間</span></div>
       <div class="board-toolbar"><div><small class="board-project-name" id="boardProjectName"></small><strong id="periodLabel">工程表</strong><span id="todayLabel"></span></div><div class="board-actions"><button id="prev" type="button" aria-label="前の期間">‹</button><button id="today" type="button">今日</button><button id="next" type="button" aria-label="次の期間">›</button></div></div>
       <div class="board-scroll" id="boardScroll"><div class="board-grid" id="boardGrid"></div></div>
-      <div class="board-foot"><span>工程の棒を左右に動かすと開始日を変更できます。</span><span><i class="legend-done"></i>完了　<i class="legend-open"></i>未完了</span></div>
+      <div class="board-foot"><span>線を左右に動かすと開始日を変更できます。</span><span><i class="legend-done"></i>完了　<i class="legend-open"></i>未完了　<i class="legend-today"></i>今日</span></div>
     </section>
     <p class="orientation-hint">↻ 横向きにすると日付と工程を広く見られます。端末の回転ロックが有効な場合は解除してください。</p>
     <div class="below-board"><span id="saveState" role="status">この端末に保存しました</span><div><button id="export" class="text-action" type="button">データを保存</button><label class="text-action file-action">データを読み込む<input id="import" type="file" accept="application/json,.json"></label><button id="newProject" class="text-action" type="button">新しい工程表</button></div></div>
