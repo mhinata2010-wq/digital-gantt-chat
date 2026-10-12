@@ -1,7 +1,7 @@
 const $ = id => document.getElementById(id);
 const KEY = 'snake_schedule_only_v1';
 const PROJECTS_KEY = 'snake_schedule_projects_v2';
-const SATO_SEED_KEY = 'snake_sato_sample_v1';
+const SATO_ID = 'sato-master-2021';
 const compactLandscape = () => window.matchMedia('(max-width: 900px) and (orientation: landscape) and (max-height: 650px)').matches;
 const portraitPhone = () => window.matchMedia('(max-width: 900px) and (orientation: portrait)').matches;
 const LABEL_WIDTH = () => compactLandscape() ? 175 : window.innerWidth <= 780 ? 183 : 310;
@@ -33,7 +33,7 @@ const existingProjects = !!localStorage.getItem(PROJECTS_KEY);
 const existingLegacy = !!localStorage.getItem(KEY);
 try{
  const data=JSON.parse(localStorage.getItem(PROJECTS_KEY));
- if(!data||!Array.isArray(data.projects)||!data.projects.length||data.projects.length>50)throw Error('invalid projects');
+ if(!data||!Array.isArray(data.projects)||!data.projects.length||data.projects.length>51)throw Error('invalid projects');
  const ids=new Set();
  projects=data.projects.map(item=>{if(!item||typeof item.id!=='string'||ids.has(item.id))throw Error('invalid project');ids.add(item.id);return {id:item.id,schedule:clean(item.schedule)}});
  activeId=ids.has(data.activeId)?data.activeId:projects[0].id;
@@ -41,22 +41,19 @@ try{
  let initial;try{initial=clean(JSON.parse(localStorage.getItem(KEY)))}catch{initial=example()}
  activeId=newId();projects=[{id:activeId,schedule:initial}];
 }
-if(!localStorage.getItem(SATO_SEED_KEY) && typeof SATO_SCHEDULE!=='undefined' && projects.length<50){
- const sample={id:'sato-master-2021',schedule:clean(SATO_SCHEDULE)};
- if(!projects.some(project=>project.id===sample.id)){
-  projects.unshift(sample);
-  if(!existingProjects&&!existingLegacy)activeId=sample.id;
-  localStorage.setItem(PROJECTS_KEY,JSON.stringify({activeId,projects}));
- }
- localStorage.setItem(SATO_SEED_KEY,'1');
+if(typeof SATO_SCHEDULE!=='undefined' && !projects.some(project=>project.id===SATO_ID) && projects.length<51){
+ projects.unshift({id:SATO_ID,schedule:clean(SATO_SCHEDULE)});
+ if(!existingProjects&&!existingLegacy)activeId=SATO_ID;
+ localStorage.setItem(PROJECTS_KEY,JSON.stringify({activeId,projects}));
 }
+if(new URL(location.href).searchParams.get('project')===SATO_ID && projects.some(project=>project.id===SATO_ID))activeId=SATO_ID;
 state=projects.find(project=>project.id===activeId).schedule;
 let saveTimer;
 function save(){projects.find(project=>project.id===activeId).schedule=state;localStorage.setItem(PROJECTS_KEY,JSON.stringify({activeId,projects}));$('saveState').textContent='この端末に保存しました';clearTimeout(saveTimer);saveTimer=setTimeout(()=>$('saveState').textContent='この端末に保存しました',2000)}
 function announce(message){$('toast').textContent=message;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),3200)}
 function render(){const monthScale=state.scale==='month',today=todayISO(),starts=state.tasks.map(task=>task.start),ends=state.tasks.map(task=>plus(task.start,task.days-1)),minDate=starts.length?starts.sort()[0]:state.viewStart,maxDate=ends.length?ends.sort().at(-1):plus(state.viewStart,27),first=monthScale?`${minDate.slice(0,7)}-01`:state.viewStart,last=monthScale?plus(`${maxDate.slice(0,7)}-01`,new Date(Date.UTC(+maxDate.slice(0,4),+maxDate.slice(5,7),0)).getUTCDate()-1):plus(first,state.days-1),days=distance(last,first)+1,w=WIDTH(),width=days*w,dates=Array.from({length:days},(_,i)=>plus(first,i));
  document.body.classList.toggle('month-scale',monthScale);
- $('projectName').value=state.name;$('displayName').textContent=state.name||'名称未設定の工程表';$('viewStart').value=state.viewStart;$('periodLabel').textContent=monthScale?`${first.slice(0,4)}/${+first.slice(5,7)} – ${last.slice(0,4)}/${+last.slice(5,7)}`:`${short(first)} – ${short(last)}`;$('todayLabel').textContent=state.tasks.length?`${state.tasks.length}工程 · ${monthScale?'全期間を月単位で表示':'暦日で表示'}`:'工程を追加してください';$('projectMeta').textContent=state.source?'佐藤さんの総合工程表を再構成した試作です。':'工程を追加して、予定を組みましょう。';document.querySelectorAll('[data-days]').forEach(button=>button.setAttribute('aria-pressed',String(!monthScale&&+button.dataset.days===state.days)));$('allPeriod').setAttribute('aria-pressed',String(monthScale));$('sourceNote').hidden=!state.source;$('sourceNote').textContent=state.source||'';$('boardInstruction').textContent=monthScale?'工程名または線を押すと内容を確認・編集できます。':'線を左右に動かすと開始日を変更できます。';
+ $('projectName').value=state.name;$('displayName').textContent=state.name||'名称未設定の工程表';$('viewStart').value=state.viewStart;$('periodLabel').textContent=monthScale?`${first.slice(0,4)}/${+first.slice(5,7)} – ${last.slice(0,4)}/${+last.slice(5,7)}`:`${short(first)} – ${short(last)}`;$('todayLabel').textContent=state.tasks.length?`${state.tasks.length}工程 · ${monthScale?'全期間を月単位で表示':'暦日で表示'}`:'工程を追加してください';$('projectMeta').textContent=state.source?'佐藤さんの総合工程表を再構成した試作です。':'工程を追加して、予定を組みましょう。';$('openSato').hidden=activeId===SATO_ID||!projects.some(project=>project.id===SATO_ID);document.querySelectorAll('[data-days]').forEach(button=>button.setAttribute('aria-pressed',String(!monthScale&&+button.dataset.days===state.days)));$('allPeriod').setAttribute('aria-pressed',String(monthScale));$('sourceNote').hidden=!state.source;$('sourceNote').textContent=state.source||'';$('boardInstruction').textContent=monthScale?'工程名または線を押すと内容を確認・編集できます。':'線を左右に動かすと開始日を変更できます。';
  $('homeProjectName').textContent=state.name||'名称未設定の工程表';$('homePeriod').textContent=monthScale?`${first.slice(0,7)} – ${last.slice(0,7)} の予定を見る`:`${short(first)} – ${short(last)} の予定を見る`;$('boardProjectName').textContent=state.name;$('sheetProjectName').textContent=state.name||'名称未設定の工程表';$('sheetRange').textContent=`${first} 〜 ${last} / ${state.tasks.length}工程`;document.documentElement.style.setProperty('--sheet-print-scale',String(Math.min(1.2,1040/(LABEL_WIDTH()+width))));$('projectPicker').innerHTML=projects.map(project=>`<option value="${text(project.id)}">${text(project.schedule.name)}</option>`).join('');$('projectPicker').value=activeId;
  $('homeTasks').innerHTML=projects.map(project=>`<div class="project-tile"><button type="button" class="project-open" data-open-project="${text(project.id)}" aria-label="${text(project.schedule.name||'名称未設定の工程表')}の工程表を開く"><span class="project-tile-icon" aria-hidden="true"><i></i><i></i><i></i></span><span class="project-tile-copy"><strong>${text(project.schedule.name||'名称未設定の工程表')}</strong><small>${project.schedule.tasks.length}工程 · ${short(project.schedule.viewStart)}から</small></span></button><button type="button" class="favorite-button ${favorites.has(project.id)?'is-favorite':''}" data-favorite="${text(project.id)}" aria-pressed="${favorites.has(project.id)}" aria-label="${text(project.schedule.name||'名称未設定の工程表')}を${favorites.has(project.id)?'お気に入りから外す':'お気に入りに追加'}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2.5 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.3l-5.8 3.1 1.1-6.5-4.7-4.6 6.5-.9z"/></svg></button></div>`).join('');
  const yearGroups=[];for(let i=0;i<days;){let j=i+1;while(j<days&&dates[i].slice(0,4)===dates[j].slice(0,4))j++;yearGroups.push(`<span class="year-span" style="width:${(j-i)*w}px">${dates[i].slice(0,4)}年</span>`);i=j}
@@ -84,6 +81,7 @@ document.querySelectorAll('[data-view-button]').forEach(button=>button.onclick=(
 $('openSchedule').onclick=()=>openProject(activeId);
 async function openProject(id){
  const project=projects.find(item=>item.id===id);if(!project)return;
+ const url=new URL(location.href);if(url.searchParams.has('project')){url.searchParams.delete('project');history.replaceState(null,'',url)}
  activeId=id;state=project.schedule;save();render();setView('schedule');
  if(!portraitPhone())return;
  try{
