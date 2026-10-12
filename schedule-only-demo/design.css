@@ -284,3 +284,42 @@ button:focus-visible, input:focus-visible, .bar:focus-visible {
 }
 @media (prefers-reduced-motion: reduce) { .bar { transition: none; } }
 .timeline::after { content: ''; position: absolute; right: 0; top: 0; bottom: 0; border-right: 1px solid #aeb7b1; pointer-events: none; }
+
+/* The long-form master schedule uses monthly columns and compact floor groups. */
+.source-note { margin: 0; padding: 10px 20px; border-bottom: 1px solid #d7ddd5; background: #f5f7f2; color: #526454; font-size: 11px; line-height: 1.65; }
+dialog label > select { display: block; width: 100%; min-height: 44px; margin-top: 7px; padding: 8px 11px; border: 1px solid #cddccf; border-radius: 4px; background: #fff; color: #203327; }
+.month-scale .board-scroll { max-height: min(74vh, 780px); overflow: auto; }
+.month-scale .year-row { position: sticky; top: 0; z-index: 12; }
+.month-scale .month-row { position: sticky; top: 24px; z-index: 11; }
+.month-scale .date-row, .month-scale .board-actions { display: none; }
+.month-scale .year-row .task-label, .month-scale .month-row .task-label { z-index: 13; }
+.month-scale .board-row[data-row], .month-scale .board-row[data-row] .timeline { min-height: 37px; height: 37px; }
+.month-scale .board-row[data-row] .task-label { min-height: 37px; padding: 2px 9px; gap: 4px; }
+.month-scale .task-name { padding: 0 2px; }
+.month-scale .task-name strong { font-size: 11px; font-weight: 650; }
+.month-scale .task-name small, .month-scale .move-buttons { display: none; }
+.month-scale .task-label .drag-handle { font-size: 13px; padding: 2px; }
+.month-scale .status-badge { font-size: 9px; padding: 2px 3px; }
+.status-badge.is-unknown { border-color: #d4d8d0; color: #657068; background: #f5f6f2; }
+.month-scale .group-row, .month-scale .group-row .timeline { min-height: 26px; height: 26px; background: #e9eee9; }
+.month-scale .group-row .task-label { padding: 3px 13px; font-size: 11px; font-weight: 800; color: #274d37; background: #e9eee9; }
+.month-scale .day-cell.month-start { border-left: 1px dashed #b6c2b8; background: transparent; }
+.month-scale .day-cell.quarter-start { border-left: 1px solid #d6a49c; background: linear-gradient(90deg,#f5e4df 0 5px,transparent 5px); }
+.month-scale .bar, .month-scale .bar.done { top: 12px; height: 19px; padding: 0; border-bottom-width: 2px; cursor: pointer; }
+.month-scale .bar::before, .month-scale .bar::after { bottom: -4px; width: 5px; height: 5px; border-width: 1px; }
+.month-scale .bar.milestone { top: 13px; width: 9px !important; height: 9px; border: 2px solid #33483a; transform: rotate(45deg); background: #fff; }
+.month-scale .bar.milestone::before, .month-scale .bar.milestone::after { display: none; }
+.month-scale .board-foot .legend-today { display: none; }
+.board-foot .legend-unknown { background: #aab3aa; }
+@media (max-width: 900px) and (orientation: landscape) and (max-height: 650px) {
+  .month-scale .month-row { top: 22px; }
+  .month-scale .board-scroll { max-height: calc(100dvh - 57px); }
+  .month-scale .board-row[data-row], .month-scale .board-row[data-row] .timeline { min-height: 37px; height: 37px; }
+  .month-scale .task-label .status-badge { right: 3px; bottom: 1px; }
+  .month-scale .task-name { padding-bottom: 0; padding-right: 19px; }
+}
+@media print {
+  .month-scale .board-scroll { max-height: none; overflow: visible; }
+  .month-scale .year-row, .month-scale .month-row { position: static; }
+  .source-note { padding: 2mm; }
+}
