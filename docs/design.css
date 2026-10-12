@@ -400,7 +400,8 @@ dialog label > select { display: block; width: 100%; min-height: 44px; margin-to
 dialog label.receipt-required { display: flex; align-items: center; gap: 9px; margin: 12px 0; font-size: 12px; }
 .receipt-required input { width: 18px; height: 18px; accent-color: #208965; }
 .receipt-buttons { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.receipt-upload { position: relative; display: inline-flex !important; align-items: center; justify-content: center; min-height: 40px; margin: 0 !important; padding: 7px 12px; border-radius: 4px; background: #146e4d; color: #fff !important; cursor: pointer; }
+.receipt-upload { position: relative; display: inline-flex !important; align-items: center; justify-content: center; gap: 7px; min-height: 40px; margin: 0 !important; padding: 7px 12px; border-radius: 4px; background: #146e4d; color: #fff !important; cursor: pointer; }
+.receipt-upload svg { display: block; flex: none; }
 .receipt-upload input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
 .receipt-upload:focus-within { outline: 3px solid #72bc98; outline-offset: 2px; }
 .receipt-buttons .quiet { min-height: 40px; font-size: 12px; }.receipt-buttons .quiet:disabled { opacity: .5; cursor: default; }
@@ -411,3 +412,14 @@ dialog label.receipt-required { display: flex; align-items: center; gap: 9px; ma
 .receipt-help { display: block; margin-top: 11px; color: #64766b; font-size: 11px; line-height: 1.5; }
 @media (max-width: 900px) and (orientation: landscape) and (max-height: 650px) { .receipt-pin { top: 2px; } }
 @media print { .receipt-pin { print-color-adjust: exact; -webkit-print-color-adjust: exact; } .receipt-section { display: none; } }
+
+/* Explicitly assigned predecessor links run beneath the schedule bars. */
+.board-grid { position: relative; }
+.dependency-layer { position: absolute; left: 0; top: 0; z-index: 1; overflow: visible; pointer-events: none; }
+.dependency-path { fill: none; stroke: #24764f; stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; }
+.dependency-path.is-conflict { stroke: #aa653c; stroke-dasharray: 4 3; }
+.legend-dependency { color: #24764f; }.legend-dependency-conflict { color: #aa653c; text-decoration: underline dashed; }
+.bar { z-index: 2; }
+.receipt-pin { z-index: 3; }
+dialog select { display: block; width: 100%; min-height: 44px; margin-top: 7px; padding: 8px 11px; border: 1px solid #cddccf; border-radius: 4px; background: #fff; color: #203327; font: inherit; }
+@media print { .dependency-path { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
