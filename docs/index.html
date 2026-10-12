@@ -8,9 +8,10 @@
   <meta name="description" content="工程を並べ、日付を決め、ひとつの工程表をつくる試作です。">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="design.css?v=20261012-7">
+  <link rel="stylesheet" href="design.css?v=20261012-8">
   <script src="sato-data.js?v=20261012-7" defer></script>
-  <script src="app.js?v=20261012-7" defer></script>
+  <script src="receipts.js?v=20261012-8" defer></script>
+  <script src="app.js?v=20261012-8" defer></script>
 </head>
 <body>
   <svg class="icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
@@ -49,7 +50,7 @@
       <div class="board-toolbar"><div><small class="board-project-name" id="boardProjectName"></small><strong id="periodLabel">工程表</strong><span id="todayLabel"></span></div><div class="board-actions"><button id="prev" type="button" aria-label="前の期間">‹</button><button id="today" type="button">今日</button><button id="next" type="button" aria-label="次の期間">›</button></div></div>
       <details id="sourceDetails" class="source-disclosure" hidden><summary>元資料と日付の扱い</summary><p id="sourceNote" class="source-note"></p></details>
       <div class="board-scroll" id="boardScroll"><div class="board-grid" id="boardGrid"></div></div>
-      <div class="board-foot"><span id="boardInstruction">線を左右に動かすと開始日を変更できます。</span><span><i class="legend-done"></i>完了　<i class="legend-open"></i>未完了　<i class="legend-unknown"></i>実績未確認　<i class="legend-today"></i>今日</span></div>
+      <div class="board-foot"><span id="boardInstruction">線を左右に動かすと開始日を変更できます。</span><span><i class="legend-done"></i>完了　<i class="legend-open"></i>未完了　<i class="legend-unknown"></i>実績未確認　<i class="legend-today"></i>今日　／　領収書：<b class="legend-receipt-missing">!</b> 未添付　<b class="legend-receipt-attached">●</b> 確認待ち　<b class="legend-receipt-reviewed">✓</b> 確認済み</span></div>
     </section>
     <p class="orientation-hint">↻ 横向きにすると日付と工程を広く見られます。端末の回転ロックが有効な場合は解除してください。</p>
     <div class="below-board"><span id="saveState" role="status">この端末に保存しました</span><div><button id="export" class="text-action" type="button">データを保存</button><label class="text-action file-action">データを読み込む<input id="import" type="file" accept="application/json,.json"></label><button id="newProject" class="text-action" type="button">新しい工程表</button></div></div>
@@ -65,6 +66,15 @@
     <label>担当会社・担当<input name="company" maxlength="80" placeholder="例：基礎業者"></label>
     <div class="dialog-row"><label>開始日<input name="start" type="date" required></label><label>所要日数（暦日）<input name="days" type="number" min="1" max="365" required></label></div>
     <label>実績状態<select name="status"><option value="unknown">実績未確認</option><option value="open">未完了</option><option value="done">完了</option></select></label>
+    <section id="receiptSection" class="receipt-section" hidden aria-label="この工程の領収書">
+      <div class="receipt-heading"><strong>領収書</strong><span id="receiptState" role="status"></span></div>
+      <label class="receipt-required"><input id="receiptRequired" type="checkbox">この工程では領収書を確認する</label>
+      <div id="receiptActions" hidden>
+        <div class="receipt-buttons"><label class="receipt-upload">📷 撮影・写真を選ぶ<input id="receiptInput" type="file" accept="image/*" capture="environment" aria-label="領収書を撮影・選択"></label><button type="button" id="receiptReview" class="quiet"></button></div>
+        <ul id="receiptList" class="receipt-list"></ul>
+      </div>
+      <small class="receipt-help">写真はこの端末に保存されます。共有やJSON書き出しには含まれません。</small>
+    </section>
     <div class="dialog-actions"><button id="deleteTask" type="button" class="danger">この工程を削除</button><button type="submit" class="primary">工程表に反映</button></div>
   </form></dialog>
   <div id="toast" role="status" aria-live="polite"></div>
