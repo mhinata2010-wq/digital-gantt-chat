@@ -206,7 +206,7 @@ button:focus-visible, input:focus-visible, .bar:focus-visible {
 .board-toolbar { background: #f9faf8; border-color: #c8d0ca; }
 .board-toolbar strong { font-variant-numeric: tabular-nums; }
 .board-row { min-height: 64px; border-bottom: 1px dashed #aab6ae; }
-.task-label { background: #fff; border-right: 1px solid #aeb7b1; box-shadow: none; }
+.task-label { width: 310px; min-width: 310px; background: #fff; border-right: 1px solid #aeb7b1; box-shadow: none; }
 .task-label .row-number { flex: 0 0 20px; color: #7f8d83; font: 11px ui-monospace,SFMono-Regular,monospace; }
 .task-label .drag-handle { font-size: 15px; padding: 6px 3px; color: #92a498; }
 .task-name strong { font-size: 13px; }
@@ -251,6 +251,9 @@ button:focus-visible, input:focus-visible, .bar:focus-visible {
   .task-label .row-number { display: none; }
   .task-label .status-badge { position: absolute; right: 20px; bottom: 2px; padding: 0 3px; font-size: 9px; }
   .task-label .task-name { padding-bottom: 10px; }
+}
+@media (max-width: 780px) {
+  .task-label { width: 183px; min-width: 183px; }
 }
 @media (max-width: 900px) and (orientation: landscape) and (max-height: 650px) {
   .sheet-heading { display: none; }
