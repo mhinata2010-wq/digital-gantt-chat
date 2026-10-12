@@ -331,3 +331,52 @@ dialog label > select { display: block; width: 100%; min-height: 44px; margin-to
   .source-note { padding: 2mm; }
   .page-actions { display: none; }
 }
+
+/* Keep the working sheet near the top of the screen; expose rarely used edits on demand. */
+.visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+@media screen {
+  main { padding-top: 14px; }
+  .topbar { height: 56px; }
+  .page-head { align-items: center; margin-bottom: 10px; gap: 12px; }
+  .page-name { min-width: 0; }
+  .page-name h1 { margin: 0; font-size: clamp(17px, 1.6vw, 22px); line-height: 1.35; letter-spacing: -.035em; overflow-wrap: anywhere; }
+  .page-actions { align-items: center; }
+  .project-switch { gap: 0; }
+  .project-switch select { min-height: 36px; }
+  .page-head .primary { min-height: 36px; padding: 7px 14px; }
+  .project-controls { flex-wrap: wrap; gap: 8px 12px; padding: 7px 11px; margin-bottom: 10px; align-items: center; }
+  .project-settings { flex: 0 0 auto; }
+  .project-settings summary { list-style: none; cursor: pointer; border: 1px solid #cbd8ce; border-radius: 4px; padding: 7px 11px; font-size: 12px; font-weight: 700; color: #315a42; white-space: nowrap; }
+  .project-settings summary::-webkit-details-marker { display: none; }
+  .project-settings summary::after { content: '⌄'; margin-left: 9px; }
+  .project-settings[open] { flex-basis: 100%; }
+  .project-settings[open] summary { width: max-content; }
+  .project-settings[open] summary::after { content: '⌃'; }
+  .settings-fields { display: flex; gap: 16px; align-items: end; padding: 12px 2px 5px; }
+  .project-controls .settings-fields label:first-child { flex: 1; max-width: 460px; }
+  .project-controls .settings-fields label:nth-child(2) { width: 185px; }
+  .project-controls .settings-fields input { min-height: 38px; }
+  .period-control { padding: 0; margin-left: auto; }
+  .segmented button { padding: 6px 11px; }
+  .sheet-heading { display: none; }
+  .board-toolbar { padding: 8px 14px; min-height: 42px; }
+  .source-disclosure { border-bottom: 1px solid #d7ddd5; }
+  .source-disclosure summary { padding: 5px 14px; cursor: pointer; font-size: 11px; color: #526454; }
+  .source-disclosure .source-note { border-top: 1px solid #d7ddd5; border-bottom: 0; }
+  .sato-shortcut { margin: 0; padding: 5px 0; font-size: 11px; white-space: nowrap; }
+  .month-scale .board-scroll { max-height: max(250px, calc(100dvh - 190px)); }
+}
+@media screen and (max-width: 900px) and (orientation: portrait) {
+  .page-head { margin-bottom: 9px !important; }
+  .page-name h1 { font-size: 17px; }
+  .settings-fields { flex-wrap: wrap; }
+  .project-controls .settings-fields label:first-child { flex-basis: 100%; }
+  .month-scale .board-scroll { max-height: calc(100dvh - 190px); }
+}
+@media screen and (max-width: 900px) and (orientation: landscape) and (max-height: 650px) {
+  .month-scale .board-scroll { max-height: calc(100dvh - 57px); }
+}
+@media print {
+  .page-head, .project-controls, .source-disclosure { display: none !important; }
+  .sheet-heading { display: grid !important; }
+}
