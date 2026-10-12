@@ -8,10 +8,10 @@
   <meta name="description" content="工程を並べ、日付を決め、ひとつの工程表をつくる試作です。">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="design.css?v=20261013-1">
+  <link rel="stylesheet" href="design.css?v=20261013-2">
   <script src="sato-data.js?v=20261012-7" defer></script>
   <script src="receipts.js?v=20261012-8" defer></script>
-  <script src="app.js?v=20261013-1" defer></script>
+  <script src="app.js?v=20261013-2" defer></script>
 </head>
 <body>
   <svg class="icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
@@ -65,7 +65,13 @@
     <label>工程名<input name="name" required maxlength="80" placeholder="例：基礎工事"></label>
     <label>担当会社・担当<input name="company" maxlength="80" placeholder="例：基礎業者"></label>
     <div class="dialog-row"><label>開始日<input name="start" type="date" required></label><label>所要日数（暦日）<input name="days" type="number" min="1" max="365" required></label></div>
-    <label>前提工程<select name="predecessor"><option value="">指定なし</option></select></label>
+    <section class="dependency-editor" aria-labelledby="dependencyTitle">
+      <div class="dependency-editor-head"><strong id="dependencyTitle">前提工程</strong><small>複数選択できます</small></div>
+      <div id="selectedDependencies" class="selected-dependencies" aria-live="polite"></div>
+      <label class="dependency-search-label">工程名で探す<input id="dependencySearch" type="search" autocomplete="off" placeholder="例：土木工事"></label>
+      <div id="dependencyOptions" class="dependency-options" role="group" aria-label="前提工程の候補"></div>
+      <small class="dependency-help">工程表の棒の端から次の工程へ線を引くこともできます。</small>
+    </section>
     <label>実績状態<select name="status"><option value="unknown">実績未確認</option><option value="open">未完了</option><option value="done">完了</option></select></label>
     <section id="receiptSection" class="receipt-section" hidden aria-label="この工程の領収書">
       <div class="receipt-heading"><strong>領収書</strong><span id="receiptState" role="status"></span></div>
