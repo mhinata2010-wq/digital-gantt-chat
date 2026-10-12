@@ -8,9 +8,9 @@
   <meta name="description" content="工程を並べ、日付を決め、ひとつの工程表をつくる試作です。">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="design.css?v=20261012-6">
-  <script src="sato-data.js?v=20261012-6" defer></script>
-  <script src="app.js?v=20261012-6" defer></script>
+  <link rel="stylesheet" href="design.css?v=20261012-7">
+  <script src="sato-data.js?v=20261012-7" defer></script>
+  <script src="app.js?v=20261012-7" defer></script>
 </head>
 <body>
   <svg class="icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
@@ -36,18 +36,18 @@
       <p class="rotate-tip"><span aria-hidden="true">↻</span> 工程表を選んで、横向きで日程を確認できます。</p>
     </section>
     <div class="page-head">
-      <div class="page-name"><span class="eyebrow">工程表 / 試作</span><h1 id="displayName">現場の工程表</h1><p id="projectMeta">工程を追加して予定を組みましょう。</p><a id="openSato" class="sato-shortcut" href="?project=sato-master-2021" hidden>佐藤さんの工程表を見る <span aria-hidden="true">↗</span></a></div>
+      <div class="page-name"><h1 id="displayName">現場の工程表</h1><p id="projectMeta" class="visually-hidden">工程を追加して予定を組みましょう。</p></div>
       <div class="page-actions"><label class="project-switch">案件を切り替え<select id="projectPicker" aria-label="案件を切り替え"></select></label><button class="primary" id="addTask" type="button">＋ 工程を追加</button></div>
     </div>
     <section class="project-controls" id="projectControls" aria-label="工程表の設定">
-      <label>工事名<input id="projectName" maxlength="80" autocomplete="off"></label>
-      <label>表示開始日<input id="viewStart" type="date"></label>
+      <details class="project-settings" id="projectSettings"><summary>工事名・開始日を編集</summary><div class="settings-fields"><label>工事名<input id="projectName" maxlength="80" autocomplete="off"></label><label>表示開始日<input id="viewStart" type="date"></label></div></details>
       <div class="period-control" aria-label="表示期間"><span>表示期間</span><div class="segmented"><button type="button" data-days="14" aria-pressed="true">2週間</button><button type="button" data-days="28" aria-pressed="false">4週間</button><button type="button" id="allPeriod" aria-pressed="false">全期間</button></div></div>
+      <a id="openSato" class="sato-shortcut" href="?project=sato-master-2021" hidden>佐藤さんの工程表を見る <span aria-hidden="true">↗</span></a>
     </section>
     <section class="board" aria-label="総合工程表">
       <div class="sheet-heading"><div><small>工事工程</small><h2 id="sheetProjectName">工事名</h2></div><strong>総合工程表</strong><span id="sheetRange">表示期間</span></div>
       <div class="board-toolbar"><div><small class="board-project-name" id="boardProjectName"></small><strong id="periodLabel">工程表</strong><span id="todayLabel"></span></div><div class="board-actions"><button id="prev" type="button" aria-label="前の期間">‹</button><button id="today" type="button">今日</button><button id="next" type="button" aria-label="次の期間">›</button></div></div>
-      <p id="sourceNote" class="source-note" hidden></p>
+      <details id="sourceDetails" class="source-disclosure" hidden><summary>元資料と日付の扱い</summary><p id="sourceNote" class="source-note"></p></details>
       <div class="board-scroll" id="boardScroll"><div class="board-grid" id="boardGrid"></div></div>
       <div class="board-foot"><span id="boardInstruction">線を左右に動かすと開始日を変更できます。</span><span><i class="legend-done"></i>完了　<i class="legend-open"></i>未完了　<i class="legend-unknown"></i>実績未確認　<i class="legend-today"></i>今日</span></div>
     </section>
