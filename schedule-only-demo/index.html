@@ -8,9 +8,9 @@
   <meta name="description" content="工程を並べ、日付を決め、ひとつの工程表をつくる試作です。">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="design.css?v=20261012-4">
-  <script src="sato-data.js?v=20261012-4" defer></script>
-  <script src="app.js?v=20261012-4" defer></script>
+  <link rel="stylesheet" href="design.css?v=20261012-5">
+  <script src="sato-data.js?v=20261012-5" defer></script>
+  <script src="app.js?v=20261012-5" defer></script>
 </head>
 <body>
   <svg class="icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
@@ -37,7 +37,7 @@
     </section>
     <div class="page-head">
       <div class="page-name"><span class="eyebrow">工程表 / 試作</span><h1 id="displayName">現場の工程表</h1><p id="projectMeta">工程を追加して予定を組みましょう。</p></div>
-      <button class="primary" id="addTask" type="button">＋ 工程を追加</button>
+      <div class="page-actions"><label class="project-switch">案件を切り替え<select id="projectPicker" aria-label="案件を切り替え"></select></label><button class="primary" id="addTask" type="button">＋ 工程を追加</button></div>
     </div>
     <section class="project-controls" id="projectControls" aria-label="工程表の設定">
       <label>工事名<input id="projectName" maxlength="80" autocomplete="off"></label>
