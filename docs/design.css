@@ -56,6 +56,7 @@ button:focus-visible, input:focus-visible, .bar:focus-visible {
   .mobile-nav button[aria-current="page"] svg { width: 27px; height: 27px; stroke-width: 1.9; }
   .mobile-nav button:active, .home-card:active, .project-tile:active { transform: scale(.97); }
 }
+.mobile-nav .nav-add-task { display: none; }
 @media (max-width: 900px) and (orientation: portrait) {
   body { background: var(--paper); }
   .topbar { height: 75px; padding: 17px 27px 8px; }
@@ -164,12 +165,16 @@ button:focus-visible, input:focus-visible, .bar:focus-visible {
 }
 @media (max-width: 900px) and (orientation: landscape) and (max-height: 650px) {
   .mobile-nav {
-    width: 62px; border-radius: 0 16px 16px 0;
-    align-items: center; justify-content: space-around;
-    padding: max(12px,env(safe-area-inset-top)) 6px max(12px,env(safe-area-inset-bottom));
+    top: max(72px, env(safe-area-inset-top));
+    width: 62px; border-radius: 0 12px 12px 0;
+    align-items: center; justify-content: flex-start; gap: 8px;
+    padding: 10px 6px max(10px,env(safe-area-inset-bottom));
   }
+  .mobile-nav .nav-add-task { display: flex; flex: 0 0 49px; width: 49px; height: 49px; border: 1px solid #ffffff88; border-radius: 50%; }
+  .mobile-nav .nav-add-task span { font-size: 28px; line-height: 1; }
   .mobile-nav button { flex: 0 0 49px; }
   .mobile-nav button[aria-current="page"] { flex: 0 0 49px; }
+  :fullscreen .mobile-nav { top: 0; padding-top: max(12px,env(safe-area-inset-top)); }
   .board { background: var(--paper); }
   .board-toolbar { background: var(--paper); }
   .board-grid { background: var(--paper); }
