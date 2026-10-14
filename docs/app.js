@@ -146,7 +146,7 @@ function editTask(id){editing=id||null;const task=taskFor(id)||{name:'',company:
 $('dependencySearch').oninput=renderDependencyEditor;
 $('dependencyOptions').onchange=e=>{const id=e.target.dataset.predecessor;if(!id)return;if(e.target.checked)editingPredecessors.add(id);else editingPredecessors.delete(id);renderDependencyEditor()};
 $('selectedDependencies').onclick=e=>{const button=e.target.closest('[data-remove-dependency]');if(!button)return;editingPredecessors.delete(button.dataset.removeDependency);renderDependencyEditor()};
-$('addTask').onclick=()=>editTask(null);$('closeDialog').onclick=()=>$('taskDialog').close();
+$('addTask').onclick=()=>editTask(null);$('navAddTask').onclick=()=>{setView('schedule');editTask(null)};$('closeDialog').onclick=()=>$('taskDialog').close();
 $('taskDialog').addEventListener('close',releaseReceiptURLs);
 $('receiptRequired').onchange=e=>{const task=taskFor(editing);if(!task)return;task.receiptRequired=e.target.checked;task.receiptReviewed=false;save();render();renderReceiptPanel()};
 $('receiptInput').onchange=async e=>{
