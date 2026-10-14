@@ -8,10 +8,10 @@
   <meta name="description" content="工程を並べ、日付を決め、ひとつの工程表をつくる試作です。">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="design.css?v=20261013-2">
+  <link rel="stylesheet" href="design.css?v=20261014-1">
   <script src="sato-data.js?v=20261012-7" defer></script>
   <script src="receipts.js?v=20261012-8" defer></script>
-  <script src="app.js?v=20261013-3" defer></script>
+  <script src="app.js?v=20261014-1" defer></script>
 </head>
 <body>
   <svg class="icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
@@ -21,6 +21,7 @@
     <symbol id="icon-arrow" viewBox="0 0 24 24"><path d="M4 12h15m-6-6 6 6-6 6"/></symbol>
   </svg>
   <nav class="mobile-nav" aria-label="画面の切り替え">
+    <button type="button" class="nav-add-task" id="navAddTask" aria-label="工程を追加" title="工程を追加"><span aria-hidden="true">＋</span><small>工程を追加</small></button>
     <button type="button" data-view-button="schedule" aria-label="工程表を見る" title="工程表"><svg aria-hidden="true"><use href="#icon-schedule"/></svg><small>工程表</small></button>
     <button type="button" data-view-button="home" aria-label="ホームを見る" title="ホーム"><svg aria-hidden="true"><use href="#icon-home"/></svg><small>ホーム</small></button>
     <button type="button" data-view-button="settings" aria-label="工程表の設定" title="設定"><svg aria-hidden="true"><use href="#icon-person"/></svg><small>設定</small></button>
