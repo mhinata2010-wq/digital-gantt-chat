@@ -471,3 +471,21 @@ dialog label.dependency-choice { display: flex; align-items: center; gap: 9px; m
 .schedule-filters select:focus-visible { outline:3px solid #72bc98; outline-offset:2px; }
 @media (max-width:600px) { .schedule-filters { gap:8px; padding:10px; } .schedule-filters .filter-search { flex-basis:100%; } .schedule-filters label { flex-basis:28%; } .filter-summary { justify-content:space-between; width:100%; } }
 @media print { .schedule-filters { display:none!important; } }
+
+.profile-screen { max-width:680px; margin:24px auto; padding:0 8px 90px; }
+.profile-screen[hidden] { display:none!important; }
+body[data-view="profile"] .page-head,body[data-view="profile"] .mobile-home,body[data-view="profile"] .project-controls,body[data-view="profile"] .board,body[data-view="profile"] .below-board,body[data-view="profile"] .orientation-hint { display:none!important; }
+.profile-heading,.profile-identity { display:flex; align-items:center; gap:16px; }
+.profile-heading { justify-content:space-between; margin-bottom:24px; }
+.profile-heading h1 { font-size:23px; }
+.profile-identity { padding:20px 0; border-bottom:1px solid var(--rule); }
+.profile-identity > div { flex:1; min-width:0; }
+.profile-identity h2 { margin:0 0 6px; font-size:22px; overflow-wrap:anywhere; }
+.profile-identity p { margin:0; color:#52695b; font-size:13px; overflow-wrap:anywhere; }
+.profile-avatar { display:grid; place-items:center; flex:0 0 60px; height:60px; border-radius:50%; background:#e1efe7; color:var(--snake-dark); font-size:26px; }
+.profile-details { margin:0; }.profile-details > div { display:grid; grid-template-columns:135px 1fr; gap:12px; padding:18px 0; border-bottom:1px solid var(--rule); }
+.profile-details dt { color:#52695b; font-size:13px; }.profile-details dd { margin:0; overflow-wrap:anywhere; }
+.profile-note { color:#52695b; line-height:1.7; font-size:12px; margin:20px 0; }
+#profileForm { display:grid; gap:15px; }#profileForm label { display:grid; gap:5px; }#profileForm input { width:100%; box-sizing:border-box; min-height:44px; } .profile-form-actions { display:flex; justify-content:flex-end; gap:10px; }
+@media (max-width:600px) { .profile-details > div { grid-template-columns:100px 1fr; }.profile-heading h1 { font-size:21px; } }
+@media print { .profile-screen,#profileDialog { display:none!important; } }

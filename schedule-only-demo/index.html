@@ -8,10 +8,10 @@
   <meta name="description" content="工程を並べ、日付を決め、ひとつの工程表をつくる試作です。">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="design.css?v=20261015-filters">
+  <link rel="stylesheet" href="design.css?v=20261015-profile">
   <script src="sato-data.js?v=20261012-7" defer></script>
   <script src="receipts.js?v=20261012-8" defer></script>
-  <script src="app.js?v=20261015-filters" defer></script>
+  <script src="app.js?v=20261015-profile" defer></script>
 </head>
 <body>
   <svg class="icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
@@ -24,7 +24,7 @@
     <button type="button" class="nav-add-task" id="navAddTask" aria-label="工程を追加" title="工程を追加"><span aria-hidden="true">＋</span><small>工程を追加</small></button>
     <button type="button" data-view-button="schedule" aria-label="工程表を見る" title="工程表"><svg aria-hidden="true"><use href="#icon-schedule"/></svg><small>工程表</small></button>
     <button type="button" data-view-button="home" aria-label="ホームを見る" title="ホーム"><svg aria-hidden="true"><use href="#icon-home"/></svg><small>ホーム</small></button>
-    <button type="button" data-view-button="settings" aria-label="工程表の設定" title="設定"><svg aria-hidden="true"><use href="#icon-person"/></svg><small>設定</small></button>
+    <button type="button" data-view-button="profile" aria-label="プロフィールを見る" title="プロフィール"><svg aria-hidden="true"><use href="#icon-person"/></svg><small>プロフィール</small></button>
   </nav>
   <header class="topbar">
     <div class="brand"><img src="logo.svg" width="120" height="51" alt="snake site"><span class="division">工程表</span></div>
@@ -37,9 +37,24 @@
       <div class="home-tasks" id="homeTasks"></div>
       <p class="rotate-tip"><span aria-hidden="true">↻</span> 工程表を選んで、横向きで日程を確認できます。</p>
     </section>
+    <section class="profile-screen" id="profileScreen" aria-labelledby="profileTitle" hidden>
+      <div class="profile-heading"><h1 id="profileTitle">プロフィール</h1><button type="button" data-view-button="schedule">工程表へ戻る</button></div>
+      <div class="profile-identity"><span class="profile-avatar" id="profileInitial" aria-hidden="true">人</span><div><h2 id="profileDisplayName">名前が未登録です</h2><p id="profileAffiliation">所属・役割を登録できます</p></div><button type="button" id="editProfile">編集</button></div>
+      <dl class="profile-details"><div><dt>氏名</dt><dd id="profileNameValue"></dd></div><div><dt>会社・所属</dt><dd id="profileCompanyValue"></dd></div><div><dt>役割・職種</dt><dd id="profileRoleValue"></dd></div><div><dt>メールアドレス</dt><dd id="profileEmailValue"></dd></div><div><dt>電話番号</dt><dd id="profilePhoneValue"></dd></div></dl>
+      <p class="profile-note">このプロフィールはこの端末のブラウザに保存されます。ログインアカウントとの連携や他の端末への同期はありません。</p>
+      <button type="button" data-view-button="settings">工程表の設定・データ管理</button>
+    </section>
+    <dialog id="profileDialog" aria-labelledby="profileEditTitle"><form id="profileForm"><h2 id="profileEditTitle">プロフィールを編集</h2>
+      <label>氏名<input name="name" autocomplete="name" maxlength="80"></label>
+      <label>会社・所属<input name="company" autocomplete="organization" maxlength="80"></label>
+      <label>役割・職種<input name="role" autocomplete="organization-title" maxlength="80"></label>
+      <label>メールアドレス<input name="email" type="email" autocomplete="email" maxlength="254"></label>
+      <label>電話番号<input name="phone" type="tel" autocomplete="tel" maxlength="40"></label>
+      <div class="profile-form-actions"><button type="button" id="cancelProfile">キャンセル</button><button class="primary" type="submit">保存</button></div>
+    </form></dialog>
     <div class="page-head">
       <div class="page-name"><h1 id="displayName">現場の工程表</h1><p id="projectMeta" class="visually-hidden">工程を追加して予定を組みましょう。</p></div>
-      <div class="page-actions"><label class="project-switch">案件を切り替え<select id="projectPicker" aria-label="案件を切り替え"></select></label><button class="primary" id="addTask" type="button">＋ 工程を追加</button></div>
+      <div class="page-actions"><label class="project-switch">案件を切り替え<select id="projectPicker" aria-label="案件を切り替え"></select></label><button type="button" data-view-button="profile">プロフィール</button><button class="primary" id="addTask" type="button">＋ 工程を追加</button></div>
     </div>
     <section class="project-controls" id="projectControls" aria-label="工程表の設定">
       <details class="project-settings" id="projectSettings"><summary>工事名・開始日を編集</summary><div class="settings-fields"><label>工事名<input id="projectName" maxlength="80" autocomplete="off"></label><label>表示開始日<input id="viewStart" type="date"></label></div></details>
