@@ -700,3 +700,34 @@ input,select,textarea{border-radius:14px!important}
   .field-nav-button:active{background:rgba(255,255,255,.18);transform:scale(.96)}
   .field-nav-button[aria-current="page"]:active{background:#fff}
 }
+
+/* Navigation is a movement through the field, not an instant replacement. */
+.screen-enter{animation:screen-arrive .46s cubic-bezier(.22,.8,.25,1) both!important}
+.screen-enter .home-overview>*{animation:surface-arrive .42s cubic-bezier(.22,.8,.25,1) both!important}
+.screen-enter .home-overview>*:nth-child(2){animation-delay:.055s!important}
+.screen-enter .home-overview>*:nth-child(3){animation-delay:.11s!important}
+.screen-enter .home-calendar{animation:surface-arrive .45s .12s cubic-bezier(.22,.8,.25,1) both!important}
+.screen-enter .home-project-card,.screen-enter .project-card{animation:surface-arrive .4s calc(.13s + var(--item-delay, 0ms)) cubic-bezier(.22,.8,.25,1) both!important}
+.screen-enter .home-agenda-item{animation:agenda-arrive .36s cubic-bezier(.22,.8,.25,1) both!important}
+.screen-enter .home-agenda-item:nth-child(1){animation-delay:.17s!important}
+.screen-enter .home-agenda-item:nth-child(2){animation-delay:.22s!important}
+.screen-enter .home-agenda-item:nth-child(3){animation-delay:.27s!important}
+.view-enter.from-right{animation:view-arrive-right .36s cubic-bezier(.22,.8,.25,1) both!important}
+.view-enter.from-left{animation:view-arrive-left .36s cubic-bezier(.22,.8,.25,1) both!important}
+.view-tabs button{transition:color .2s ease,background-color .2s ease,transform .2s cubic-bezier(.22,.8,.25,1)!important}
+.view-tabs button[aria-current="page"]{animation:tab-settle .28s cubic-bezier(.22,.8,.25,1) both!important}
+.field-nav-button{transition:color .22s ease,background-color .22s ease,transform .22s cubic-bezier(.22,.8,.25,1)!important}
+.field-nav-button[aria-current="page"]{animation:nav-select .34s cubic-bezier(.22,.8,.25,1) both!important}
+.field-nav-button:hover{transform:translateY(-2px)}
+.field-nav-button[aria-current="page"]:hover{transform:scale(1.04)}
+@keyframes screen-arrive{from{opacity:0;transform:translateY(18px) scale(.992)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes surface-arrive{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes agenda-arrive{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
+@keyframes view-arrive-right{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:translateX(0)}}
+@keyframes view-arrive-left{from{opacity:0;transform:translateX(-26px)}to{opacity:1;transform:translateX(0)}}
+@keyframes tab-settle{0%{transform:translateY(3px);opacity:.55}100%{transform:translateY(0);opacity:1}}
+@keyframes nav-select{0%{transform:scale(.78);opacity:.45}72%{transform:scale(1.07)}100%{transform:scale(1);opacity:1}}
+@media(prefers-reduced-motion:reduce){
+  .screen-enter,.screen-enter .home-overview>*,.screen-enter .home-calendar,.screen-enter .home-project-card,.screen-enter .project-card,.screen-enter .home-agenda-item,.view-enter.from-right,.view-enter.from-left,.view-tabs button[aria-current="page"],.field-nav-button[aria-current="page"]{animation:none!important}
+  .view-tabs button,.field-nav-button{transition:none!important}
+}

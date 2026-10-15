@@ -133,7 +133,7 @@ async function enterApplication(){
 
 async function showProjects(){
   stopRealtime?.();stopRealtime=null;currentProject=null;tasks=[];managementItems=[];versions=[];changeRequests=[];networkLayouts=[];networkEventLayouts=[];todayCompany='all';fieldOperations=false;location.hash='projects';
-  $('#projectView').hidden=true;$('#profileView').hidden=true;$('#homeView').hidden=true;$('#projectsView').hidden=false;setConnection('online','同期済み');
+  revealScreen('projectsView');setConnection('online','同期済み');
   setFieldNav('projects');
   projects=await loadProjects();renderProjects();renderMigration();
 }
@@ -144,14 +144,25 @@ function setFieldNav(active){
   }
 }
 
+function revealScreen(id){
+  const target=$(`#${id}`);
+  for(const screen of ['projectsView','projectView','profileView','homeView']){
+    const node=$(`#${screen}`);if(!node)continue;
+    node.hidden=screen!==id;
+  }
+  target.classList.remove('screen-enter');
+  void target.offsetWidth;
+  target.classList.add('screen-enter');
+}
+
 function showProfile(){
-  if(!profile)return;$('#projectsView').hidden=true;$('#projectView').hidden=true;$('#homeView').hidden=true;$('#profileView').hidden=false;location.hash='profile';
+  if(!profile)return;revealScreen('profileView');location.hash='profile';
   const name=profile.display_name||profile.email||'—';$('#profileAvatar').textContent=name.slice(0,1).toUpperCase();$('#profileName').value=profile.display_name||'';$('#profileEmail').value=profile.email||'';$('#profileAccount').textContent=profile.email||'—';$('#profileProjects').textContent=`${projects.length}件`;
   $('#profileMessage').textContent='';setFieldNav('profile');$('#profileView').focus();
 }
 
 async function showHome(){
-  if(!profile)return;$('#projectsView').hidden=true;$('#projectView').hidden=true;$('#profileView').hidden=true;$('#homeView').hidden=false;location.hash='home';setFieldNav('home');
+  if(!profile)return;revealScreen('homeView');location.hash='home';setFieldNav('home');
   if(!projects.length)projects=await loadProjects();
   $('#homeDate').textContent=new Intl.DateTimeFormat('ja-JP',{month:'numeric',day:'numeric'}).format(new Date());$('#homeProjectCount').textContent=String(projects.length);
   $('#homeProjectGrid').innerHTML=projects.length?projects.map(project=>`<button class="home-project-card" data-home-project="${project.id}" type="button"><span>${esc(project.manager||'責任者未設定')}</span><b>${esc(project.name)}</b><small>${Number(project.completed_count||0)}/${Number(project.task_count||0)}工程 完了</small></button>`).join(''):'<p class="home-empty">参加中の現場はありません。</p>';
@@ -208,9 +219,9 @@ async function openProject(id){
     setConnection('connecting','読込中');
     const loaded=await loadProject(id);currentProject=loaded.project;tasks=loaded.tasks;managementItems=loaded.managementItems||[];versions=loaded.versions||[];changeRequests=loaded.changeRequests||[];networkLayouts=loaded.networkLayouts||[];networkEventLayouts=loaded.networkEventLayouts||[];fieldOperations=Boolean(loaded.fieldOperations);todayCompany=loadCompanyFilter(id);
     await cacheProject(profile.id,loaded).catch(()=>{});await hydrateBaseline();
-    $('#projectsView').hidden=true;$('#profileView').hidden=true;$('#homeView').hidden=true;$('#projectView').hidden=false;location.hash=`project=${id}`;
+    revealScreen('projectView');location.hash=`project=${id}`;
     activeView='today';renderProject();startRealtime(id);setConnection('online','同期済み');
-  }catch(error){const cached=profile?await readCachedProject(profile.id,id).catch(()=>null):null;if(!cached){showError(error);await showProjects();return}const loaded=cached.payload;currentProject=loaded.project;tasks=loaded.tasks;managementItems=loaded.managementItems||[];versions=loaded.versions||[];changeRequests=loaded.changeRequests||[];networkLayouts=loaded.networkLayouts||[];networkEventLayouts=loaded.networkEventLayouts||[];fieldOperations=Boolean(loaded.fieldOperations);todayCompany=loadCompanyFilter(id);$('#projectsView').hidden=true;$('#profileView').hidden=true;$('#homeView').hidden=true;$('#projectView').hidden=false;location.hash=`project=${id}`;activeView='today';renderProject();setConnection('offline',`オフライン・最終同期 ${formatDateTime(cached.cachedAt)}`);toast('保存済みの工程表を表示しています')}
+  }catch(error){const cached=profile?await readCachedProject(profile.id,id).catch(()=>null):null;if(!cached){showError(error);await showProjects();return}const loaded=cached.payload;currentProject=loaded.project;tasks=loaded.tasks;managementItems=loaded.managementItems||[];versions=loaded.versions||[];changeRequests=loaded.changeRequests||[];networkLayouts=loaded.networkLayouts||[];networkEventLayouts=loaded.networkEventLayouts||[];fieldOperations=Boolean(loaded.fieldOperations);todayCompany=loadCompanyFilter(id);revealScreen('projectView');location.hash=`project=${id}`;activeView='today';renderProject();setConnection('offline',`オフライン・最終同期 ${formatDateTime(cached.cachedAt)}`);toast('保存済みの工程表を表示しています')}
 }
 
 function startRealtime(projectId){
@@ -243,6 +254,7 @@ function renderProject(){
 }
 
 function switchView(view,scroll=true){
+  const viewOrder=['today','gantt','network','tasks'],previousView=activeView;
   activeView=view;
   if(currentProject)setFieldNav('projects');
   const tabs=document.querySelector('.view-tabs');if(tabs)tabs.dataset.active=view;
@@ -251,7 +263,7 @@ function switchView(view,scroll=true){
     button.setAttribute('aria-current',selected?'page':'false');button.setAttribute('aria-selected',String(selected));
   });
   for(const name of ['today','gantt','network','tasks'])$(`#${name}View`).hidden=name!==view;
-  const target=$(`#${view}View`);target.classList.remove('view-enter');void target.offsetWidth;target.classList.add('view-enter');
+  const target=$(`#${view}View`),direction=viewOrder.indexOf(view)>=viewOrder.indexOf(previousView)?'from-right':'from-left';target.classList.remove('view-enter','from-right','from-left');void target.offsetWidth;target.classList.add('view-enter',direction);
   if(scroll)window.scrollTo({top:0,behavior:'smooth'});
 }
 
