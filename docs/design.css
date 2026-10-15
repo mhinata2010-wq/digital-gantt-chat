@@ -496,3 +496,16 @@ body[data-view="profile"] .page-head,body[data-view="profile"] .mobile-home,body
  .mobile-nav button[data-view-button],.mobile-nav button[data-view-button][aria-current="page"] { width:55px; height:55px; min-width:0; justify-self:center; }
  .page-actions > button[data-view-button="profile"] { display:none; }
 }
+
+/* Keep navigation artwork stationary while selection changes. */
+@media (max-width:900px) {
+ .mobile-nav button[data-view-button],
+ .mobile-nav button[data-view-button][aria-current="page"],
+ .mobile-nav button[data-view-button]:active {
+  transform:none; transition:none; animation:none;
+ }
+ .mobile-nav button[data-view-button] svg,
+ .mobile-nav button[data-view-button][aria-current="page"] svg {
+  width:25px; height:25px; transform:none; transition:none; animation:none;
+ }
+}
