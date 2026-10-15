@@ -536,3 +536,5 @@ body[data-view="profile"] .page-head,body[data-view="profile"] .mobile-home,body
  .reader-tools { padding:3px 8px; }.reader-tools button { min-height:28px; padding:3px 8px; }.filter-disclosure > summary { padding:5px 10px; }.source-disclosure { display:none; }.month-scale .board-scroll { max-height:calc(100dvh - 145px); }
 }
 @media print { .reader-tools,.filter-disclosure,#taskDetail { display:none!important; } }
+
+body.reading-mode[data-view="schedule"] .project-controls { display:none!important; }
