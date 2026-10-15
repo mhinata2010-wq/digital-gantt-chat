@@ -510,6 +510,29 @@ body[data-view="profile"] .page-head,body[data-view="profile"] .mobile-home,body
  }
 }
 
+/* The selected button is a single physical control that glides between each destination. */
+@media (max-width:900px) {
+ .mobile-nav { isolation:isolate; }
+ .mobile-nav-indicator {
+  position:absolute; z-index:0; top:0; left:0;
+  width:var(--nav-indicator-width,55px); height:var(--nav-indicator-height,55px);
+  border:1px solid #22382a; border-radius:50%; background:#fff;
+  box-shadow:0 3px 7px #123d2a33; pointer-events:none;
+  opacity:0; transform:translate3d(var(--nav-indicator-x,0),var(--nav-indicator-y,0),0) scale(.9);
+ }
+ .mobile-nav[data-indicator-ready="true"] .mobile-nav-indicator {
+  opacity:1; transform:translate3d(var(--nav-indicator-x,0),var(--nav-indicator-y,0),0) scale(1);
+  transition:transform .46s cubic-bezier(.22,.9,.22,1),width .46s cubic-bezier(.22,.9,.22,1),height .46s cubic-bezier(.22,.9,.22,1),opacity .14s ease;
+ }
+ .mobile-nav button[data-view-button] { position:relative; z-index:1; }
+ .mobile-nav button[data-view-button][aria-current="page"] {
+  background:transparent; border-color:transparent; box-shadow:none; transform:none; color:#172b1f;
+ }
+}
+@media (prefers-reduced-motion:reduce) {
+ .mobile-nav[data-indicator-ready="true"] .mobile-nav-indicator { transition:none; }
+}
+
 /* Reading-first schedule: compact controls, stronger work lines. */
 .reader-tools { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:8px 12px; border-bottom:1px solid var(--rule); }
 .reader-tools button { min-height:36px; font-size:12px; }.filter-disclosure { border-bottom:1px solid var(--rule); }.filter-disclosure > summary { padding:10px 12px; cursor:pointer; font-size:13px; font-weight:700; color:#22563d; }.filter-disclosure summary span { margin-left:10px; font-weight:500; }

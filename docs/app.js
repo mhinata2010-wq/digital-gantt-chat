@@ -217,7 +217,19 @@ $('editProfile').onclick=()=>{for(const key of ['name','company','role','email',
 $('cancelProfile').onclick=()=>$('profileDialog').close();
 $('profileForm').onsubmit=e=>{e.preventDefault();const next={};for(const key of ['name','company','role','email','phone'])next[key]=e.target.elements.namedItem(key).value.trim();try{localStorage.setItem(PROFILE_KEY,JSON.stringify(next))}catch{announce('保存できませんでした。ブラウザの保存設定・空き容量を確認してください');return}localProfile=next;renderProfile();$('profileDialog').close();announce('プロフィールを保存しました')};
 renderProfile();
-function setView(view){document.body.dataset.view=view;$('profileScreen').hidden=view!=='profile';if(view==='profile')renderProfile();if(view==='settings')$('projectSettings').open=true;document.querySelectorAll('[data-view-button]').forEach(button=>{if(button.dataset.viewButton===view)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current')})}
+function positionNavIndicator(){
+ const nav=document.querySelector('.mobile-nav'),indicator=nav?.querySelector('.mobile-nav-indicator'),selected=nav?.querySelector('[data-view-button][aria-current="page"]');
+ if(!nav||!indicator||!selected)return;
+ requestAnimationFrame(()=>{
+  const navBox=nav.getBoundingClientRect(),buttonBox=selected.getBoundingClientRect();
+  indicator.style.setProperty('--nav-indicator-x',`${Math.round(buttonBox.left-navBox.left)}px`);
+  indicator.style.setProperty('--nav-indicator-y',`${Math.round(buttonBox.top-navBox.top)}px`);
+  indicator.style.setProperty('--nav-indicator-width',`${Math.round(buttonBox.width)}px`);
+  indicator.style.setProperty('--nav-indicator-height',`${Math.round(buttonBox.height)}px`);
+  requestAnimationFrame(()=>nav.dataset.indicatorReady='true');
+ });
+}
+function setView(view){document.body.dataset.view=view;$('profileScreen').hidden=view!=='profile';if(view==='profile')renderProfile();if(view==='settings')$('projectSettings').open=true;document.querySelectorAll('[data-view-button]').forEach(button=>{if(button.dataset.viewButton===view)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current')});positionNavIndicator()}
 document.querySelectorAll('[data-view-button]').forEach(button=>button.onclick=()=>{setView(button.dataset.viewButton);if(button.dataset.viewButton==='home'){try{screen.orientation?.unlock?.()}catch{}if(document.fullscreenElement)document.exitFullscreen().catch(()=>{})}});
 $('openSchedule').onclick=()=>openProject(activeId);
 async function openProject(id){
@@ -293,4 +305,4 @@ $('export').onclick=()=>{const blob=new Blob([JSON.stringify(state,null,2)],{typ
 $('import').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;try{if(file.size>300000)throw Error('ファイルが大きすぎます');const imported=clean(JSON.parse(await file.text()));if(!confirm(`「${imported.name}」を読み込みますか？現在の工程表はこの端末から置き換わります。写真はJSONから復元されません。`))return;state=imported;save();render();loadReceiptCounts();announce('工程表を読み込みました')}catch(error){announce(error.message)}finally{e.target.value=''}};
 $('newProject').onclick=()=>$('projectDialog').showModal();
 let previousOrientation=portraitPhone()?'portrait':compactLandscape()?'landscape':'desktop';
-window.addEventListener('resize',()=>{const nextOrientation=portraitPhone()?'portrait':compactLandscape()?'landscape':'desktop';if(nextOrientation!==previousOrientation){previousOrientation=nextOrientation;if(nextOrientation==='landscape')setView('schedule')}render()});render();loadReceiptCounts();
+window.addEventListener('resize',()=>{const nextOrientation=portraitPhone()?'portrait':compactLandscape()?'landscape':'desktop';if(nextOrientation!==previousOrientation){previousOrientation=nextOrientation;if(nextOrientation==='landscape')setView('schedule')}render();positionNavIndicator()});render();loadReceiptCounts();
