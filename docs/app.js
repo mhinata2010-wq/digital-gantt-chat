@@ -191,7 +191,20 @@ $('receiptList').onclick=async e=>{const button=e.target.closest('[data-receipt-
 $('homeAddTask').onclick=()=>$('projectDialog').showModal();
 $('homeTasks').onclick=e=>{const star=e.target.closest('[data-favorite]');if(star){const id=star.dataset.favorite;if(favorites.has(id))favorites.delete(id);else favorites.add(id);localStorage.setItem(FAVORITES_KEY,JSON.stringify([...favorites]));render();return}const button=e.target.closest('[data-open-project]');if(button)openProject(button.dataset.openProject)};
 $('projectPicker').onchange=e=>openProject(e.target.value);
-function setView(view){document.body.dataset.view=view;if(view==='settings')$('projectSettings').open=true;document.querySelectorAll('[data-view-button]').forEach(button=>{if(button.dataset.viewButton===view)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current')})}
+const PROFILE_KEY='snake_local_profile_v1';
+let localProfile={};
+try { const saved=JSON.parse(localStorage.getItem(PROFILE_KEY));if(saved&&typeof saved==='object'&&!Array.isArray(saved))for(const key of ['name','company','role','email','phone'])if(typeof saved[key]==='string')localProfile[key]=saved[key].slice(0,key==='email'?254:key==='phone'?40:80); } catch {}
+function renderProfile(){
+ $('profileDisplayName').textContent=localProfile.name||'名前が未登録です';
+ $('profileInitial').textContent=Array.from(localProfile.name||'人')[0];
+ $('profileAffiliation').textContent=[localProfile.company,localProfile.role].filter(Boolean).join(' / ')||'所属・役割を登録できます';
+ for(const key of ['name','company','role','email','phone'])$('profile'+key[0].toUpperCase()+key.slice(1)+'Value').textContent=localProfile[key]||'未登録';
+}
+$('editProfile').onclick=()=>{for(const key of ['name','company','role','email','phone'])$('profileForm').elements.namedItem(key).value=localProfile[key]||'';$('profileDialog').showModal()};
+$('cancelProfile').onclick=()=>$('profileDialog').close();
+$('profileForm').onsubmit=e=>{e.preventDefault();const next={};for(const key of ['name','company','role','email','phone'])next[key]=e.target.elements.namedItem(key).value.trim();try{localStorage.setItem(PROFILE_KEY,JSON.stringify(next))}catch{announce('保存できませんでした。ブラウザの保存設定・空き容量を確認してください');return}localProfile=next;renderProfile();$('profileDialog').close();announce('プロフィールを保存しました')};
+renderProfile();
+function setView(view){document.body.dataset.view=view;$('profileScreen').hidden=view!=='profile';if(view==='profile')renderProfile();if(view==='settings')$('projectSettings').open=true;document.querySelectorAll('[data-view-button]').forEach(button=>{if(button.dataset.viewButton===view)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current')})}
 document.querySelectorAll('[data-view-button]').forEach(button=>button.onclick=()=>{setView(button.dataset.viewButton);if(button.dataset.viewButton==='home'){try{screen.orientation?.unlock?.()}catch{}if(document.fullscreenElement)document.exitFullscreen().catch(()=>{})}});
 $('openSchedule').onclick=()=>openProject(activeId);
 async function openProject(id){
