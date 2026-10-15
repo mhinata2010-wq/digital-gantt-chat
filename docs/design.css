@@ -489,3 +489,10 @@ body[data-view="profile"] .page-head,body[data-view="profile"] .mobile-home,body
 #profileForm { display:grid; gap:15px; }#profileForm label { display:grid; gap:5px; }#profileForm input { width:100%; box-sizing:border-box; min-height:44px; } .profile-form-actions { display:flex; justify-content:flex-end; gap:10px; }
 @media (max-width:600px) { .profile-details > div { grid-template-columns:100px 1fr; }.profile-heading h1 { font-size:21px; } }
 @media print { .profile-screen,#profileDialog { display:none!important; } }
+
+/* Equal navigation slots keep Home centered for every selected screen. */
+@media (max-width:900px) and (orientation:portrait) {
+ .mobile-nav { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); justify-items:center; align-items:center; }
+ .mobile-nav button[data-view-button],.mobile-nav button[data-view-button][aria-current="page"] { width:55px; height:55px; min-width:0; justify-self:center; }
+ .page-actions > button[data-view-button="profile"] { display:none; }
+}
