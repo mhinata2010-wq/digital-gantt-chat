@@ -509,3 +509,30 @@ body[data-view="profile"] .page-head,body[data-view="profile"] .mobile-home,body
   width:25px; height:25px; transform:none; transition:none; animation:none;
  }
 }
+
+/* Reading-first schedule: compact controls, stronger work lines. */
+.reader-tools { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:8px 12px; border-bottom:1px solid var(--rule); }
+.reader-tools button { min-height:36px; font-size:12px; }.filter-disclosure { border-bottom:1px solid var(--rule); }.filter-disclosure > summary { padding:10px 12px; cursor:pointer; font-size:13px; font-weight:700; color:#22563d; }.filter-disclosure summary span { margin-left:10px; font-weight:500; }
+.reading-mode .link-handle,.reading-mode .drag-handle,.reading-mode .move-buttons,.reading-mode .status-badge.is-unknown,.reading-mode #addTask,.reading-mode .nav-add-task { display:none!important; }
+.reading-mode .bar { touch-action:auto; cursor:pointer; }
+.month-scale .board-row[data-row],.month-scale .board-row[data-row] .timeline { min-height:44px; height:44px; }
+.month-scale .board-row[data-row] .task-label { min-height:44px; }.month-scale .task-name strong { font-size:13px; line-height:1.4; }.month-scale .task-name { white-space:normal; }
+.month-scale .bar:not(.milestone),.month-scale .bar.done:not(.milestone) { top:15px; height:18px; border-bottom:5px solid #245b40; }
+.month-scale .bar.done:not(.milestone) { border-bottom-color:#7b9f89; }.month-scale .bar:not(.milestone)::before,.month-scale .bar:not(.milestone)::after { display:none; }
+.month-scale .day-cell.month-start { border-left:1px solid #e2e8e3; }.month-scale .day-cell.quarter-start { border-left:1px solid #bdcfc3; background:transparent; }
+.board-row[data-row] .timeline { border-bottom-color:#e6ece8; }.board-row[data-row]:nth-child(even) .timeline { background-color:#fafcfb; }
+#taskDetail { max-height:80dvh; overflow:auto; }#detailTitle { font-size:20px; line-height:1.45; }#detailGroup,#detailNote { font-size:13px; color:#52695b; line-height:1.6; }#editFromDetail { margin-top:20px; min-height:42px; }
+@media (min-width:901px) { .task-name strong { font-size:14px; } }
+@media (max-width:900px) and (orientation:portrait) {
+ body[data-view="schedule"] main { max-width:none; padding:0 10px 100px; }
+ body[data-view="schedule"] .topbar { height:52px; padding:4px 14px; }body[data-view="schedule"] .brand img { height:40px; width:95px; }
+ body[data-view="schedule"] .page-head { margin:8px 0; }body[data-view="schedule"] .page-name h1 { font-size:15px; line-height:1.4; margin:0; }
+ body[data-view="schedule"] .page-actions { flex-shrink:0; }.board-toolbar { padding:8px 10px; }.board-toolbar strong { font-size:13px; }.board-toolbar span { font-size:11px; }
+ .filter-help { display:none; }.source-disclosure { display:none; }.month-scale .board-scroll { max-height:calc(100dvh - 280px); min-height:180px; }
+ .filter-disclosure[open] ~ .board-scroll { max-height:calc(100dvh - 420px); }
+ .month-scale .task-name strong { font-size:12px; }.reader-tools { padding:6px 8px; }.reader-tools button { padding:6px 8px; }
+}
+@media (max-width:900px) and (orientation:landscape) and (max-height:650px) {
+ .reader-tools { padding:3px 8px; }.reader-tools button { min-height:28px; padding:3px 8px; }.filter-disclosure > summary { padding:5px 10px; }.source-disclosure { display:none; }.month-scale .board-scroll { max-height:calc(100dvh - 145px); }
+}
+@media print { .reader-tools,.filter-disclosure,#taskDetail { display:none!important; } }
