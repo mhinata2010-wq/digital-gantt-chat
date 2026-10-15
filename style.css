@@ -731,3 +731,11 @@ input,select,textarea{border-radius:14px!important}
   .screen-enter,.screen-enter .home-overview>*,.screen-enter .home-calendar,.screen-enter .home-project-card,.screen-enter .project-card,.screen-enter .home-agenda-item,.view-enter.from-right,.view-enter.from-left,.view-tabs button[aria-current="page"],.field-nav-button[aria-current="page"]{animation:none!important}
   .view-tabs button,.field-nav-button{transition:none!important}
 }
+
+/* The selected control is one physical button which glides between destinations. */
+.field-nav{isolation:isolate}
+.field-nav-indicator{position:absolute;z-index:0;top:0;left:0;width:var(--indicator-width,66px);height:var(--indicator-height,66px);border:1px solid #111;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.22);pointer-events:none;transform:translate3d(var(--indicator-x,0),var(--indicator-y,22px),0) scale(.94);opacity:0}
+.field-nav[data-ready="true"] .field-nav-indicator{opacity:1;transform:translate3d(var(--indicator-x,0),var(--indicator-y,22px),0) scale(1);transition:transform .48s cubic-bezier(.22,.9,.22,1),width .48s cubic-bezier(.22,.9,.22,1),height .48s cubic-bezier(.22,.9,.22,1),opacity .16s ease!important}
+.field-nav-button{position:relative;z-index:1}
+.field-nav-button[aria-current="page"]{border-color:transparent!important;background:transparent!important;box-shadow:none!important;animation:none!important;color:#111}
+@media(prefers-reduced-motion:reduce){.field-nav[data-ready="true"] .field-nav-indicator{transition:none!important}}

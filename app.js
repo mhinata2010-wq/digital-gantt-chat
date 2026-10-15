@@ -142,6 +142,16 @@ function setFieldNav(active){
   for(const [name,id] of Object.entries({projects:'navProjects',home:'navToday',profile:'navProfile'})){
     const button=$(`#${id}`);button?.setAttribute('aria-current',name===active?'page':'false');
   }
+  const nav=$('.field-nav'),indicator=$('.field-nav-indicator'),selected=$('.field-nav-button[aria-current="page"]');
+  if(!nav||!indicator||!selected)return;
+  requestAnimationFrame(()=>{
+    const navBox=nav.getBoundingClientRect(),buttonBox=selected.getBoundingClientRect();
+    indicator.style.setProperty('--indicator-x',`${Math.round(buttonBox.left-navBox.left)}px`);
+    indicator.style.setProperty('--indicator-y',`${Math.round(buttonBox.top-navBox.top)}px`);
+    indicator.style.setProperty('--indicator-width',`${Math.round(buttonBox.width)}px`);
+    indicator.style.setProperty('--indicator-height',`${Math.round(buttonBox.height)}px`);
+    requestAnimationFrame(()=>nav.dataset.ready='true');
+  });
 }
 
 function revealScreen(id){
