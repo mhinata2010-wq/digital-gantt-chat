@@ -110,6 +110,33 @@ function filterScheduleTasks(tasks,filters){
  const words=filters.query.normalize('NFKC').toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
  return tasks.filter(task=>{const facets=taskFacets(task),haystack=[task.name,task.company,task.group,task.note].join(' ').normalize('NFKC').toLocaleLowerCase();return ['building','floor','trade'].every(key=>!filters[key]||filters[key]===facets[key])&&words.every(word=>haystack.includes(word))});
 }
+function taskEnd(task){return plus(task.start,task.days-1)}
+function isWeatherSensitive(task){return /コンクリ|打設|掘削|土工|基礎|杭|防水|屋根|外構|足場|塗装|舗装|解体|埋戻/i.test(`${task.name} ${task.group||''}`)}
+function activeDashboardProjects(){const current=projects.filter(project=>!project.schedule.source);return current.length?current:projects}
+function dashboardTasks(){return activeDashboardProjects().flatMap(project=>project.schedule.tasks.map(task=>({project,task})))}
+function homeItem(entry,kind){
+ const {project,task}=entry,end=taskEnd(task),projectName=project.schedule.name||'名称未設定の工程表';
+ const labels={today:'今日',late:'遅延',review:'確認待ち',weather:'天候確認',upcoming:short(task.start)};
+ const details={today:`${short(task.start)}〜${short(end)}`,late:`${short(end)}までの予定`,review:'内容を確認してください',weather:`${short(task.start)}〜${short(end)}`,upcoming:`${projectName} · ${task.company||'担当未設定'}`};
+ return `<button type="button" class="home-list-item is-${kind}" data-open-project="${text(project.id)}" data-open-task="${text(task.id)}"><span class="home-item-mark">${text(labels[kind])}</span><span class="home-item-copy"><strong>${text(task.name)}</strong><small>${text(details[kind])}</small></span><svg aria-hidden="true"><use href="#icon-arrow"/></svg></button>`;
+}
+function homeEmpty(message){return `<p class="home-empty">${text(message)}</p>`}
+function renderHomeDashboard(){
+ const today=todayISO(),all=dashboardTasks(),unfinished=all.filter(({task})=>task.complete!==true);
+ const urgent=unfinished.filter(({task})=>task.start<=today&&taskEnd(task)>=today).sort((a,b)=>a.task.start.localeCompare(b.task.start));
+ const late=unfinished.filter(({task})=>taskEnd(task)<today).sort((a,b)=>taskEnd(a.task).localeCompare(taskEnd(b.task)));
+ const waiting=unfinished.filter(({task})=>task.receiptRequired&&!task.receiptReviewed&&taskEnd(task)>=today);
+ const review=[...late.map(entry=>({...entry,kind:'late'})),...waiting.filter(entry=>!late.some(item=>item.task.id===entry.task.id&&item.project.id===entry.project.id)).map(entry=>({...entry,kind:'review'}))].slice(0,3);
+ const weather=unfinished.filter(({task})=>task.start>=today&&isWeatherSensitive(task)).sort((a,b)=>a.task.start.localeCompare(b.task.start)).slice(0,3);
+ const upcoming=unfinished.filter(({task})=>task.start>today).sort((a,b)=>a.task.start.localeCompare(b.task.start)).slice(0,3);
+ const date=dayDate(today);$('homeDate').textContent=`${date.getUTCFullYear()}年${date.getUTCMonth()+1}月${date.getUTCDate()}日（${weekdays[date.getUTCDay()]}）`;
+ $('homeUrgentCount').textContent=urgent.length?`${urgent.length}件`:'';$('homeReviewCount').textContent=review.length?`${review.length}件`:'';
+ $('homeUrgent').innerHTML=urgent.length?urgent.slice(0,3).map(entry=>homeItem(entry,'today')).join(''):homeEmpty('今日、対応が必要な工程はありません。');
+ $('homeReview').innerHTML=review.length?review.map(entry=>homeItem(entry,entry.kind)).join(''):homeEmpty('遅延・確認待ちの工程はありません。');
+ $('homeWeather').innerHTML=weather.length?weather.map(entry=>homeItem(entry,'weather')).join(''):homeEmpty('天候の影響を確認する工程はありません。');
+ $('homeUpcoming').innerHTML=upcoming.length?upcoming.map(entry=>homeItem(entry,'upcoming')).join(''):homeEmpty('次の予定は登録されていません。');
+ $('homeProjects').innerHTML=projects.map(project=>`<div class="project-tile"><button type="button" class="project-open" data-open-project="${text(project.id)}" aria-label="${text(project.schedule.name||'名称未設定の工程表')}の工程表を開く"><span class="project-tile-icon" aria-hidden="true"><i></i><i></i><i></i></span><span class="project-tile-copy"><strong>${text(project.schedule.name||'名称未設定の工程表')}</strong><small>${project.schedule.tasks.length}工程 · ${short(project.schedule.viewStart)}から</small></span></button><button type="button" class="favorite-button ${favorites.has(project.id)?'is-favorite':''}" data-favorite="${text(project.id)}" aria-pressed="${favorites.has(project.id)}" aria-label="${text(project.schedule.name||'名称未設定の工程表')}を${favorites.has(project.id)?'お気に入りから外す':'お気に入りに追加'}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2.5 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.3l-5.8 3.1 1.1-6.5-4.7-4.6 6.5-.9z"/></svg></button></div>`).join('');
+}
 function refreshScheduleFilters(){
  for(const key of ['building','floor','trade']){
   const select=$('filter'+key[0].toUpperCase()+key.slice(1)),values=[...new Set(state.tasks.map(task=>taskFacets(task)[key]))].sort((a,b)=>a.localeCompare(b,'ja',{numeric:true}));
@@ -128,8 +155,8 @@ function render(){const filteredTasks=refreshScheduleFilters();const monthScale=
  document.body.classList.toggle('month-scale',monthScale);
  $('projectName').value=state.name;$('displayName').textContent=state.name||'名称未設定の工程表';$('viewStart').value=state.viewStart;$('periodLabel').textContent=monthScale?`${first.slice(0,4)}/${+first.slice(5,7)} – ${last.slice(0,4)}/${+last.slice(5,7)}`:`${short(first)} – ${short(last)}`;$('todayLabel').textContent=state.tasks.length?`${state.tasks.length}工程 · ${monthScale?'全期間を月単位で表示':'暦日で表示'}`:'工程を追加してください';$('projectMeta').textContent=state.source?'佐藤さんの総合工程表を再構成した試作です。':'工程を追加して、予定を組みましょう。';$('openSato').hidden=activeId===SATO_ID||!projects.some(project=>project.id===SATO_ID);document.querySelectorAll('[data-days]').forEach(button=>button.setAttribute('aria-pressed',String(!monthScale&&+button.dataset.days===state.days)));$('allPeriod').setAttribute('aria-pressed',String(monthScale));$('readerAll').setAttribute('aria-pressed',String(monthScale));$('sourceDetails').hidden=!state.source;$('sourceNote').textContent=state.source||'';$('boardInstruction').textContent=monthScale?'棒の端の丸から次の工程へ引くと、矢印でつながります。':'棒を左右にスワイプすると開始日を変更できます。端の丸から次の工程へ引くと矢印でつながります。';
  if(!editingMode)$('boardInstruction').textContent='工程名・工程線をタップすると開始日と終了日を確認できます。';
- $('homeProjectName').textContent=state.name||'名称未設定の工程表';$('homePeriod').textContent=monthScale?`${first.slice(0,7)} – ${last.slice(0,7)} の予定を見る`:`${short(first)} – ${short(last)} の予定を見る`;$('boardProjectName').textContent=state.name;$('sheetProjectName').textContent=state.name||'名称未設定の工程表';$('sheetRange').textContent=`${first} 〜 ${last} / ${filteredTasks.length} / ${state.tasks.length}工程${Object.values(scheduleFilters).some(Boolean)?"（絞り込み中）":""}`;document.documentElement.style.setProperty('--sheet-print-scale',String(Math.min(1.2,1040/(LABEL_WIDTH()+width))));$('projectPicker').innerHTML=projects.map(project=>`<option value="${text(project.id)}">${text(project.schedule.name)}</option>`).join('');$('projectPicker').value=activeId;
- $('homeTasks').innerHTML=projects.map(project=>`<div class="project-tile"><button type="button" class="project-open" data-open-project="${text(project.id)}" aria-label="${text(project.schedule.name||'名称未設定の工程表')}の工程表を開く"><span class="project-tile-icon" aria-hidden="true"><i></i><i></i><i></i></span><span class="project-tile-copy"><strong>${text(project.schedule.name||'名称未設定の工程表')}</strong><small>${project.schedule.tasks.length}工程 · ${short(project.schedule.viewStart)}から</small></span></button><button type="button" class="favorite-button ${favorites.has(project.id)?'is-favorite':''}" data-favorite="${text(project.id)}" aria-pressed="${favorites.has(project.id)}" aria-label="${text(project.schedule.name||'名称未設定の工程表')}を${favorites.has(project.id)?'お気に入りから外す':'お気に入りに追加'}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2.5 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.3l-5.8 3.1 1.1-6.5-4.7-4.6 6.5-.9z"/></svg></button></div>`).join('');
+ $('boardProjectName').textContent=state.name;$('sheetProjectName').textContent=state.name||'名称未設定の工程表';$('sheetRange').textContent=`${first} 〜 ${last} / ${filteredTasks.length} / ${state.tasks.length}工程${Object.values(scheduleFilters).some(Boolean)?"（絞り込み中）":""}`;document.documentElement.style.setProperty('--sheet-print-scale',String(Math.min(1.2,1040/(LABEL_WIDTH()+width))));$('projectPicker').innerHTML=projects.map(project=>`<option value="${text(project.id)}">${text(project.schedule.name)}</option>`).join('');$('projectPicker').value=activeId;
+ renderHomeDashboard();
  const yearGroups=[];for(let i=0;i<days;){let j=i+1;while(j<days&&dates[i].slice(0,4)===dates[j].slice(0,4))j++;yearGroups.push(`<span class="year-span" style="width:${(j-i)*w}px">${dates[i].slice(0,4)}年</span>`);i=j}
  const monthGroups=[];for(let i=0;i<days;){let j=i+1;while(j<days&&dates[i].slice(0,7)===dates[j].slice(0,7))j++;monthGroups.push(`<span class="month-span" style="width:${(j-i)*w}px">${+dates[i].slice(5,7)}月</span>`);i=j}
  const lines=monthScale?dates.filter(date=>date.slice(8)==='01').map(date=>`<span class="day-cell month-start ${[1,4,7,10].includes(+date.slice(5,7))?'quarter-start':''}" style="left:${distance(date,first)*w}px;width:1px" aria-label="${date.slice(0,7)}"></span>`).join(''):dates.map((date,i)=>`<span class="day-cell ${[0,6].includes(dayDate(date).getUTCDay())?'off':''} ${dayDate(date).getUTCDay()===1?'week-start':''} ${date.slice(8)==='01'?'month-start':''} ${date===today?'today':''}" style="left:${i*w}px;width:${w}px" aria-label="${date}"></span>`).join('');
@@ -202,7 +229,7 @@ $('receiptInput').onchange=async e=>{
 $('receiptReview').onclick=()=>{const task=taskFor(editing);if(!task||!receiptCounts.get(editing))return;task.receiptReviewed=!task.receiptReviewed;save();render();renderReceiptPanel()};
 $('receiptList').onclick=async e=>{const button=e.target.closest('[data-receipt-id]');if(!button)return;const taskId=editing,projectId=activeId;try{await receiptStore.remove(button.dataset.receiptId);const task=taskFor(taskId);if(activeId===projectId&&task){task.receiptReviewed=false;save();await renderReceiptPanel();announce('写真を削除しました')}}catch{announce('写真を削除できませんでした')}};
 $('homeAddTask').onclick=()=>$('projectDialog').showModal();
-$('homeTasks').onclick=e=>{const star=e.target.closest('[data-favorite]');if(star){const id=star.dataset.favorite;if(favorites.has(id))favorites.delete(id);else favorites.add(id);localStorage.setItem(FAVORITES_KEY,JSON.stringify([...favorites]));render();return}const button=e.target.closest('[data-open-project]');if(button)openProject(button.dataset.openProject)};
+$('mobileHome').onclick=e=>{const star=e.target.closest('[data-favorite]');if(star){const id=star.dataset.favorite;if(favorites.has(id))favorites.delete(id);else favorites.add(id);localStorage.setItem(FAVORITES_KEY,JSON.stringify([...favorites]));render();return}const button=e.target.closest('[data-open-project]');if(!button)return;openProject(button.dataset.openProject).then(()=>{const task=button.dataset.openTask;if(task&&taskFor(task))openTask(task)})};
 $('projectPicker').onchange=e=>openProject(e.target.value);
 const PROFILE_KEY='snake_local_profile_v1';
 let localProfile={};
@@ -231,7 +258,6 @@ function positionNavIndicator(){
 }
 function setView(view){document.body.dataset.view=view;$('profileScreen').hidden=view!=='profile';if(view==='profile')renderProfile();if(view==='settings')$('projectSettings').open=true;document.querySelectorAll('[data-view-button]').forEach(button=>{if(button.dataset.viewButton===view)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current')});positionNavIndicator()}
 document.querySelectorAll('[data-view-button]').forEach(button=>button.onclick=()=>{setView(button.dataset.viewButton);if(button.dataset.viewButton==='home'){try{screen.orientation?.unlock?.()}catch{}if(document.fullscreenElement)document.exitFullscreen().catch(()=>{})}});
-$('openSchedule').onclick=()=>openProject(activeId);
 async function openProject(id){
  const project=projects.find(item=>item.id===id);if(!project)return;
  const url=new URL(location.href);if(url.searchParams.has('project')){url.searchParams.delete('project');history.replaceState(null,'',url)}

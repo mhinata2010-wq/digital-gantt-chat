@@ -8,10 +8,10 @@
   <meta name="description" content="工程を並べ、日付を決め、ひとつの工程表をつくる試作です。">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="design.css?v=20261016-field-sheet-1">
+  <link rel="stylesheet" href="design.css?v=20261016-home-dashboard-1">
   <script src="sato-data.js?v=20261012-7" defer></script>
   <script src="receipts.js?v=20261012-8" defer></script>
-  <script src="app.js?v=20261016-nav-glide-1" defer></script>
+  <script src="app.js?v=20261016-home-dashboard-1" defer></script>
 </head>
 <body>
   <svg class="icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
@@ -33,9 +33,27 @@
   </header>
   <main>
     <section class="mobile-home" id="mobileHome" aria-label="現場のホーム">
-      <button type="button" class="home-card" id="openSchedule"><span>前回開いた工程表</span><strong id="homeProjectName">サンプル工事</strong><span class="card-footer"><span id="homePeriod">予定を確認する</span><svg aria-hidden="true"><use href="#icon-arrow"/></svg></span></button>
-      <div class="home-section-heading"><h2>工程表一覧</h2><button type="button" id="homeAddTask">＋ 新しい工程表</button></div>
-      <div class="home-tasks" id="homeTasks"></div>
+      <header class="home-dashboard-head"><span id="homeDate">今日</span><h1>現場の確認</h1></header>
+      <section class="home-dashboard-section home-urgent-section" aria-labelledby="homeUrgentTitle">
+        <div class="home-section-heading"><h2 id="homeUrgentTitle">今日対応が必要な工程</h2><span id="homeUrgentCount" class="home-count"></span></div>
+        <div class="home-list" id="homeUrgent"></div>
+      </section>
+      <section class="home-dashboard-section home-review-section" aria-labelledby="homeReviewTitle">
+        <div class="home-section-heading"><h2 id="homeReviewTitle">遅延・天候変更・確認待ち</h2><span id="homeReviewCount" class="home-count"></span></div>
+        <div class="home-list" id="homeReview"></div>
+      </section>
+      <section class="home-dashboard-section home-weather-section" aria-labelledby="homeWeatherTitle">
+        <div class="home-section-heading"><h2 id="homeWeatherTitle">天候により変更を検討する工程</h2><span class="weather-note">予報と現場判断で確認</span></div>
+        <div class="home-list" id="homeWeather"></div>
+      </section>
+      <section class="home-dashboard-section home-upcoming-section" aria-labelledby="homeUpcomingTitle">
+        <div class="home-section-heading"><h2 id="homeUpcomingTitle">直近3件の予定</h2><span class="home-count">予定順</span></div>
+        <div class="home-list" id="homeUpcoming"></div>
+      </section>
+      <section class="home-dashboard-section home-projects-section" aria-labelledby="homeProjectsTitle">
+        <div class="home-section-heading"><h2 id="homeProjectsTitle">参加中の案件一覧</h2><button type="button" id="homeAddTask">＋ 新しい工程表</button></div>
+        <div class="home-projects" id="homeProjects"></div>
+      </section>
       <p class="rotate-tip"><span aria-hidden="true">↻</span> 工程表を選んで、横向きで日程を確認できます。</p>
     </section>
     <section class="profile-screen" id="profileScreen" aria-labelledby="profileTitle" hidden>
