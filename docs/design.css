@@ -558,6 +558,46 @@ body[data-view="profile"] .page-head,body[data-view="profile"] .mobile-home,body
 @media (max-width:900px) and (orientation:landscape) and (max-height:650px) {
  .reader-tools { padding:3px 8px; }.reader-tools button { min-height:28px; padding:3px 8px; }.filter-disclosure > summary { padding:5px 10px; }.source-disclosure { display:none; }.month-scale .board-scroll { max-height:calc(100dvh - 145px); }
 }
+
+/* Field-sheet hierarchy: the schedule is a drawing, not a card collection.
+   Keep softness for touch targets (home, profile and navigation), while the
+   working sheet gets squared corners, explicit rules and compact columns. */
+@media screen and (min-width: 901px) {
+  main { max-width: 1760px; padding: 18px 24px 56px; }
+  .page-head { min-height: 50px; padding: 0 2px 10px; margin-bottom: 0; border-bottom: 2px solid #294c39; }
+  .page-name h1 { font-size: clamp(18px, 1.65vw, 25px); letter-spacing: -.02em; }
+  .project-switch select, .project-settings summary, .quiet, .primary { border-radius: 3px; }
+  .project-controls { margin: 0; padding: 8px 11px; border-width: 0 0 1px; border-radius: 0; background: #f7f9f6; }
+  .board { border: 1px solid #8fa095; border-radius: 0; }
+  .board-toolbar { min-height: 44px; padding: 9px 13px; border-bottom-color: #9ca99f; background: #f3f6f2; }
+  .board-toolbar strong::before { content: '工程表  '; color: #54705e; font-size: 10px; letter-spacing: .14em; }
+  .month-scale .board-scroll { max-height: min(77vh, 840px); }
+  .task-label { width: 248px; min-width: 248px; padding: 3px 9px; border-right-color: #9ca99f; }
+  .month-scale .board-row[data-row], .month-scale .board-row[data-row] .timeline { min-height: 40px; height: 40px; }
+  .month-scale .board-row[data-row] .task-label { min-height: 40px; }
+  .month-scale .task-name strong { font-size: 12px; letter-spacing: 0; }
+  .month-scale .group-row, .month-scale .group-row .timeline { background: #e5ece6; }
+  .month-scale .group-row .task-label { background: #e5ece6; color: #183d2d; }
+  .month-scale .bar:not(.milestone), .month-scale .bar.done:not(.milestone) { border-bottom-width: 4px; }
+  .schedule-filters { padding: 9px 12px; border-bottom-color: #aebbb1; border-radius: 0; background: #f3f6f2; }
+  .schedule-filters input, .schedule-filters select { border-radius: 2px; }
+  .profile-screen { max-width: 860px; padding: 18px 26px 90px; border-top: 2px solid #294c39; }
+  .profile-identity { padding: 22px 0; }
+  .profile-details > div { grid-template-columns: 170px 1fr; }
+}
+
+/* Mobile remains touch-friendly; the actual schedule still reads as a sheet. */
+@media screen and (max-width: 900px) {
+  body[data-view="schedule"] .board { border-radius: 0; border-color: #aebbb1; }
+  body[data-view="schedule"] .board-toolbar { background: #f3f6f2; border-bottom-color: #aebbb1; }
+  body[data-view="schedule"] .schedule-filters { border-radius: 0; background: #f3f6f2; }
+  body[data-view="schedule"] .schedule-filters input,
+  body[data-view="schedule"] .schedule-filters select { border-radius: 2px; }
+  body[data-view="schedule"] .task-label { border-right-color: #aebbb1; }
+  body[data-view="schedule"] .month-scale .group-row,
+  body[data-view="schedule"] .month-scale .group-row .timeline,
+  body[data-view="schedule"] .month-scale .group-row .task-label { background: #e5ece6; }
+}
 @media print { .reader-tools,.filter-disclosure,#taskDetail { display:none!important; } }
 
 body.reading-mode[data-view="schedule"] .project-controls { display:none!important; }
