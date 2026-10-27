@@ -510,6 +510,29 @@ body[data-view="profile"] .page-head,body[data-view="profile"] .mobile-home,body
  }
 }
 
+/* The selected button is a single physical control that glides between each destination. */
+@media (max-width:900px) {
+ .mobile-nav { isolation:isolate; }
+ .mobile-nav-indicator {
+  position:absolute; z-index:0; top:0; left:0;
+  width:var(--nav-indicator-width,55px); height:var(--nav-indicator-height,55px);
+  border:1px solid #22382a; border-radius:50%; background:#fff;
+  box-shadow:0 3px 7px #123d2a33; pointer-events:none;
+  opacity:0; transform:translate3d(var(--nav-indicator-x,0),var(--nav-indicator-y,0),0) scale(.9);
+ }
+ .mobile-nav[data-indicator-ready="true"] .mobile-nav-indicator {
+  opacity:1; transform:translate3d(var(--nav-indicator-x,0),var(--nav-indicator-y,0),0) scale(1);
+  transition:transform .46s cubic-bezier(.22,.9,.22,1),width .46s cubic-bezier(.22,.9,.22,1),height .46s cubic-bezier(.22,.9,.22,1),opacity .14s ease;
+ }
+ .mobile-nav button[data-view-button] { position:relative; z-index:1; }
+ .mobile-nav button[data-view-button][aria-current="page"] {
+  background:transparent; border-color:transparent; box-shadow:none; transform:none; color:#172b1f;
+ }
+}
+@media (prefers-reduced-motion:reduce) {
+ .mobile-nav[data-indicator-ready="true"] .mobile-nav-indicator { transition:none; }
+}
+
 /* Reading-first schedule: compact controls, stronger work lines. */
 .reader-tools { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:8px 12px; border-bottom:1px solid var(--rule); }
 .reader-tools button { min-height:36px; font-size:12px; }.filter-disclosure { border-bottom:1px solid var(--rule); }.filter-disclosure > summary { padding:10px 12px; cursor:pointer; font-size:13px; font-weight:700; color:#22563d; }.filter-disclosure summary span { margin-left:10px; font-weight:500; }
@@ -534,6 +557,97 @@ body[data-view="profile"] .page-head,body[data-view="profile"] .mobile-home,body
 }
 @media (max-width:900px) and (orientation:landscape) and (max-height:650px) {
  .reader-tools { padding:3px 8px; }.reader-tools button { min-height:28px; padding:3px 8px; }.filter-disclosure > summary { padding:5px 10px; }.source-disclosure { display:none; }.month-scale .board-scroll { max-height:calc(100dvh - 145px); }
+}
+
+/* Field-sheet hierarchy: the schedule is a drawing, not a card collection.
+   Keep softness for touch targets (home, profile and navigation), while the
+   working sheet gets squared corners, explicit rules and compact columns. */
+@media screen and (min-width: 901px) {
+  main { max-width: 1760px; padding: 18px 24px 56px; }
+  .page-head { min-height: 50px; padding: 0 2px 10px; margin-bottom: 0; border-bottom: 2px solid #294c39; }
+  .page-name h1 { font-size: clamp(18px, 1.65vw, 25px); letter-spacing: -.02em; }
+  .project-switch select, .project-settings summary, .quiet, .primary { border-radius: 3px; }
+  .project-controls { margin: 0; padding: 8px 11px; border-width: 0 0 1px; border-radius: 0; background: #f7f9f6; }
+  .board { border: 1px solid #8fa095; border-radius: 0; }
+  .board-toolbar { min-height: 44px; padding: 9px 13px; border-bottom-color: #9ca99f; background: #f3f6f2; }
+  .board-toolbar strong::before { content: '工程表  '; color: #54705e; font-size: 10px; letter-spacing: .14em; }
+  .month-scale .board-scroll { max-height: min(77vh, 840px); }
+  .task-label { width: 248px; min-width: 248px; padding: 3px 9px; border-right-color: #9ca99f; }
+  .month-scale .board-row[data-row], .month-scale .board-row[data-row] .timeline { min-height: 40px; height: 40px; }
+  .month-scale .board-row[data-row] .task-label { min-height: 40px; }
+  .month-scale .task-name strong { font-size: 12px; letter-spacing: 0; }
+  .month-scale .group-row, .month-scale .group-row .timeline { background: #e5ece6; }
+  .month-scale .group-row .task-label { background: #e5ece6; color: #183d2d; }
+  .month-scale .bar:not(.milestone), .month-scale .bar.done:not(.milestone) { border-bottom-width: 4px; }
+  .schedule-filters { padding: 9px 12px; border-bottom-color: #aebbb1; border-radius: 0; background: #f3f6f2; }
+  .schedule-filters input, .schedule-filters select { border-radius: 2px; }
+  .profile-screen { max-width: 860px; padding: 18px 26px 90px; border-top: 2px solid #294c39; }
+  .profile-identity { padding: 22px 0; }
+  .profile-details > div { grid-template-columns: 170px 1fr; }
+}
+
+/* Mobile remains touch-friendly; the actual schedule still reads as a sheet. */
+@media screen and (max-width: 900px) {
+  body[data-view="schedule"] .board { border-radius: 0; border-color: #aebbb1; }
+  body[data-view="schedule"] .board-toolbar { background: #f3f6f2; border-bottom-color: #aebbb1; }
+  body[data-view="schedule"] .schedule-filters { border-radius: 0; background: #f3f6f2; }
+  body[data-view="schedule"] .schedule-filters input,
+  body[data-view="schedule"] .schedule-filters select { border-radius: 2px; }
+  body[data-view="schedule"] .task-label { border-right-color: #aebbb1; }
+  body[data-view="schedule"] .month-scale .group-row,
+  body[data-view="schedule"] .month-scale .group-row .timeline,
+  body[data-view="schedule"] .month-scale .group-row .task-label { background: #e5ece6; }
+}
+
+/* Home is the site manager's decision board. It prioritizes work and risks
+   before the project directory, while keeping project cards as a final step. */
+@media screen and (max-width: 900px) and (orientation: portrait) {
+  body[data-view="home"] .mobile-home { padding-top: 24px; }
+  .home-dashboard-head { margin: 4px 0 22px; padding-bottom: 12px; border-bottom: 2px solid #294c39; }
+  .home-dashboard-head > span { display:block; color:#5d7466; font-size:11px; font-weight:700; font-variant-numeric:tabular-nums; }
+  .home-dashboard-head h1 { margin:6px 0 0; color:#1b3426; font-size:25px; letter-spacing:-.035em; }
+  .home-dashboard-section { margin:0 0 25px; }
+  .home-section-heading { display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin:0 0 9px; }
+  .home-section-heading h2 { margin:0; color:#21392b; font-size:15px; letter-spacing:0; }
+  .home-count,.weather-note { flex:none; color:#5d7466; font-size:10px; font-weight:700; white-space:nowrap; }
+  .weather-note { color:#756144; }
+  .home-list { border-top:1px solid #bdc8bf; }
+  .home-list-item { display:flex; align-items:center; width:100%; min-height:64px; padding:9px 2px; gap:10px; border:0; border-bottom:1px solid #d5ded7; border-radius:0; background:transparent; color:#203428; text-align:left; }
+  .home-list-item:active { background:#edf3ee; }
+  .home-list-item svg { flex:none; width:18px; height:18px; margin-left:auto; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; color:#2e7653; }
+  .home-item-mark { display:grid; place-items:center; flex:0 0 54px; min-height:32px; padding:3px; border:1px solid #aabbb0; border-radius:2px; color:#265942; font-size:10px; font-weight:800; text-align:center; }
+  .is-late .home-item-mark { border-color:#b05745; color:#9a3d2f; }
+  .is-review .home-item-mark { border-color:#b69755; color:#7e632c; }
+  .is-weather .home-item-mark { border-color:#829c8b; color:#456652; }
+  .home-item-copy { display:grid; min-width:0; gap:3px; }
+  .home-item-copy strong,.home-item-copy small { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+  .home-item-copy strong { font-size:13px; }
+  .home-item-copy small { color:#697c70; font-size:11px; }
+  .home-empty { margin:0; padding:15px 2px; border-bottom:1px solid #d5ded7; color:#718176; font-size:12px; line-height:1.55; }
+  .home-projects { display:grid; gap:8px; }
+  .home-projects .project-tile { min-height:78px; border-radius:8px; background:#58a987; }
+  .home-projects .project-open { min-height:78px; }
+  .home-projects .project-tile-icon { flex-basis:56px; height:58px; padding:14px 10px; border-radius:5px; }
+  .home-projects .project-tile-copy strong { font-size:13px; }
+  .home-projects .project-tile-copy small { margin-top:4px; }
+  .home-projects .favorite-button { bottom:4px; right:5px; width:32px; height:32px; }
+}
+@media screen and (max-width: 900px) and (orientation: landscape) and (max-height:650px) {
+  body[data-view="home"] .home-dashboard-head { margin:0 0 12px; padding-bottom:8px; border-bottom:2px solid #294c39; }
+  body[data-view="home"] .home-dashboard-head > span { display:block; font-size:10px; color:#5d7466; }
+  body[data-view="home"] .home-dashboard-head h1 { margin:2px 0 0; font-size:19px; }
+  body[data-view="home"] .home-dashboard-section { margin:0 0 15px; }
+  body[data-view="home"] .home-section-heading { display:flex; justify-content:space-between; gap:12px; margin:0 0 5px; }
+  body[data-view="home"] .home-section-heading h2 { margin:0; font-size:13px; }
+  body[data-view="home"] .home-list { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); border-top:1px solid #bdc8bf; }
+  body[data-view="home"] .home-list-item { min-height:48px; padding:5px; gap:7px; border:0; border-right:1px solid #d5ded7; background:#fff; }
+  body[data-view="home"] .home-item-mark { flex-basis:38px; min-height:26px; font-size:9px; }
+  body[data-view="home"] .home-item-copy strong { font-size:11px; }
+  body[data-view="home"] .home-item-copy small { font-size:9px; }
+  body[data-view="home"] .home-list-item svg { width:13px; height:13px; }
+  body[data-view="home"] .home-empty { grid-column:1/-1; padding:8px 2px; font-size:10px; }
+  body[data-view="home"] .home-projects { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+  body[data-view="home"] .home-projects .project-tile { min-height:60px; }
 }
 @media print { .reader-tools,.filter-disclosure,#taskDetail { display:none!important; } }
 
