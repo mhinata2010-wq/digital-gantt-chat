@@ -9,9 +9,10 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="design.css?v=20261016-home-dashboard-1">
+  <link rel="stylesheet" href="human.css?v=20261028-1">
   <script src="sato-data.js?v=20261012-7" defer></script>
   <script src="receipts.js?v=20261012-8" defer></script>
-  <script src="app.js?v=20261016-home-dashboard-1" defer></script>
+  <script src="app.js?v=20261028-human-1" defer></script>
 </head>
 <body>
   <svg class="icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
@@ -72,7 +73,7 @@
       <div class="profile-form-actions"><button type="button" id="cancelProfile">キャンセル</button><button class="primary" type="submit">保存</button></div>
     </form></dialog>
     <div class="page-head">
-      <div class="page-name"><h1 id="displayName">現場の工程表</h1><p id="projectMeta" class="visually-hidden">工程を追加して予定を組みましょう。</p></div>
+      <div class="page-name"><span class="workspace-eyebrow">PROJECT SCHEDULE <span>工程を、ひと目で。</span></span><h1 id="displayName">現場の工程表</h1><p id="projectMeta" class="visually-hidden">工程を追加して予定を組みましょう。</p></div>
       <div class="page-actions"><label class="project-switch">案件を切り替え<select id="projectPicker" aria-label="案件を切り替え"></select></label><button type="button" data-view-button="profile">プロフィール</button><button class="primary" id="addTask" type="button">＋ 工程を追加</button></div>
     </div>
     <section class="project-controls" id="projectControls" aria-label="工程表の設定">
@@ -80,23 +81,32 @@
       <div class="period-control" aria-label="表示期間"><span>表示期間</span><div class="segmented"><button type="button" data-days="14" aria-pressed="true">2週間</button><button type="button" data-days="28" aria-pressed="false">4週間</button><button type="button" id="allPeriod" aria-pressed="false">全期間</button></div></div>
       <a id="openSato" class="sato-shortcut" href="?project=sato-master-2021" hidden>佐藤さんの工程表を見る <span aria-hidden="true">↗</span></a>
     </section>
+    <section class="schedule-overview" id="scheduleOverview" aria-label="工程表の概要">
+      <div class="overview-intro"><span class="overview-mark" aria-hidden="true">↗</span><div><strong>次の段取りが、見えてくる。</strong><p id="overviewPeriod"></p></div></div>
+      <div class="overview-stat"><strong id="overviewTotal">0</strong><span>登録工程</span></div>
+      <div class="overview-stat"><strong id="overviewVisible">0</strong><span id="overviewVisibleLabel">表示中</span></div>
+      <div class="overview-context"><span id="sourceBadge">端末に保存</span><small id="overviewContext">予定を表示しています</small></div>
+    </section>
     <section class="board" aria-label="総合工程表">
       <div class="sheet-heading"><div><small>工事工程</small><h2 id="sheetProjectName">工事名</h2></div><strong>総合工程表</strong><span id="sheetRange">表示期間</span></div>
-      <div class="board-toolbar"><div><small class="board-project-name" id="boardProjectName"></small><strong id="periodLabel">工程表</strong><span id="todayLabel"></span></div><div class="board-actions"><button id="prev" type="button" aria-label="前の期間">‹</button><button id="today" type="button">今日</button><button id="next" type="button" aria-label="次の期間">›</button></div></div>
-      <div class="reader-tools"><div class="segmented" aria-label="工程表の表示期間"><button type="button" data-days="14">2週間</button><button type="button" data-days="28">4週間</button><button type="button" id="readerAll">全期間</button></div><button type="button" id="toggleEditing" aria-pressed="false">編集する</button></div>
+      <div class="board-toolbar"><div><small class="board-project-name" id="boardProjectName"></small><strong id="periodLabel">工程表</strong><span id="todayLabel"></span></div><div class="board-actions"><label class="jump-date">日付へ移動<input type="date" id="jumpDate" aria-label="表示する日付"></label><button id="prev" type="button" aria-label="前の期間">‹</button><button id="today" type="button">今日</button><button id="next" type="button" aria-label="次の期間">›</button></div></div>
+      <div class="reader-tools"><div class="segmented" aria-label="工程表の表示期間"><button type="button" data-days="14">2週間</button><button type="button" data-days="28">4週間</button><button type="button" id="readerAll">全期間</button></div><div class="view-switch" aria-label="表示形式"><button type="button" id="showTimeline" aria-pressed="true">工程表</button><button type="button" id="showList" aria-pressed="false">リスト</button></div><button type="button" id="toggleEditing" aria-pressed="false">編集する</button></div>
       <details id="sourceDetails" class="source-disclosure" hidden><summary>元資料と日付の扱い</summary><p id="sourceNote" class="source-note"></p></details>
-      <details class="filter-disclosure" id="filterDisclosure"><summary>検索・絞り込み <span id="filterSummaryCount"></span></summary><section class="schedule-filters" aria-label="工程の絞り込み">
-        <label class="filter-search">工程を検索<input type="search" id="filterQuery" placeholder="工程名・担当・グループ" autocomplete="off" aria-controls="boardGrid"></label>
-        <label>棟<select id="filterBuilding" aria-controls="boardGrid"></select></label>
-        <label>階<select id="filterFloor" aria-controls="boardGrid"></select></label>
-        <label>工種・作業<select id="filterTrade" aria-controls="boardGrid"></select></label>
-        <div class="filter-summary"><output id="filterCount" aria-live="polite"></output><button type="button" id="clearFilters">クリア</button></div>
-        <small class="filter-help">条件を組み合わせて表示。工種・作業は工程名から分類しています。非表示の工程との前提関係も保持されます。</small>
-      </section></details>
+      <section class="search-workspace" aria-label="工程を探す">
+        <label class="search-field"><span aria-hidden="true">⌕</span><input type="search" id="filterQuery" placeholder="工程名・担当・場所で検索" aria-label="工程を検索" autocomplete="off" aria-controls="boardGrid scheduleList"></label>
+        <details class="filter-disclosure" id="filterDisclosure"><summary>絞り込み <span id="filterSummaryCount"></span></summary><section class="schedule-filters" aria-label="工程の絞り込み">
+          <label>棟<select id="filterBuilding" aria-controls="boardGrid"></select></label>
+          <label>階<select id="filterFloor" aria-controls="boardGrid"></select></label>
+          <label>工種<select id="filterTrade" aria-controls="boardGrid"></select></label>
+        </section></details>
+        <button type="button" id="clearFilters">条件をクリア</button>
+      </section>
+      <div class="results-strip"><output id="filterCount" aria-live="polite"></output><label class="period-only"><input id="periodOnly" type="checkbox" checked>表示期間の工程だけ</label><span id="activeConditions"></span></div>
+      <div id="scheduleList" class="schedule-list" hidden></div>
       <div class="board-scroll" id="boardScroll"><div class="board-grid" id="boardGrid"></div></div>
-      <div class="board-foot"><span id="boardInstruction">線を左右に動かすと開始日を変更できます。</span><span><b class="legend-dependency">→</b> 前提工程　<b class="legend-dependency-conflict">→</b> 日付が重複　／　<i class="legend-done"></i>完了　<i class="legend-open"></i>未完了　<i class="legend-unknown"></i>実績未確認　<i class="legend-today"></i>今日　／　領収書：<b class="legend-receipt-missing">!</b> 未添付　<b class="legend-receipt-attached">●</b> 確認待ち　<b class="legend-receipt-reviewed">✓</b> 確認済み</span></div>
+      <div class="board-foot"><span id="boardInstruction">線を左右に動かすと開始日を変更できます。</span><span class="reading-legend"><i class="legend-open"></i>予定 <i class="legend-done"></i>完了 <span>線・工程名を押すと詳細</span></span></div>
     </section>
-    <p class="orientation-hint">↻ 横向きにすると日付と工程を広く見られます。端末の回転ロックが有効な場合は解除してください。</p>
+    <p class="orientation-hint">縦向きではリスト、横向きでは工程表で、予定を確認できます。</p>
     <div class="below-board"><span id="saveState" role="status">この端末に保存しました</span><div><button id="export" class="text-action" type="button">データを保存</button><label class="text-action file-action">データを読み込む<input id="import" type="file" accept="application/json,.json"></label><button id="newProject" class="text-action" type="button">新しい工程表</button></div></div>
   </main>
   <dialog id="projectDialog" aria-labelledby="projectDialogTitle"><form id="projectForm">
@@ -104,7 +114,7 @@
     <label>工事名<input id="newProjectName" name="projectName" required maxlength="80" placeholder="例：中央通り改修工事"></label>
     <div class="dialog-actions"><span></span><button type="submit" class="primary">工程表を作る</button></div>
   </form></dialog>
-  <dialog id="taskDetail" aria-labelledby="detailTitle"><div class="dialog-head"><h2 id="detailTitle">工程の詳細</h2><button type="button" class="close" id="closeDetail" aria-label="詳細を閉じる">×</button></div><p id="detailGroup"></p><dl class="profile-details"><div><dt>開始日</dt><dd id="detailStart"></dd></div><div><dt>終了日</dt><dd id="detailEnd"></dd></div><div><dt>所要日数</dt><dd id="detailDays"></dd></div><div><dt>担当</dt><dd id="detailCompany"></dd></div><div><dt>前提工程</dt><dd id="detailBefore"></dd></div></dl><p id="detailNote"></p><button type="button" id="editFromDetail">この工程を編集</button></dialog>
+  <dialog id="taskDetail" aria-labelledby="detailTitle"><div class="dialog-head"><h2 id="detailTitle">工程の詳細</h2><button type="button" class="close" id="closeDetail" aria-label="詳細を閉じる">×</button></div><p id="detailGroup"></p><dl class="profile-details"><div><dt>開始日</dt><dd id="detailStart"></dd></div><div><dt>終了日</dt><dd id="detailEnd"></dd></div><div><dt>所要日数</dt><dd id="detailDays"></dd></div><div><dt>担当</dt><dd id="detailCompany"></dd></div><div><dt>前提工程</dt><dd id="detailBefore"></dd></div></dl><p id="detailNote"></p><button type="button" id="focusTask" class="primary">この工程の期間を見る</button><button type="button" id="editFromDetail">この工程を編集</button></dialog>
   <dialog id="taskDialog" aria-labelledby="dialogTitle"><form id="taskForm">
     <div class="dialog-head"><div><span class="eyebrow">工程</span><h2 id="dialogTitle">工程を追加</h2></div><button type="button" id="closeDialog" class="close" aria-label="閉じる">×</button></div>
     <label>工程名<input name="name" required maxlength="80" placeholder="例：基礎工事"></label>
