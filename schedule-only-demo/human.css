@@ -90,3 +90,13 @@
 @media screen and (max-width:600px) {.board-actions button {white-space:nowrap;flex-shrink:0}.board-actions #today {padding:0 9px;min-width:46px}.jump-date {font-size:0}.jump-date input {font-size:13px}}
 @media screen {.detail-status {display:inline-block;padding:6px 10px;margin:0 0 8px;border-radius:5px;background:#f1f5f2;color:#526b5d;font-size:11px}.overview-intro p {line-height:1.6}}
 @media screen and (max-width:600px) {.month-span {font-size:10px;padding-left:5px}}
+
+/* Keep the reading screen focused on the schedule itself. */
+@media screen {
+ body[data-view="schedule"] .page-name,
+ body[data-view="schedule"] .schedule-overview {display:none!important}
+ body[data-view="schedule"] .page-head {min-height:0;justify-content:flex-end;margin:0 0 12px;padding:0}
+}
+@media screen and (max-width:600px) {
+ body[data-view="schedule"] .page-head {display:none!important}
+}
