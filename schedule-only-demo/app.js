@@ -5,7 +5,7 @@ const SATO_ID = 'sato-master-2021';
 const compactLandscape = () => window.matchMedia('(max-width: 900px) and (orientation: landscape) and (max-height: 650px)').matches;
 const portraitPhone = () => window.matchMedia('(max-width: 900px) and (orientation: portrait)').matches;
 const LABEL_WIDTH = () => window.innerWidth <= 600 ? 164 : 280;
-const WIDTH = () => state.scale === 'month' ? Math.max(.12,(document.querySelector('.board').clientWidth-LABEL_WIDTH()-18)/overviewDays()) : compactLandscape() ? Math.max(26,Math.min(48,Math.floor((window.innerWidth-62-LABEL_WIDTH()-8)/state.days))) : window.innerWidth <= 780 ? 38 : Math.max(48,Math.min(80,Math.floor((window.innerWidth > 900 ? $('boardScroll').clientWidth-LABEL_WIDTH()-2 : 48*state.days)/state.days)));
+const WIDTH = () => state.scale === 'month' ? Math.max(window.innerWidth<=600?1.4:.12,(document.querySelector('.board').clientWidth-LABEL_WIDTH()-18)/overviewDays()) : compactLandscape() ? Math.max(26,Math.min(48,Math.floor((window.innerWidth-62-LABEL_WIDTH()-8)/state.days))) : window.innerWidth <= 780 ? 38 : Math.max(48,Math.min(80,Math.floor((window.innerWidth > 900 ? $('boardScroll').clientWidth-LABEL_WIDTH()-2 : 48*state.days)/state.days)));
 const todayISO = () => {const date=new Date();return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`};
 const weekdays = ['日','月','火','水','木','金','土'];
 let state, projects, activeId, editing = null, dragging = false;
@@ -160,7 +160,7 @@ $('clearFilters').onclick=()=>{Object.keys(scheduleFilters).forEach(key=>schedul
 function render(){const matchingTasks=refreshScheduleFilters();const monthScale=state.scale==='month',today=todayISO(),starts=state.tasks.map(task=>task.start),ends=state.tasks.map(task=>plus(task.start,task.days-1)),minDate=starts.length?starts.sort()[0]:state.viewStart,maxDate=ends.length?ends.sort().at(-1):plus(state.viewStart,27),first=monthScale?`${minDate.slice(0,7)}-01`:state.viewStart,last=monthScale?plus(`${maxDate.slice(0,7)}-01`,new Date(Date.UTC(+maxDate.slice(0,4),+maxDate.slice(5,7),0)).getUTCDate()-1):plus(first,state.days-1),days=distance(last,first)+1,w=WIDTH(),width=days*w,dates=Array.from({length:days},(_,i)=>plus(first,i));
  const filteredTasks=monthScale||!periodOnly?matchingTasks:tasksInPeriod(matchingTasks,first,last);
  $('jumpDate').value=first;$('periodOnly').checked=periodOnly;$('periodOnly').disabled=monthScale;
- $('overviewPeriod').textContent=state.tasks.length?`${minDate.replaceAll('-','/')} — ${maxDate.replaceAll('-','/')}`:'工程を登録すると、日程がここに表示されます';
+ $('overviewPeriod').textContent=state.tasks.length?`${state.source?'参考データ · ':''}${minDate.replaceAll('-','/')} — ${maxDate.replaceAll('-','/')}`:'工程を登録すると、日程がここに表示されます';
  $('overviewTotal').textContent=state.tasks.length;$('overviewVisible').textContent=filteredTasks.length;
  $('overviewVisibleLabel').textContent=monthScale?'表示中':'期間内・表示中';
  $('sourceBadge').textContent=state.source?'参考工程表':'この端末の工程表';
@@ -169,7 +169,7 @@ function render(){const matchingTasks=refreshScheduleFilters();const monthScale=
  $('activeConditions').textContent=[scheduleFilters.building,scheduleFilters.floor,scheduleFilters.trade].filter(Boolean).join(' · ');
  $('scheduleList').hidden=!listView;$('boardScroll').hidden=listView;
  $('showList').setAttribute('aria-pressed',String(listView));$('showTimeline').setAttribute('aria-pressed',String(!listView));
- $('scheduleList').innerHTML=filteredTasks.map(task=>`<button type="button" class="schedule-card" data-open-detail="${text(task.id)}"><span class="schedule-card-category">${text(task.group||tradeCategory(task))}</span><strong>${text(task.name)}</strong><span class="schedule-card-dates">${rangeLabel(task)}<small>${task.days}日間</small></span><span class="schedule-card-bottom">${text(task.company||'担当未設定')}<span>${task.complete===true?'✓ 完了':'予定を確認 →'}</span></span></button>`).join('')||`<div class="list-empty"><strong>${state.tasks.length?'この条件・期間の工程はありません':'工程はまだありません'}</strong><p>日付や絞り込みを変えるか、全期間から探せます。</p><button type="button" data-reset-view>全期間で見る</button></div>`;
+ $('scheduleList').innerHTML=filteredTasks.map(task=>`<button type="button" class="schedule-card" data-open-detail="${text(task.id)}"><span class="schedule-card-category">${text(task.group||tradeCategory(task))}</span><strong>${text(task.name)}</strong><span class="schedule-card-dates">${rangeLabel(task)}<small>${task.days}日間</small></span><span class="schedule-card-bottom">${text(task.company||'担当未設定')}<span>${task.complete===true?'✓ 完了':task.complete===false?'未完了 →':'実績未確認 →'}</span></span></button>`).join('')||`<div class="list-empty"><strong>${state.tasks.length?'この条件・期間の工程はありません':'工程はまだありません'}</strong><p>日付や絞り込みを変えるか、全期間から探せます。</p><button type="button" data-reset-view>全期間で見る</button></div>`;
  document.body.classList.toggle('month-scale',monthScale);
  $('projectName').value=state.name;$('displayName').textContent=state.name||'名称未設定の工程表';$('viewStart').value=state.viewStart;$('periodLabel').textContent=monthScale?`${first.slice(0,4)}/${+first.slice(5,7)} – ${last.slice(0,4)}/${+last.slice(5,7)}`:`${first.slice(0,4)}年 ${short(first)} – ${short(last)}`;$('todayLabel').textContent=state.tasks.length?`${state.tasks.length}工程 · ${monthScale?'全期間を月単位で表示':'暦日で表示'}`:'工程を追加してください';$('projectMeta').textContent=state.source?'佐藤さんの総合工程表を再構成した試作です。':'工程を追加して、予定を組みましょう。';$('openSato').hidden=activeId===SATO_ID||!projects.some(project=>project.id===SATO_ID);document.querySelectorAll('[data-days]').forEach(button=>button.setAttribute('aria-pressed',String(!monthScale&&+button.dataset.days===state.days)));$('allPeriod').setAttribute('aria-pressed',String(monthScale));$('readerAll').setAttribute('aria-pressed',String(monthScale));$('sourceDetails').hidden=!state.source;$('sourceNote').textContent=state.source||'';$('boardInstruction').textContent=monthScale?'棒の端の丸から次の工程へ引くと、矢印でつながります。':'棒を左右にスワイプすると開始日を変更できます。端の丸から次の工程へ引くと矢印でつながります。';
  if(!editingMode)$('boardInstruction').textContent='工程名・工程線をタップすると開始日と終了日を確認できます。';
@@ -219,7 +219,7 @@ function renderDependencyEditor(){
 }
 function openTask(id){
  if(editingMode){editTask(id);return}const task=taskFor(id);if(!task)return;detailTaskId=id;
- $('detailTitle').textContent=task.name;$('detailGroup').textContent=task.group||'';
+ $('detailStatus').textContent=task.complete===true?'完了':task.complete===false?'未完了':'実績未確認 — 計画上の日程です';$('detailTitle').textContent=task.name;$('detailGroup').textContent=task.group||'';
  $('detailStart').textContent=task.start.replaceAll('-','/');$('detailEnd').textContent=plus(task.start,task.days-1).replaceAll('-','/');$('detailDays').textContent=`${task.days}日（暦日）`;
  $('detailCompany').textContent=task.company||'担当未設定';$('detailBefore').textContent=predecessors(task).map(taskFor).filter(Boolean).map(t=>t.name).join('、')||'指定なし';$('detailNote').textContent=task.note||'';$('taskDetail').showModal();
 }
