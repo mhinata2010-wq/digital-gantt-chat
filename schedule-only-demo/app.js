@@ -9,6 +9,7 @@ const WIDTH = () => state.scale === 'month' ? (compactLandscape()?1.65:window.in
 const todayISO = () => {const date=new Date();return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`};
 const weekdays = ['日','月','火','水','木','金','土'];
 let state, projects, activeId, editing = null, dragging = false;
+let receiptRequiredDraft = false;
 let receiptCounts = new Map(), receiptLoadFailed = new Set(), receiptPreviewURLs = [];
 const FAVORITES_KEY = 'snake_schedule_favorites_v1';
 let favorites = new Set();
@@ -29,7 +30,9 @@ function example(){const monday=startOfWeek(todayISO());return {name:'サンプ�
  {id:newId(),name:'電気配線',company:'電気業者',start:plus(monday,10),days:4,complete:false},
  {id:newId(),name:'内装工事',company:'内装業者',start:plus(monday,14),days:5,complete:false}
 ]}}
-function clean(input){if(!input || typeof input!=='object' || !Array.isArray(input.tasks) || input.tasks.length>200 || typeof input.name!=='string' || input.name.length>80 || !validDate(input.viewStart) || ![14,28].includes(input.days))throw Error('工程表データを読み取れませんでした');return {name:input.name,viewStart:input.viewStart,days:input.days,scale:input.scale==='month'?'month':'day',source:typeof input.source==='string'?input.source.slice(0,250):'',tasks:input.tasks.map(task=>{if(!task || typeof task.name!=='string' || !task.name.trim() || task.name.length>80 || typeof task.company!=='string' || task.company.length>80 || !validDate(task.start) || !Number.isInteger(task.days) || task.days<1 || task.days>365)throw Error('工程の内容を確認してください');return {id:typeof task.id==='string'?task.id:newId(),name:task.name,company:task.company,group:typeof task.group==='string'?task.group.slice(0,60):'',note:typeof task.note==='string'?task.note.slice(0,100):'',start:task.start,days:task.days,complete:task.complete===null?null:task.complete===true,receiptRequired:task.receiptRequired===true,receiptReviewed:task.receiptReviewed===true}})}}
+function predecessors(task){return Array.isArray(task.predecessorIds)?task.predecessorIds:typeof task.predecessorId==='string'&&task.predecessorId?[task.predecessorId]:[]}
+function hasDependencyCycle(tasks,id,predecessorId){const seen=new Set(),stack=[predecessorId];while(stack.length){const next=stack.pop();if(next===id)return true;if(seen.has(next))continue;seen.add(next);stack.push(...predecessors(tasks.find(task=>task.id===next)||{}))}return false}
+function clean(input){if(!input || typeof input!=='object' || !Array.isArray(input.tasks) || input.tasks.length>200 || typeof input.name!=='string' || input.name.length>80 || !validDate(input.viewStart) || ![14,28].includes(input.days))throw Error('工程表データを読み取れませんでした');const tasks=input.tasks.map(task=>{if(!task || typeof task.name!=='string' || !task.name.trim() || task.name.length>80 || typeof task.company!=='string' || task.company.length>80 || !validDate(task.start) || !Number.isInteger(task.days) || task.days<1 || task.days>365)throw Error('工程の内容を確認してください');return {id:typeof task.id==='string'?task.id:newId(),name:task.name,company:task.company,group:typeof task.group==='string'?task.group.slice(0,60):'',note:typeof task.note==='string'?task.note.slice(0,100):'',start:task.start,days:task.days,complete:task.complete===null?null:task.complete===true,receiptRequired:task.receiptRequired===true,receiptReviewed:task.receiptReviewed===true,predecessorIds:[...new Set(predecessors(task).filter(id=>typeof id==='string'))]}});const ids=new Set(tasks.map(task=>task.id));for(const task of tasks){const wanted=task.predecessorIds;task.predecessorIds=[];for(const id of wanted)if(ids.has(id)&&!hasDependencyCycle(tasks,task.id,id))task.predecessorIds.push(id)}return {name:input.name,viewStart:input.viewStart,days:input.days,scale:input.scale==='month'?'month':'day',source:typeof input.source==='string'?input.source.slice(0,250):'',tasks}}
 const existingProjects = !!localStorage.getItem(PROJECTS_KEY);
 const existingLegacy = !!localStorage.getItem(KEY);
 try{
@@ -71,7 +74,7 @@ async function loadReceiptCounts(){
 function releaseReceiptURLs(){receiptPreviewURLs.forEach(url=>URL.revokeObjectURL(url));receiptPreviewURLs=[]}
 async function renderReceiptPanel(){
  const projectId=activeId,taskId=editing,task=taskFor(taskId);if(!task||!$('taskDialog').open)return;
- const required=task.receiptRequired===true;
+ const required=receiptRequiredDraft;
  $('receiptRequired').checked=required;$('receiptActions').hidden=!required;
  $('receiptList').replaceChildren();releaseReceiptURLs();
  if(!required){$('receiptState').textContent='対象外';return}
@@ -80,7 +83,7 @@ async function renderReceiptPanel(){
   const photos=await receiptStore.list(projectId,taskId);
   if(activeId!==projectId||editing!==taskId||!$('taskDialog').open)return;
   receiptCounts.set(taskId,photos.length);receiptLoadFailed.delete(taskId);render();
-  $('receiptState').textContent=receiptStatus(task).label;
+  $('receiptState').textContent=receiptStatus({...task,receiptRequired:true}).label;
   $('receiptReview').disabled=!photos.length;$('receiptReview').textContent=task.receiptReviewed?'確認済みを取り消す':'確認済みにする';
   photos.forEach(photo=>{
    const url=URL.createObjectURL(photo.blob);receiptPreviewURLs.push(url);
@@ -115,10 +118,10 @@ function render(){const monthScale=state.scale==='month',today=todayISO(),starts
  document.querySelectorAll('.board-row[data-row]').forEach(row=>{const handle=row.querySelector('.drag-handle');handle.draggable=window.innerWidth>780;handle.addEventListener('dragstart',e=>{e.dataTransfer.setData('text/plain',row.dataset.row);e.dataTransfer.effectAllowed='move'});row.addEventListener('dragover',e=>{e.preventDefault()});row.addEventListener('drop',e=>{e.preventDefault();let source=e.dataTransfer.getData('text/plain'),from=state.tasks.findIndex(t=>t.id===source),to=state.tasks.findIndex(t=>t.id===row.dataset.row);if(from<0||to<0||from===to)return;state.tasks.splice(to,0,state.tasks.splice(from,1)[0]);save();render()})});
 }
 function taskFor(id){return state.tasks.find(task=>task.id===id)}
-function editTask(id){editing=id||null;const task=taskFor(id)||{name:'',company:'',start:state.viewStart,days:1,complete:null};$('dialogTitle').textContent=id?'工程を編集':'工程を追加';const form=$('taskForm');for(const key of ['name','company','start','days'])form.elements.namedItem(key).value=task[key];form.elements.namedItem('status').value=task.complete===true?'done':task.complete===false?'open':'unknown';$('deleteTask').hidden=!id;$('receiptSection').hidden=!id;$('taskDialog').showModal();if(id)renderReceiptPanel();form.elements.namedItem('name').focus()}
+function editTask(id){editing=id||null;const task=taskFor(id)||{name:'',company:'',start:state.viewStart,days:1,complete:null};receiptRequiredDraft=task.receiptRequired===true;$('dialogTitle').textContent=id?'工程を編集':'工程を追加';const form=$('taskForm');for(const key of ['name','company','start','days'])form.elements.namedItem(key).value=task[key];form.elements.namedItem('status').value=task.complete===true?'done':task.complete===false?'open':'unknown';$('deleteTask').hidden=!id;$('receiptSection').hidden=!id;$('taskDialog').showModal();if(id)renderReceiptPanel();form.elements.namedItem('name').focus()}
 $('addTask').onclick=()=>editTask(null);$('closeDialog').onclick=()=>$('taskDialog').close();
 $('taskDialog').addEventListener('close',releaseReceiptURLs);
-$('receiptRequired').onchange=e=>{const task=taskFor(editing);if(!task)return;task.receiptRequired=e.target.checked;task.receiptReviewed=false;save();render();renderReceiptPanel()};
+$('receiptRequired').onchange=e=>{receiptRequiredDraft=e.target.checked;renderReceiptPanel()};
 $('receiptInput').onchange=async e=>{
  const file=e.target.files?.[0],projectId=activeId,taskId=editing;e.target.value='';if(!file||!taskId)return;
  if(!file.type.startsWith('image/')||file.size>8*1024*1024){announce('画像を8MB以内で選んでください');return}
@@ -141,15 +144,7 @@ async function openProject(id){
  const project=projects.find(item=>item.id===id);if(!project)return;
  const url=new URL(location.href);if(url.searchParams.has('project')){url.searchParams.delete('project');history.replaceState(null,'',url)}
  activeId=id;state=project.schedule;receiptCounts=new Map();save();render();loadReceiptCounts();setView('schedule');
- if(!portraitPhone())return;
- try{
-  if(!screen.orientation?.lock)throw Error('orientation unsupported');
-  if(!document.fullscreenElement&&document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();
-  await screen.orientation.lock('landscape');
- }catch{
-  if(document.fullscreenElement)await document.exitFullscreen().catch(()=>{});
-  announce('工程表を開きました。端末を横向きにすると広く見られます');
- }
+
 }
 $('closeProjectDialog').onclick=()=>$('projectDialog').close();
 $('projectForm').onsubmit=e=>{
@@ -159,7 +154,7 @@ $('projectForm').onsubmit=e=>{
  projects.push({id,schedule});activeId=id;state=schedule;$('projectDialog').close();e.target.reset();save();render();setView('schedule');announce('工程表を作成しました');
 };
 setView(portraitPhone()?'home':'schedule');
-$('taskForm').onsubmit=e=>{e.preventDefault();const f=e.target,days=Number(f.elements.namedItem('days').value),start=f.elements.namedItem('start').value,name=f.elements.namedItem('name').value.trim(),company=f.elements.namedItem('company').value.trim(),status=f.elements.namedItem('status').value,complete=status==='done'?true:status==='open'?false:null;if(!name||!validDate(start)||!Number.isInteger(days)||days<1||days>365){announce('工程名、開始日、所要日数を確認してください');return}let current=taskFor(editing);if(current)Object.assign(current,{name,company,start,days,complete});else state.tasks.push({id:newId(),name,company,start,days,complete});$('taskDialog').close();save();render();announce('工程を反映しました')};
+$('taskForm').onsubmit=e=>{e.preventDefault();const f=e.target,days=Number(f.elements.namedItem('days').value),start=f.elements.namedItem('start').value,name=f.elements.namedItem('name').value.trim(),company=f.elements.namedItem('company').value.trim(),status=f.elements.namedItem('status').value,complete=status==='done'?true:status==='open'?false:null;if(!name||!validDate(start)||!Number.isInteger(days)||days<1||days>365){announce('工程名、開始日、所要日数を確認してください');return}let current=taskFor(editing);if(current){if(current.receiptRequired!==receiptRequiredDraft)current.receiptReviewed=false;Object.assign(current,{name,company,start,days,complete,receiptRequired:receiptRequiredDraft})}else state.tasks.push({id:newId(),name,company,start,days,complete});$('taskDialog').close();save();render();announce('工程を反映しました')};
 $('deleteTask').onclick=async()=>{const task=taskFor(editing);if(!task||!confirm(`「${task.name}」を削除しますか？`))return;try{await receiptStore.removeTask(activeId,task.id)}catch{announce('写真を削除できないため、工程を削除できませんでした');return}state.tasks=state.tasks.filter(item=>item.id!==editing);$('taskDialog').close();save();render()};
 $('projectName').onchange=e=>{state.name=e.target.value.trim()||'名称未設定の工程表';save();render()};
 $('viewStart').onchange=e=>{if(!validDate(e.target.value)){announce('表示開始日を確認してください');return}state.viewStart=e.target.value;state.scale='day';save();render()};
