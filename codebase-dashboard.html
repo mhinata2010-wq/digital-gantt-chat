@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SiteFlow Dashboard</title>
+  <meta name="description" content="Construction operations dashboard inspired by modern admin UI patterns." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="codebase-dashboard.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand"><div class="brand-mark">S</div><div class="brand-copy"><strong>SiteFlow</strong><span>Operations</span></div></div>
+      <nav class="nav" aria-label="Primary">
+        <p class="nav-section">OVERVIEW</p>
+        <a class="nav-item active" href="#"><span class="nav-icon">◫</span><span>Dashboard</span></a>
+        <a class="nav-item" href="#"><span class="nav-icon">▤</span><span>Today</span><span class="badge">8</span></a>
+        <a class="nav-item" href="#"><span class="nav-icon">⌁</span><span>Schedule</span></a>
+        <a class="nav-item" href="#"><span class="nav-icon">△</span><span>Attention</span><span class="badge danger">3</span></a>
+        <p class="nav-section">MANAGEMENT</p>
+        <a class="nav-item" href="#"><span class="nav-icon">□</span><span>Sites</span></a>
+        <a class="nav-item" href="#"><span class="nav-icon">◎</span><span>Teams</span></a>
+        <a class="nav-item" href="#"><span class="nav-icon">▦</span><span>Reports</span></a>
+        <a class="nav-item" href="#"><span class="nav-icon">⚙</span><span>Settings</span></a>
+      </nav>
+      <div class="sidebar-footer"><div class="mini-avatar">HM</div><div><strong>Hinata Miyaji</strong><span>Project Admin</span></div></div>
+    </aside>
+    <div class="page">
+      <header class="topbar">
+        <div class="topbar-left"><button class="icon-button" id="menuButton" aria-label="メニューを開閉">☰</button><div class="search-wrap"><span>⌕</span><input type="search" placeholder="Search sites, tasks, members..." /></div></div>
+        <div class="topbar-actions"><button class="icon-button" aria-label="通知">♢<span class="notification-dot"></span></button><button class="profile-button"><span class="mini-avatar">HM</span><span class="profile-name">Hinata</span><span>⌄</span></button></div>
+      </header>
+      <main class="content">
+        <section class="hero-row"><div><p class="eyebrow">OPERATIONS / DASHBOARD</p><h1>Good afternoon, Hinata.</h1><p class="hero-copy">現場の状態、遅延、次のアクションを一画面で把握します。</p></div><div class="hero-actions"><button class="button secondary">Export</button><button class="button primary">＋ New task</button></div></section>
+        <section class="metric-grid" aria-label="主要KPI">
+          <article class="metric-card"><div class="metric-head"><span class="metric-label">ACTIVE SITES</span><span class="metric-icon blue">□</span></div><div class="metric-value">12</div><div class="metric-foot positive">↑ 8.3% <span>vs last month</span></div></article>
+          <article class="metric-card"><div class="metric-head"><span class="metric-label">TODAY PROGRESS</span><span class="metric-icon violet">↗</span></div><div class="metric-value">72%</div><div class="progress-track"><div class="progress-bar" style="width:72%"></div></div><div class="metric-foot muted">Plan 100% · Delta -28pt</div></article>
+          <article class="metric-card"><div class="metric-head"><span class="metric-label">ATTENTION</span><span class="metric-icon orange">△</span></div><div class="metric-value">3</div><div class="metric-foot negative">2 critical <span>need decision</span></div></article>
+          <article class="metric-card"><div class="metric-head"><span class="metric-label">ON-TIME RATE</span><span class="metric-icon green">✓</span></div><div class="metric-value">91.4%</div><div class="metric-foot positive">↑ 2.6pt <span>this week</span></div></article>
+        </section>
+        <section class="dashboard-grid main-grid">
+          <article class="panel chart-panel"><div class="panel-header"><div><p class="panel-kicker">PROGRESS TREND</p><h2>Plan vs Actual</h2></div><div class="segmented" role="group" aria-label="期間"><button class="active">7D</button><button>30D</button><button>90D</button></div></div><div class="chart-wrap"><canvas id="progressChart"></canvas></div><div class="chart-summary"><div><span class="legend-dot plan"></span><strong>Plan</strong><span>100%</span></div><div><span class="legend-dot actual"></span><strong>Actual</strong><span>72%</span></div><div class="delta-box"><span>Current delta</span><strong>-28pt</strong></div></div></article>
+          <article class="panel attention-panel"><div class="panel-header"><div><p class="panel-kicker">ATTENTION QUEUE</p><h2>Needs decision</h2></div><button class="text-button">View all</button></div><div class="attention-list"><button class="attention-item"><span class="status-dot red"></span><span class="attention-copy"><strong>外壁防水の開始遅延</strong><small>Impact: 内装開始 +2 days</small></span><span class="severity critical">Critical</span></button><button class="attention-item"><span class="status-dot amber"></span><span class="attention-copy"><strong>資材搬入の時間変更</strong><small>Action: 搬入枠を再調整</small></span><span class="severity warning">Warning</span></button><button class="attention-item"><span class="status-dot amber"></span><span class="attention-copy"><strong>電気工事の人員不足</strong><small>Impact: 進捗 -12pt</small></span><span class="severity warning">Warning</span></button></div></article>
+        </section>
+        <section class="dashboard-grid lower-grid">
+          <article class="panel tasks-panel"><div class="panel-header"><div><p class="panel-kicker">TODAY</p><h2>Site activity</h2></div><button class="icon-button">•••</button></div><div class="table-wrap"><table><thead><tr><th>Task</th><th>Site</th><th>Owner</th><th>Status</th><th>Progress</th></tr></thead><tbody><tr><td><strong>外壁防水</strong><span class="subtext">09:00 – 16:00</span></td><td>神山A棟</td><td><span class="avatar-row"><span class="tiny-avatar">SK</span>佐藤</span></td><td><span class="pill delayed">Delayed</span></td><td><div class="inline-progress"><span style="width:58%"></span></div><small>58%</small></td></tr><tr><td><strong>1F 配線</strong><span class="subtext">08:30 – 15:30</span></td><td>神山A棟</td><td><span class="avatar-row"><span class="tiny-avatar">TM</span>田村</span></td><td><span class="pill active-pill">In progress</span></td><td><div class="inline-progress"><span style="width:74%"></span></div><small>74%</small></td></tr><tr><td><strong>資材搬入</strong><span class="subtext">13:00 – 14:00</span></td><td>徳島B棟</td><td><span class="avatar-row"><span class="tiny-avatar">YM</span>山本</span></td><td><span class="pill planned">Planned</span></td><td><div class="inline-progress"><span style="width:20%"></span></div><small>20%</small></td></tr><tr><td><strong>天井下地</strong><span class="subtext">10:00 – 17:00</span></td><td>徳島B棟</td><td><span class="avatar-row"><span class="tiny-avatar">NK</span>中川</span></td><td><span class="pill done">Done</span></td><td><div class="inline-progress"><span style="width:100%"></span></div><small>100%</small></td></tr></tbody></table></div></article>
+          <article class="panel sites-panel"><div class="panel-header"><div><p class="panel-kicker">SITES</p><h2>Overall status</h2></div><button class="text-button">Manage</button></div><div class="site-list"><div class="site-row"><div class="site-icon">KA</div><div class="site-copy"><strong>神山A棟</strong><span>24 active tasks</span></div><div class="site-score"><strong>68%</strong><span class="trend down">↓ 4pt</span></div></div><div class="site-row"><div class="site-icon">TB</div><div class="site-copy"><strong>徳島B棟</strong><span>17 active tasks</span></div><div class="site-score"><strong>84%</strong><span class="trend up">↑ 3pt</span></div></div><div class="site-row"><div class="site-icon">NC</div><div class="site-copy"><strong>鳴門C棟</strong><span>11 active tasks</span></div><div class="site-score"><strong>93%</strong><span class="trend up">↑ 1pt</span></div></div></div></article>
+        </section>
+      </main>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="codebase-dashboard.js"></script>
+</body>
+</html>
