@@ -1,57 +1,205 @@
 <!doctype html>
-<html lang="ja">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>SiteFlow Dashboard</title>
-  <meta name="description" content="Construction operations dashboard inspired by modern admin UI patterns." />
+  <title>Codebase-style Dashboard</title>
+  <meta name="description" content="A faithful independently implemented dashboard inspired by the Codebase demo layout." />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="codebase-dashboard.css" />
 </head>
 <body>
-  <div class="app-shell">
-    <aside class="sidebar" id="sidebar">
-      <div class="brand"><div class="brand-mark">S</div><div class="brand-copy"><strong>SiteFlow</strong><span>Operations</span></div></div>
-      <nav class="nav" aria-label="Primary">
-        <p class="nav-section">OVERVIEW</p>
-        <a class="nav-item active" href="#"><span class="nav-icon">◫</span><span>Dashboard</span></a>
-        <a class="nav-item" href="#"><span class="nav-icon">▤</span><span>Today</span><span class="badge">8</span></a>
-        <a class="nav-item" href="#"><span class="nav-icon">⌁</span><span>Schedule</span></a>
-        <a class="nav-item" href="#"><span class="nav-icon">△</span><span>Attention</span><span class="badge danger">3</span></a>
-        <p class="nav-section">MANAGEMENT</p>
-        <a class="nav-item" href="#"><span class="nav-icon">□</span><span>Sites</span></a>
-        <a class="nav-item" href="#"><span class="nav-icon">◎</span><span>Teams</span></a>
-        <a class="nav-item" href="#"><span class="nav-icon">▦</span><span>Reports</span></a>
-        <a class="nav-item" href="#"><span class="nav-icon">⚙</span><span>Settings</span></a>
+  <div id="pageContainer" class="page-container">
+    <aside id="sidebar" class="sidebar" aria-label="Main navigation">
+      <div class="sidebar-brand">
+        <button class="brand-button" data-action="dashboard" aria-label="Dashboard">
+          <span class="brand-symbol">c b</span>
+          <span class="brand-name">code<span>base</span></span>
+        </button>
+        <button id="sidebarClose" class="sidebar-close" aria-label="Close sidebar">×</button>
+      </div>
+
+      <div class="sidebar-user">
+        <button class="avatar-button" data-action="open-overlay" aria-label="Open user panel"><span class="avatar avatar-lg">JS</span></button>
+        <div class="sidebar-user-copy">
+          <strong>J. Smith</strong>
+          <span>Administrator</span>
+        </div>
+        <button class="tiny-icon" data-toggle="profileMenu" aria-label="Open profile menu">⌄</button>
+      </div>
+
+      <nav class="sidebar-nav" id="sidebarNav">
+        <button class="nav-link active" data-action="dashboard"><span class="ico">⌂</span><span>Dashboard</span></button>
+
+        <div class="nav-group open">
+          <button class="nav-parent" data-nav-group><span class="ico">▦</span><span>Page Kits</span><span class="chev">›</span></button>
+          <div class="nav-children">
+            <button class="nav-subparent" data-sub-group>Dashboards <span>›</span></button>
+            <div class="nav-grandchildren open">
+              <button data-view="Dashboard 2">Dashboard 2</button><button data-view="Dashboard 3">Dashboard 3</button><button data-view="Dashboard 4">Dashboard 4</button>
+            </div>
+            <button class="nav-subparent" data-sub-group>Alt Dashboards <span>›</span></button>
+            <div class="nav-grandchildren"><button data-view="Classic">Classic</button><button data-view="Clean">Clean</button><button data-view="Social">Social</button><button data-view="Corporate">Corporate</button><button data-view="Minimal">Minimal</button><button data-view="Medical">Medical</button></div>
+            <button class="nav-subparent" data-sub-group>Hosting <span>›</span></button>
+            <div class="nav-grandchildren"><button data-view="Hosting Dashboard">Dashboard</button><button data-view="Hosting Emails">Emails</button><button data-view="Hosting Account">Account</button><button data-view="Hosting Support">Support</button></div>
+            <button class="nav-subparent" data-sub-group>Real Estate <span>›</span></button>
+            <div class="nav-grandchildren"><button data-view="Real Estate Dashboard">Dashboard</button><button data-view="Listing">Listing</button><button data-view="Add New Listing">Add New Listing</button></div>
+            <button class="nav-subparent" data-sub-group>e-Commerce <span>›</span></button>
+            <div class="nav-grandchildren"><button data-view="e-Commerce Dashboard">Dashboard</button><button data-view="Orders">Orders</button><button data-view="Products">Products</button><button data-view="Customer">Customer</button></div>
+          </div>
+        </div>
+
+        <div class="nav-group">
+          <button class="nav-parent" data-nav-group><span class="ico">◈</span><span>User Interface</span><span class="chev">›</span></button>
+          <div class="nav-children">
+            <button class="nav-subparent" data-sub-group>Blocks <span>›</span></button><div class="nav-grandchildren"><button data-view="Block Styles">Styles</button><button data-view="Block Options">Options</button><button data-view="Block Forms">Forms</button><button data-view="Block API">API</button></div>
+            <button class="nav-subparent" data-sub-group>Widgets <span>›</span></button><div class="nav-grandchildren"><button data-view="Tiles">Tiles</button><button data-view="Users">Users</button><button data-view="Statistics">Statistics</button><button data-view="Projects">Projects</button></div>
+            <button class="nav-subparent" data-sub-group>Elements <span>›</span></button><div class="nav-grandchildren"><button data-view="Buttons">Buttons</button><button data-view="Dropdowns">Dropdowns</button><button data-view="Tabs">Tabs</button><button data-view="Modals">Modals</button><button data-view="Animations">Animations</button></div>
+          </div>
+        </div>
+
+        <div class="nav-group">
+          <button class="nav-parent" data-nav-group><span class="ico">▤</span><span>Tables & Forms</span><span class="chev">›</span></button>
+          <div class="nav-children">
+            <button class="nav-subparent" data-sub-group>Tables <span>›</span></button><div class="nav-grandchildren"><button data-view="Table Styles">Styles</button><button data-view="Responsive Tables">Responsive</button><button data-view="DataTables">DataTables</button></div>
+            <button class="nav-subparent" data-sub-group>Forms <span>›</span></button><div class="nav-grandchildren"><button data-view="Form Elements">Elements</button><button data-view="Form Layouts">Layouts</button><button data-view="Form Plugins">Plugins</button><button data-view="Validation">Validation</button></div>
+          </div>
+        </div>
+
+        <div class="nav-group">
+          <button class="nav-parent" data-nav-group><span class="ico">⚙</span><span>Build</span><span class="chev">›</span></button>
+          <div class="nav-children">
+            <button class="nav-subparent" data-sub-group>Layout <span>›</span></button><div class="nav-grandchildren"><button data-view="Default Layout">Default</button><button data-view="Flipped Layout">Flipped</button><button data-view="Mini Sidebar">Mini Sidebar</button><button data-view="Full Width">Full Width</button></div>
+            <button class="nav-subparent" data-sub-group>Components <span>›</span></button><div class="nav-grandchildren"><button data-view="Charts">Charts</button><button data-view="Notifications">Notifications</button><button data-view="Calendar">Calendar</button><button data-view="Sliders">Sliders</button></div>
+          </div>
+        </div>
+
+        <div class="nav-heading">Pages</div>
+        <div class="nav-group">
+          <button class="nav-parent" data-nav-group><span class="ico">◫</span><span>Generic</span><span class="chev">›</span></button>
+          <div class="nav-children"><button data-view="Blank">Blank</button><button data-view="Search">Search</button><button data-view="Profile">Profile</button><button data-view="Inbox">Inbox</button><button data-view="Invoice">Invoice</button><button data-view="FAQ">FAQ</button><button data-view="Project List">Project List</button><button data-view="Todo">Todo</button></div>
+        </div>
+        <div class="nav-group">
+          <button class="nav-parent" data-nav-group><span class="ico">◇</span><span>Authentication</span><span class="chev">›</span></button>
+          <div class="nav-children"><button data-view="Sign In">Sign In</button><button data-view="Sign Up">Sign Up</button><button data-view="Lock Screen">Lock Screen</button><button data-view="Two Factor">Two Factor</button></div>
+        </div>
+        <div class="nav-group">
+          <button class="nav-parent" data-nav-group><span class="ico">!</span><span>Error</span><span class="chev">›</span></button>
+          <div class="nav-children"><button data-view="400">400</button><button data-view="401">401</button><button data-view="403">403</button><button data-view="404">404</button><button data-view="500">500</button><button data-view="503">503</button></div>
+        </div>
       </nav>
-      <div class="sidebar-footer"><div class="mini-avatar">HM</div><div><strong>Hinata Miyaji</strong><span>Project Admin</span></div></div>
     </aside>
-    <div class="page">
+
+    <div id="pageOverlay" class="page-overlay"></div>
+
+    <main class="main-shell">
       <header class="topbar">
-        <div class="topbar-left"><button class="icon-button" id="menuButton" aria-label="メニューを開閉">☰</button><div class="search-wrap"><span>⌕</span><input type="search" placeholder="Search sites, tasks, members..." /></div></div>
-        <div class="topbar-actions"><button class="icon-button" aria-label="通知">♢<span class="notification-dot"></span></button><button class="profile-button"><span class="mini-avatar">HM</span><span class="profile-name">Hinata</span><span>⌄</span></button></div>
+        <div class="topbar-left">
+          <button id="menuButton" class="header-button" aria-label="Toggle sidebar">☰</button>
+          <button id="searchButton" class="header-button" aria-label="Search">⌕</button>
+          <span class="breadcrumb"><span id="currentSection">Dashboard</span></span>
+        </div>
+        <div class="topbar-right">
+          <button id="themeButton" class="header-button" aria-label="Theme settings">◐</button>
+          <button id="notificationsButton" class="header-button notification-button" aria-label="Notifications">♢<span class="dot"></span></button>
+          <button id="overlayButton" class="header-button" aria-label="Open side panel">☷</button>
+          <button id="profileButton" class="profile-trigger"><span class="avatar">JS</span><span>J. Smith</span><span>⌄</span></button>
+        </div>
+
+        <div id="profileMenu" class="dropdown profile-menu">
+          <div class="dropdown-title">John Smith</div>
+          <button data-view="Profile">Profile</button><button data-view="Inbox">Inbox <span class="menu-count">15</span></button><button data-view="Invoices">Invoices</button><hr><button data-action="settings">Settings</button><button data-action="signout">Sign Out</button>
+        </div>
+        <div id="notificationsMenu" class="dropdown notifications-menu">
+          <div class="dropdown-title">Notifications</div>
+          <button data-action="notice"><strong>VIP account upgraded successfully</strong><small>15 min ago</small></button>
+          <button data-action="notice"><strong>Please check your payment info</strong><small>50 min ago</small></button>
+          <button data-action="notice"><strong>Web server was automatically restarted</strong><small>4 hours ago</small></button>
+          <button data-action="notice"><strong>You are running out of space</strong><small>16 hours ago</small></button>
+          <button data-action="notice"><strong>New purchases! +$250</strong><small>1 day ago</small></button>
+          <button class="dropdown-footer" data-view="Notifications">View All</button>
+        </div>
       </header>
-      <main class="content">
-        <section class="hero-row"><div><p class="eyebrow">OPERATIONS / DASHBOARD</p><h1>Good afternoon, Hinata.</h1><p class="hero-copy">現場の状態、遅延、次のアクションを一画面で把握します。</p></div><div class="hero-actions"><button class="button secondary">Export</button><button class="button primary">＋ New task</button></div></section>
-        <section class="metric-grid" aria-label="主要KPI">
-          <article class="metric-card"><div class="metric-head"><span class="metric-label">ACTIVE SITES</span><span class="metric-icon blue">□</span></div><div class="metric-value">12</div><div class="metric-foot positive">↑ 8.3% <span>vs last month</span></div></article>
-          <article class="metric-card"><div class="metric-head"><span class="metric-label">TODAY PROGRESS</span><span class="metric-icon violet">↗</span></div><div class="metric-value">72%</div><div class="progress-track"><div class="progress-bar" style="width:72%"></div></div><div class="metric-foot muted">Plan 100% · Delta -28pt</div></article>
-          <article class="metric-card"><div class="metric-head"><span class="metric-label">ATTENTION</span><span class="metric-icon orange">△</span></div><div class="metric-value">3</div><div class="metric-foot negative">2 critical <span>need decision</span></div></article>
-          <article class="metric-card"><div class="metric-head"><span class="metric-label">ON-TIME RATE</span><span class="metric-icon green">✓</span></div><div class="metric-value">91.4%</div><div class="metric-foot positive">↑ 2.6pt <span>this week</span></div></article>
+
+      <section id="themePanel" class="theme-panel" aria-label="Theme settings">
+        <div class="theme-panel-head"><strong>Color Themes</strong><button data-close="themePanel">×</button></div>
+        <div class="theme-swatches"><button class="swatch blue active" data-accent="#0665d0" aria-label="Blue"></button><button class="swatch green" data-accent="#3f9d6e" aria-label="Green"></button><button class="swatch purple" data-accent="#665cac" aria-label="Purple"></button><button class="swatch orange" data-accent="#e56717" aria-label="Orange"></button></div>
+        <div class="theme-panel-head small"><strong>Dark Mode</strong></div>
+        <div class="theme-mode"><button data-theme-choice="light">Light</button><button data-theme-choice="dark">Dark</button><button data-theme-choice="system">System</button></div>
+      </section>
+
+      <section class="hero-strip">
+        <div><h1 id="pageTitle">Dashboard</h1><p id="pageSubtitle">Welcome to your dashboard.</p></div>
+        <button class="hero-action" data-action="quick-add">＋</button>
+      </section>
+
+      <div class="content-wrap">
+        <section class="quick-stats">
+          <button class="stat-tile blue-tile" data-view="Sales"><span class="stat-icon">▣</span><span><strong>1500</strong><small>Sales</small></span></button>
+          <button class="stat-tile green-tile" data-view="Earnings"><span class="stat-icon">$</span><span><strong>$780</strong><small>Earnings</small></span></button>
+          <button class="stat-tile orange-tile" data-view="Messages"><span class="stat-icon">✉</span><span><strong>15</strong><small>Messages</small></span></button>
+          <button class="stat-tile red-tile" data-view="Online Users"><span class="stat-icon">●</span><span><strong>4252</strong><small>Online</small></span></button>
         </section>
-        <section class="dashboard-grid main-grid">
-          <article class="panel chart-panel"><div class="panel-header"><div><p class="panel-kicker">PROGRESS TREND</p><h2>Plan vs Actual</h2></div><div class="segmented" role="group" aria-label="期間"><button class="active">7D</button><button>30D</button><button>90D</button></div></div><div class="chart-wrap"><canvas id="progressChart"></canvas></div><div class="chart-summary"><div><span class="legend-dot plan"></span><strong>Plan</strong><span>100%</span></div><div><span class="legend-dot actual"></span><strong>Actual</strong><span>72%</span></div><div class="delta-box"><span>Current delta</span><strong>-28pt</strong></div></div></article>
-          <article class="panel attention-panel"><div class="panel-header"><div><p class="panel-kicker">ATTENTION QUEUE</p><h2>Needs decision</h2></div><button class="text-button">View all</button></div><div class="attention-list"><button class="attention-item"><span class="status-dot red"></span><span class="attention-copy"><strong>外壁防水の開始遅延</strong><small>Impact: 内装開始 +2 days</small></span><span class="severity critical">Critical</span></button><button class="attention-item"><span class="status-dot amber"></span><span class="attention-copy"><strong>資材搬入の時間変更</strong><small>Action: 搬入枠を再調整</small></span><span class="severity warning">Warning</span></button><button class="attention-item"><span class="status-dot amber"></span><span class="attention-copy"><strong>電気工事の人員不足</strong><small>Impact: 進捗 -12pt</small></span><span class="severity warning">Warning</span></button></div></article>
+
+        <section class="dashboard-columns">
+          <article class="block chart-block">
+            <header class="block-header"><h2>Sales <small>This week</small></h2><div class="block-actions"><button data-chart="sales" class="active">Sales</button><button data-chart="earnings">Earnings</button><button data-action="block-menu">•••</button></div></header>
+            <div class="chart-holder"><canvas id="mainChart"></canvas></div>
+            <div class="block-metrics"><button data-action="metric"><small>This Month</small><strong>720</strong><span class="up">+16%</span></button><button data-action="metric"><small>This Week</small><strong>160</strong><span class="down">-3%</span></button><button data-action="metric"><small>Average</small><strong>24.3</strong><span class="up">+9%</span></button></div>
+          </article>
+
+          <article class="block chart-block">
+            <header class="block-header"><h2>Earnings <small>This week</small></h2><div class="block-actions"><button data-action="refresh">↻</button><button data-action="block-menu">•••</button></div></header>
+            <div class="chart-holder"><canvas id="earningsChart"></canvas></div>
+            <div class="block-metrics"><button data-action="metric"><small>This Month</small><strong>$6,540</strong><span class="up">+4%</span></button><button data-action="metric"><small>This Week</small><strong>$1,525</strong><span class="down">-7%</span></button><button data-action="metric"><small>Balance</small><strong>$9,352</strong><span class="up">+35%</span></button></div>
+          </article>
         </section>
-        <section class="dashboard-grid lower-grid">
-          <article class="panel tasks-panel"><div class="panel-header"><div><p class="panel-kicker">TODAY</p><h2>Site activity</h2></div><button class="icon-button">•••</button></div><div class="table-wrap"><table><thead><tr><th>Task</th><th>Site</th><th>Owner</th><th>Status</th><th>Progress</th></tr></thead><tbody><tr><td><strong>外壁防水</strong><span class="subtext">09:00 – 16:00</span></td><td>神山A棟</td><td><span class="avatar-row"><span class="tiny-avatar">SK</span>佐藤</span></td><td><span class="pill delayed">Delayed</span></td><td><div class="inline-progress"><span style="width:58%"></span></div><small>58%</small></td></tr><tr><td><strong>1F 配線</strong><span class="subtext">08:30 – 15:30</span></td><td>神山A棟</td><td><span class="avatar-row"><span class="tiny-avatar">TM</span>田村</span></td><td><span class="pill active-pill">In progress</span></td><td><div class="inline-progress"><span style="width:74%"></span></div><small>74%</small></td></tr><tr><td><strong>資材搬入</strong><span class="subtext">13:00 – 14:00</span></td><td>徳島B棟</td><td><span class="avatar-row"><span class="tiny-avatar">YM</span>山本</span></td><td><span class="pill planned">Planned</span></td><td><div class="inline-progress"><span style="width:20%"></span></div><small>20%</small></td></tr><tr><td><strong>天井下地</strong><span class="subtext">10:00 – 17:00</span></td><td>徳島B棟</td><td><span class="avatar-row"><span class="tiny-avatar">NK</span>中川</span></td><td><span class="pill done">Done</span></td><td><div class="inline-progress"><span style="width:100%"></span></div><small>100%</small></td></tr></tbody></table></div></article>
-          <article class="panel sites-panel"><div class="panel-header"><div><p class="panel-kicker">SITES</p><h2>Overall status</h2></div><button class="text-button">Manage</button></div><div class="site-list"><div class="site-row"><div class="site-icon">KA</div><div class="site-copy"><strong>神山A棟</strong><span>24 active tasks</span></div><div class="site-score"><strong>68%</strong><span class="trend down">↓ 4pt</span></div></div><div class="site-row"><div class="site-icon">TB</div><div class="site-copy"><strong>徳島B棟</strong><span>17 active tasks</span></div><div class="site-score"><strong>84%</strong><span class="trend up">↑ 3pt</span></div></div><div class="site-row"><div class="site-icon">NC</div><div class="site-copy"><strong>鳴門C棟</strong><span>11 active tasks</span></div><div class="site-score"><strong>93%</strong><span class="trend up">↑ 1pt</span></div></div></div></article>
+
+        <section class="mini-cards">
+          <article class="mini-card"><div class="mini-card-icon blue-soft">✉</div><div><strong>9.25k Subscribers</strong><p>Your main list is growing!</p><button data-action="manage-list">Manage list</button></div></article>
+          <article class="mini-card"><div class="mini-card-icon green-soft">❤</div><div><strong>+36 followers</strong><p>You are doing great!</p><button data-action="followers">Check them out</button></div></article>
+          <article class="mini-card"><div class="mini-card-icon orange-soft">★</div><div><strong>Business Plan</strong><p>This is your current active plan</p><button data-action="upgrade">Upgrade to VIP</button></div></article>
         </section>
-      </main>
-    </div>
+
+        <section class="dashboard-columns lower">
+          <article class="block list-block">
+            <header class="block-header"><h2>Projects</h2><div class="block-actions"><button data-action="new-project">＋ New</button><button data-action="block-menu">•••</button></div></header>
+            <div class="project-row"><button data-view="Project Alpha"><span class="project-dot blue-bg">A</span><span><strong>Project Alpha</strong><small>Web application redesign</small></span><span class="progress-copy">82%</span></button></div>
+            <div class="project-row"><button data-view="Project Beta"><span class="project-dot green-bg">B</span><span><strong>Project Beta</strong><small>Marketing dashboard</small></span><span class="progress-copy">61%</span></button></div>
+            <div class="project-row"><button data-view="Project Gamma"><span class="project-dot orange-bg">G</span><span><strong>Project Gamma</strong><small>Mobile experience</small></span><span class="progress-copy">43%</span></button></div>
+          </article>
+
+          <article class="block account-block">
+            <header class="block-header"><h2>Account Overview</h2><div class="block-actions"><button data-action="refresh">↻</button></div></header>
+            <button class="big-account-stat" data-view="Projects"><strong>16</strong><span>Projects</span><small>2 Active</small></button>
+            <button class="big-account-stat" data-view="Accounts"><strong>63,250</strong><span>Accounts</span><small>97% Active</small></button>
+          </article>
+        </section>
+
+        <section class="shortcut-row">
+          <button data-view="Inbox"><span>✉</span><strong>15</strong><small>Inbox</small></button><button data-view="Profile"><span>●</span><strong>Profile</strong><small>Account</small></button><button data-view="Forum"><span>☷</span><strong>3</strong><small>Forum</small></button><button data-action="search"><span>⌕</span><strong>Search</strong><small>Find anything</small></button><button data-view="Live Stats"><span>⌁</span><strong>Live Stats</strong><small>Realtime</small></button><button data-action="settings"><span>⚙</span><strong>Settings</strong><small>Preferences</small></button>
+        </section>
+      </div>
+
+      <footer class="footer"><span>Crafted independently for SiteFlow UI study</span><button data-action="about">Codebase-inspired UI</button></footer>
+    </main>
+
+    <aside id="sideOverlay" class="side-overlay">
+      <header><div><span class="avatar avatar-xl">JS</span><strong>John Smith</strong><small>Administrator</small></div><button data-close="sideOverlay">×</button></header>
+      <div class="overlay-stats"><button data-view="Clients"><strong>460</strong><span>Clients</span></button><button data-view="Sales"><strong>728</strong><span>Sales</span></button><button data-view="Earnings"><strong>$7,860</strong><span>Earnings</span></button></div>
+      <section><h3>Friends</h3><button class="friend" data-action="friend"><span class="avatar">CW</span><span><strong>Carol White</strong><small>Photographer</small></span><span>›</span></button><button class="friend" data-action="friend"><span class="avatar">HH</span><span><strong>Henry Harrison</strong><small>Web Designer</small></span><span>›</span></button><button class="friend" data-action="friend"><span class="avatar">RM</span><span><strong>Ralph Murray</strong><small>Copywriter</small></span><span>›</span></button></section>
+      <section><h3>Activity</h3><button class="activity" data-action="notice"><span class="activity-dot green-bg"></span><span><strong>+$29 New sale</strong><small>Admin Template · 5 min ago</small></span></button><button class="activity" data-action="notice"><span class="activity-dot red-bg"></span><span><strong>Project removed</strong><small>Best Icon Set · 26 min ago</small></span></button><button class="activity" data-action="notice"><span class="activity-dot blue-bg"></span><span><strong>You edited the file</strong><small>Docs.doc · 3 hours ago</small></span></button></section>
+      <section><h3>Profile</h3><label>Name<input id="profileName" value="John Smith"></label><label>Email<input type="email" value="john.smith@example.com"></label><label>New Password<input type="password" placeholder="••••••••"></label><button class="primary-button" data-action="update-profile">Update</button></section>
+      <section><h3>Settings</h3><label class="setting-row"><span><strong>Online Status</strong><small>Show your status to all</small></span><input type="checkbox" checked></label><label class="setting-row"><span><strong>Verify on Login</strong><small>Most secure option</small></span><input type="checkbox" checked></label><label class="setting-row"><span><strong>Auto Updates</strong><small>Keep app updated</small></span><input type="checkbox" checked></label><label class="setting-row"><span><strong>Notifications</strong><small>For every transaction</small></span><input type="checkbox" checked></label><label class="setting-row"><span><strong>API Access</strong><small>Third party apps</small></span><input type="checkbox"></label></section>
+    </aside>
   </div>
+
+  <div id="searchModal" class="modal" aria-hidden="true"><div class="modal-dialog search-dialog"><button class="modal-close" data-close="searchModal">×</button><h2>Search</h2><form id="searchForm"><input id="globalSearch" autofocus placeholder="Search pages, components, settings…"><button type="submit">Search</button></form><div id="searchResults" class="search-results"></div></div></div>
+  <div id="genericModal" class="modal" aria-hidden="true"><div class="modal-dialog"><button class="modal-close" data-close="genericModal">×</button><h2 id="modalTitle">Action</h2><p id="modalMessage"></p><div class="modal-actions"><button data-close="genericModal">Cancel</button><button class="primary-button" id="modalConfirm">Continue</button></div></div></div>
+  <div id="toastRegion" class="toast-region" aria-live="polite"></div>
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script src="codebase-dashboard.js"></script>
 </body>
