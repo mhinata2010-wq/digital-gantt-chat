@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Loading dashboard…</title>
+  <style>html,body{margin:0;min-height:100%;background:#f5f6f8;font-family:system-ui,sans-serif}body{display:grid;place-items:center;color:#667085}.loader{display:flex;gap:10px;align-items:center}.dot{width:10px;height:10px;border-radius:50%;background:#0665d0;animation:pulse .8s infinite alternate}@keyframes pulse{to{opacity:.25}}</style>
+</head>
+<body>
+  <div class="loader"><span class="dot"></span><span>最新版を読み込み中…</span></div>
+  <script>
+    const version='20261029-1425';
+    fetch(`codebase-dashboard.html?v=${version}`,{cache:'no-store'})
+      .then(r=>{if(!r.ok) throw new Error(`HTTP ${r.status}`); return r.text();})
+      .then(html=>{
+        html=html
+          .replace('href="codebase-dashboard.css"',`href="codebase-dashboard.css?v=${version}"`)
+          .replace('src="codebase-dashboard.js"',`src="codebase-dashboard.js?v=${version}"`);
+        document.open();
+        document.write(html);
+        document.close();
+      })
+      .catch(err=>{
+        document.body.innerHTML=`<main style="padding:32px"><h1>Dashboard load failed</h1><p>${err.message}</p><p>ブラウザで再読み込みしてください。</p></main>`;
+      });
+  </script>
+</body>
+</html>
