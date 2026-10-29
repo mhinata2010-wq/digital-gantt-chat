@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#208965">
+  <title>工程表 | snake site</title>
+  <meta name="description" content="工程を並べ、日付を決め、ひとつの工程表をつくる試作です。">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="design.css?v=20261016-home-dashboard-1">
+  <link rel="stylesheet" href="human.css?v=20261028-2">
+  <script src="sato-data.js?v=20261012-7" defer></script>
+  <script src="receipts.js?v=20261012-8" defer></script>
+  <script src="app.js?v=20261028-human-1" defer></script>
+</head>
+<body>
+  <svg class="icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+    <symbol id="icon-schedule" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.3"/><path d="M12 3.7v8.5h7.9M12 12.2l-3.5 3.4"/></symbol>
+    <symbol id="icon-home" viewBox="0 0 24 24"><path d="m3.5 10.2 8.5-7 8.5 7v9a1.3 1.3 0 0 1-1.3 1.3H4.8a1.3 1.3 0 0 1-1.3-1.3zM9 20.5v-7h6v7"/></symbol>
+    <symbol id="icon-person" viewBox="0 0 24 24"><circle cx="12" cy="7.5" r="3.2"/><path d="M5.5 20v-1.6c0-3 2.6-5 6.5-5s6.5 2 6.5 5V20"/></symbol>
+    <symbol id="icon-arrow" viewBox="0 0 24 24"><path d="M4 12h15m-6-6 6 6-6 6"/></symbol>
+  </svg>
+  <nav class="mobile-nav" aria-label="画面の切り替え">
+    <span class="mobile-nav-indicator" aria-hidden="true"></span>
+    <button type="button" class="nav-add-task" id="navAddTask" aria-label="工程を追加" title="工程を追加"><span aria-hidden="true">＋</span><small>工程を追加</small></button>
+    <button type="button" data-view-button="schedule" aria-label="工程表を見る" title="工程表"><svg aria-hidden="true"><use href="#icon-schedule"/></svg><small>工程表</small></button>
+    <button type="button" data-view-button="home" aria-label="ホームを見る" title="ホーム"><svg aria-hidden="true"><use href="#icon-home"/></svg><small>ホーム</small></button>
+    <button type="button" data-view-button="profile" aria-label="プロフィールを見る" title="プロフィール"><svg aria-hidden="true"><use href="#icon-person"/></svg><small>プロフィール</small></button>
+  </nav>
+  <header class="topbar">
+    <div class="brand"><img src="logo.svg" width="120" height="51" alt="snake site"><span class="division">工程表</span></div>
+    <button id="print" class="quiet print-action" type="button">印刷・PDF</button>
+  </header>
+  <main>
+    <section class="mobile-home" id="mobileHome" aria-label="現場のホーム">
+      <header class="home-dashboard-head"><span id="homeDate">今日</span><h1>現場の確認</h1></header>
+      <section class="home-dashboard-section home-urgent-section" aria-labelledby="homeUrgentTitle">
+        <div class="home-section-heading"><h2 id="homeUrgentTitle">今日対応が必要な工程</h2><span id="homeUrgentCount" class="home-count"></span></div>
+        <div class="home-list" id="homeUrgent"></div>
+      </section>
+      <section class="home-dashboard-section home-review-section" aria-labelledby="homeReviewTitle">
+        <div class="home-section-heading"><h2 id="homeReviewTitle">遅延・天候変更・確認待ち</h2><span id="homeReviewCount" class="home-count"></span></div>
+        <div class="home-list" id="homeReview"></div>
+      </section>
+      <section class="home-dashboard-section home-weather-section" aria-labelledby="homeWeatherTitle">
+        <div class="home-section-heading"><h2 id="homeWeatherTitle">天候により変更を検討する工程</h2><span class="weather-note">予報と現場判断で確認</span></div>
+        <div class="home-list" id="homeWeather"></div>
+      </section>
+      <section class="home-dashboard-section home-upcoming-section" aria-labelledby="homeUpcomingTitle">
+        <div class="home-section-heading"><h2 id="homeUpcomingTitle">直近3件の予定</h2><span class="home-count">予定順</span></div>
+        <div class="home-list" id="homeUpcoming"></div>
+      </section>
+      <section class="home-dashboard-section home-projects-section" aria-labelledby="homeProjectsTitle">
+        <div class="home-section-heading"><h2 id="homeProjectsTitle">参加中の案件一覧</h2><button type="button" id="homeAddTask">＋ 新しい工程表</button></div>
+        <div class="home-projects" id="homeProjects"></div>
+      </section>
+      <p class="rotate-tip"><span aria-hidden="true">↻</span> 工程表を選んで、横向きで日程を確認できます。</p>
+    </section>
+    <section class="profile-screen" id="profileScreen" aria-labelledby="profileTitle" hidden>
+      <div class="profile-heading"><h1 id="profileTitle">プロフィール</h1><button type="button" data-view-button="schedule">工程表へ戻る</button></div>
+      <div class="profile-identity"><span class="profile-avatar" id="profileInitial" aria-hidden="true">人</span><div><h2 id="profileDisplayName">名前が未登録です</h2><p id="profileAffiliation">所属・役割を登録できます</p></div><button type="button" id="editProfile">編集</button></div>
+      <dl class="profile-details"><div><dt>氏名</dt><dd id="profileNameValue"></dd></div><div><dt>会社・所属</dt><dd id="profileCompanyValue"></dd></div><div><dt>役割・職種</dt><dd id="profileRoleValue"></dd></div><div><dt>メールアドレス</dt><dd id="profileEmailValue"></dd></div><div><dt>電話番号</dt><dd id="profilePhoneValue"></dd></div></dl>
+      <p class="profile-note">このプロフィールはこの端末のブラウザに保存されます。ログインアカウントとの連携や他の端末への同期はありません。</p>
+      <button type="button" data-view-button="settings">工程表の設定・データ管理</button>
+    </section>
+    <dialog id="profileDialog" aria-labelledby="profileEditTitle"><form id="profileForm"><h2 id="profileEditTitle">プロフィールを編集</h2>
+      <label>氏名<input name="name" autocomplete="name" maxlength="80"></label>
+      <label>会社・所属<input name="company" autocomplete="organization" maxlength="80"></label>
+      <label>役割・職種<input name="role" autocomplete="organization-title" maxlength="80"></label>
+      <label>メールアドレス<input name="email" type="email" autocomplete="email" maxlength="254"></label>
+      <label>電話番号<input name="phone" type="tel" autocomplete="tel" maxlength="40"></label>
+      <div class="profile-form-actions"><button type="button" id="cancelProfile">キャンセル</button><button class="primary" type="submit">保存</button></div>
+    </form></dialog>
+    <div class="page-head">
+      <div class="page-name"><span class="workspace-eyebrow">PROJECT SCHEDULE <span>工程を、ひと目で。</span></span><h1 id="displayName">現場の工程表</h1><p id="projectMeta" class="visually-hidden">工程を追加して予定を組みましょう。</p></div>
+      <div class="page-actions"><label class="project-switch">案件を切り替え<select id="projectPicker" aria-label="案件を切り替え"></select></label><button type="button" data-view-button="profile">プロフィール</button><button class="primary" id="addTask" type="button">＋ 工程を追加</button></div>
+    </div>
+    <section class="project-controls" id="projectControls" aria-label="工程表の設定">
+      <details class="project-settings" id="projectSettings"><summary>工事名・開始日を編集</summary><div class="settings-fields"><label>工事名<input id="projectName" maxlength="80" autocomplete="off"></label><label>表示開始日<input id="viewStart" type="date"></label></div></details>
+      <div class="period-control" aria-label="表示期間"><span>表示期間</span><div class="segmented"><button type="button" data-days="14" aria-pressed="true">2週間</button><button type="button" data-days="28" aria-pressed="false">4週間</button><button type="button" id="allPeriod" aria-pressed="false">全期間</button></div></div>
+      <a id="openSato" class="sato-shortcut" href="?project=sato-master-2021" hidden>佐藤さんの工程表を見る <span aria-hidden="true">↗</span></a>
+    </section>
+    <section class="schedule-overview" id="scheduleOverview" aria-label="工程表の概要">
+      <div class="overview-intro"><span class="overview-mark" aria-hidden="true">↗</span><div><strong>次の段取りが、見えてくる。</strong><p id="overviewPeriod"></p></div></div>
+      <div class="overview-stat"><strong id="overviewTotal">0</strong><span>登録工程</span></div>
+      <div class="overview-stat"><strong id="overviewVisible">0</strong><span id="overviewVisibleLabel">表示中</span></div>
+      <div class="overview-context"><span id="sourceBadge">端末に保存</span><small id="overviewContext">予定を表示しています</small></div>
+    </section>
+    <section class="board" aria-label="総合工程表">
+      <div class="sheet-heading"><div><small>工事工程</small><h2 id="sheetProjectName">工事名</h2></div><strong>総合工程表</strong><span id="sheetRange">表示期間</span></div>
+      <div class="board-toolbar"><div><small class="board-project-name" id="boardProjectName"></small><strong id="periodLabel">工程表</strong><span id="todayLabel"></span></div><div class="board-actions"><label class="jump-date">日付へ移動<input type="date" id="jumpDate" aria-label="表示する日付"></label><button id="prev" type="button" aria-label="前の期間">‹</button><button id="today" type="button">今日</button><button id="next" type="button" aria-label="次の期間">›</button></div></div>
+      <div class="reader-tools"><div class="segmented" aria-label="工程表の表示期間"><button type="button" data-days="14">2週間</button><button type="button" data-days="28">4週間</button><button type="button" id="readerAll">全期間</button></div><div class="view-switch" aria-label="表示形式"><button type="button" id="showTimeline" aria-pressed="true">工程表</button><button type="button" id="showList" aria-pressed="false">リスト</button></div><button type="button" id="toggleEditing" aria-pressed="false">編集する</button></div>
+      <details id="sourceDetails" class="source-disclosure" hidden><summary>元資料と日付の扱い</summary><p id="sourceNote" class="source-note"></p></details>
+      <section class="search-workspace" aria-label="工程を探す">
+        <label class="search-field"><span aria-hidden="true">⌕</span><input type="search" id="filterQuery" placeholder="工程名・担当・場所で検索" aria-label="工程を検索" autocomplete="off" aria-controls="boardGrid scheduleList"></label>
+        <details class="filter-disclosure" id="filterDisclosure"><summary>絞り込み <span id="filterSummaryCount"></span></summary><section class="schedule-filters" aria-label="工程の絞り込み">
+          <label>棟<select id="filterBuilding" aria-controls="boardGrid"></select></label>
+          <label>階<select id="filterFloor" aria-controls="boardGrid"></select></label>
+          <label>工種<select id="filterTrade" aria-controls="boardGrid"></select></label>
+        </section></details>
+        <button type="button" id="clearFilters">条件をクリア</button>
+      </section>
+      <div class="results-strip"><output id="filterCount" aria-live="polite"></output><label class="period-only"><input id="periodOnly" type="checkbox" checked>表示期間の工程だけ</label><span id="activeConditions"></span></div>
+      <div id="scheduleList" class="schedule-list" hidden></div>
+      <div class="board-scroll" id="boardScroll"><div class="board-grid" id="boardGrid"></div></div>
+      <div class="board-foot"><span id="boardInstruction">線を左右に動かすと開始日を変更できます。</span><span class="reading-legend"><i class="legend-open"></i>予定 <i class="legend-done"></i>完了 <span>線・工程名を押すと詳細</span></span></div>
+    </section>
+    <p class="orientation-hint">縦向きではリスト、横向きでは工程表で、予定を確認できます。</p>
+    <div class="below-board"><span id="saveState" role="status">この端末に保存しました</span><div><button id="export" class="text-action" type="button">データを保存</button><label class="text-action file-action">データを読み込む<input id="import" type="file" accept="application/json,.json"></label><button id="newProject" class="text-action" type="button">新しい工程表</button></div></div>
+  </main>
+  <dialog id="projectDialog" aria-labelledby="projectDialogTitle"><form id="projectForm">
+    <div class="dialog-head"><div><span class="eyebrow">現場</span><h2 id="projectDialogTitle">工程表を作成</h2></div><button type="button" id="closeProjectDialog" class="close" aria-label="閉じる">×</button></div>
+    <label>工事名<input id="newProjectName" name="projectName" required maxlength="80" placeholder="例：中央通り改修工事"></label>
+    <div class="dialog-actions"><span></span><button type="submit" class="primary">工程表を作る</button></div>
+  </form></dialog>
+  <dialog id="taskDetail" aria-labelledby="detailTitle"><div class="dialog-head"><h2 id="detailTitle">工程の詳細</h2><button type="button" class="close" id="closeDetail" aria-label="詳細を閉じる">×</button></div><p id="detailGroup"></p><p id="detailStatus" class="detail-status"></p><dl class="profile-details"><div><dt>開始日</dt><dd id="detailStart"></dd></div><div><dt>終了日</dt><dd id="detailEnd"></dd></div><div><dt>所要日数</dt><dd id="detailDays"></dd></div><div><dt>担当</dt><dd id="detailCompany"></dd></div><div><dt>前提工程</dt><dd id="detailBefore"></dd></div></dl><p id="detailNote"></p><button type="button" id="focusTask" class="primary">この工程の期間を見る</button><button type="button" id="editFromDetail">この工程を編集</button></dialog>
+  <dialog id="taskDialog" aria-labelledby="dialogTitle"><form id="taskForm">
+    <div class="dialog-head"><div><span class="eyebrow">工程</span><h2 id="dialogTitle">工程を追加</h2></div><button type="button" id="closeDialog" class="close" aria-label="閉じる">×</button></div>
+    <label>工程名<input name="name" required maxlength="80" placeholder="例：基礎工事"></label>
+    <label>担当会社・担当<input name="company" maxlength="80" placeholder="例：基礎業者"></label>
+    <div class="dialog-row"><label>開始日<input name="start" type="date" required></label><label>所要日数（暦日）<input name="days" type="number" min="1" max="365" required></label></div>
+    <section class="dependency-editor" aria-labelledby="dependencyTitle">
+      <div class="dependency-editor-head"><strong id="dependencyTitle">前提工程</strong><small>複数選択できます</small></div>
+      <div id="selectedDependencies" class="selected-dependencies" aria-live="polite"></div>
+      <label class="dependency-search-label">工程名で探す<input id="dependencySearch" type="search" autocomplete="off" placeholder="例：土木工事"></label>
+      <div id="dependencyOptions" class="dependency-options" role="group" aria-label="前提工程の候補"></div>
+      <small class="dependency-help">工程表の棒の端から次の工程へ線を引くこともできます。</small>
+    </section>
+    <label>実績状態<select name="status"><option value="unknown">実績未確認</option><option value="open">未完了</option><option value="done">完了</option></select></label>
+    <section id="receiptSection" class="receipt-section" hidden aria-label="この工程の領収書">
+      <div class="receipt-heading"><strong>領収書</strong><span id="receiptState" role="status"></span></div>
+      <label class="receipt-required"><input id="receiptRequired" type="checkbox">この工程では領収書を確認する</label>
+      <div id="receiptActions" hidden>
+        <div class="receipt-buttons"><label class="receipt-upload"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><path d="M8.1 3.5h7.8l1.45 2.2H20a2 2 0 0 1 2 2v10.8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7.7a2 2 0 0 1 2-2h2.65L8.1 3.5ZM12 8.3a4.55 4.55 0 1 0 0 9.1 4.55 4.55 0 0 0 0-9.1Zm0 2a2.55 2.55 0 1 1 0 5.1 2.55 2.55 0 0 1 0-5.1Z"/></svg><span>撮影・写真を選ぶ</span><input id="receiptInput" type="file" accept="image/*" capture="environment" aria-label="領収書を撮影・選択"></label><button type="button" id="receiptReview" class="quiet"></button></div>
+        <ul id="receiptList" class="receipt-list"></ul>
+      </div>
+      <small class="receipt-help">写真はこの端末に保存されます。共有やJSON書き出しには含まれません。</small>
+    </section>
+    <div class="dialog-actions"><button id="deleteTask" type="button" class="danger">この工程を削除</button><button type="submit" class="primary">工程表に反映</button></div>
+  </form></dialog>
+  <div id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
