@@ -142,16 +142,7 @@ function setFieldNav(active){
   for(const [name,id] of Object.entries({projects:'navProjects',home:'navToday',profile:'navProfile'})){
     const button=$(`#${id}`);button?.setAttribute('aria-current',name===active?'page':'false');
   }
-  const nav=$('.field-nav'),indicator=$('.field-nav-indicator'),selected=$('.field-nav-button[aria-current="page"]');
-  if(!nav||!indicator||!selected)return;
-  requestAnimationFrame(()=>{
-    const navBox=nav.getBoundingClientRect(),buttonBox=selected.getBoundingClientRect();
-    indicator.style.setProperty('--indicator-x',`${Math.round(buttonBox.left-navBox.left)}px`);
-    indicator.style.setProperty('--indicator-y',`${Math.round(buttonBox.top-navBox.top)}px`);
-    indicator.style.setProperty('--indicator-width',`${Math.round(buttonBox.width)}px`);
-    indicator.style.setProperty('--indicator-height',`${Math.round(buttonBox.height)}px`);
-    requestAnimationFrame(()=>nav.dataset.ready='true');
-  });
+
 }
 
 function revealScreen(id){
@@ -171,11 +162,43 @@ function showProfile(){
   $('#profileMessage').textContent='';setFieldNav('profile');$('#profileView').focus();
 }
 
+// Keep the last opened project separate from today's scheduled work.
+function lastProjectKey(){return `snake-last-project:${profile.id}`}
+function rememberProject(id){try{localStorage.setItem(lastProjectKey(),id)}catch{}}
+function renderResume(){
+  let id;
+  try{id=localStorage.getItem(lastProjectKey())}catch{}
+  const project=projects.find(item=>item.id===id),button=$('#homeResume');
+  button.hidden=!project;
+  button.dataset.projectId=project?.id||'';
+  button.textContent=project?`前回の続き：${project.name}`:'';
+}
+
+function projectRow(project,home=false){
+  const total=Number(project.task_count||0),done=Number(project.completed_count||0);
+  const percent=Number(project.progress_percent??(total?Math.round(done/total*100):0));
+  const delayed=Number(project.delayed_count||0),alerts=delayed+Number(project.overdue_item_count||0);
+  const period=project.start_date
+    ? `${project.start_date.replaceAll('-','/')} 〜 ${project.deadline?project.deadline.replaceAll('-','/'):'未設定'}`
+    :'工期未設定';
+  const updated=project.updated_at&&!Number.isNaN(Date.parse(project.updated_at))
+    ? `<time datetime="${esc(project.updated_at)}">${formatDateTime(project.updated_at)}</time>`
+    :'—';
+  const role=roleLabel[project.current_role];
+  return `<button class="project-line ${home?'home-project-card':'project-card'}" ${home?'data-home-project':'data-project-id'}="${esc(project.id)}" type="button">
+    <span class="project-line-name"><strong>${esc(project.name)}</strong><small>${esc(project.manager||'責任者未設定')}${role?' ・ '+esc(role):''}</small></span>
+    <span class="project-line-period"><small>工期</small>${esc(period)}</span>
+    <span class="project-line-progress"><small>完了</small>${total?`${done}/${total}工程 ・ 進捗 ${percent}%`:'工程未登録'}${alerts?`<small class="project-line-alert">要対応 ${alerts}件（遅延 ${delayed}件）</small>`:''}${project.unread_count?`<small>未読 ${Number(project.unread_count)}件</small>`:''}</span>
+    <span class="project-line-updated"><small>最終更新</small>${updated}</span><span class="project-line-arrow" aria-hidden="true">›</span>
+  </button>`;
+}
+
 async function showHome(){
   if(!profile)return;revealScreen('homeView');location.hash='home';setFieldNav('home');
   if(!projects.length)projects=await loadProjects();
   $('#homeDate').textContent=new Intl.DateTimeFormat('ja-JP',{month:'numeric',day:'numeric'}).format(new Date());$('#homeProjectCount').textContent=String(projects.length);
-  $('#homeProjectGrid').innerHTML=projects.length?projects.map(project=>`<button class="home-project-card" data-home-project="${project.id}" type="button"><span>${esc(project.manager||'責任者未設定')}</span><b>${esc(project.name)}</b><small>${Number(project.completed_count||0)}/${Number(project.task_count||0)}工程 完了</small></button>`).join(''):'<p class="home-empty">参加中の現場はありません。</p>';
+  renderResume();
+  $('#homeProjectGrid').innerHTML=projects.length?projects.map(project=>projectRow(project,true)).join(''):'<p class="home-empty">参加中の現場はありません。</p>';
   $('#homeAgenda').innerHTML='<p class="home-empty">予定を読み込んでいます。</p>';
   const plans=(await Promise.all(projects.map(async project=>{try{const loaded=await loadProject(project.id),schedule=computeSchedule(loaded.project,loaded.tasks);return loaded.tasks.filter(task=>progressOf(task)<100).map(task=>({project,task,node:schedule.nodes.get(task.id)})).filter(item=>item.node)}catch{return []}}))).flat(),today=todayISO();
   const current=plans.filter(item=>item.node.startDate<=today&&item.node.endDate>=today).sort((a,b)=>a.node.endDate.localeCompare(b.node.endDate))[0],upcoming=plans.filter(item=>item.node.startDate>today).sort((a,b)=>a.node.startDate.localeCompare(b.node.startDate)).slice(0,3);
@@ -196,14 +219,7 @@ function renderProjects(){
     return true;
   });
   visible.sort((a,b)=>sort==='delay'?Number(b.delayed_count||0)-Number(a.delayed_count||0):sort==='progress'?Number(a.progress_percent||0)-Number(b.progress_percent||0):sort==='name'?a.name.localeCompare(b.name,'ja'):String(b.updated_at).localeCompare(String(a.updated_at)));
-  $('#projectGrid').innerHTML=visible.length?visible.map((project,index)=>{
-    const total=project.task_count||0,done=project.completed_count||0,percent=Object.hasOwn(project,'progress_percent')?Number(project.progress_percent||0):(total?Math.round(done/total*100):0),alerts=Number(project.delayed_count||0)+Number(project.overdue_item_count||0);
-    return `<article class="project-card" data-project-id="${project.id}" tabindex="0" role="button" aria-label="${esc(project.name)}を開く" style="--item-delay:${Math.min(index*45,360)}ms">
-      <div class="project-card-top"><span class="role-pill ${project.current_role}">${roleLabel[project.current_role]}</span><time>${formatDateTime(project.updated_at)}</time></div>
-      <h2>${esc(project.name)}</h2><p>${esc(project.manager||'責任者未設定')}</p>
-      ${alerts?`<p class="project-alert">要対応 ${alerts}件（遅延 ${Number(project.delayed_count||0)}件）</p>`:''}<div class="progress"><i style="width:${percent}%"></i></div><div class="project-card-foot"><span>${percent}% ・ ${done}/${total}完了</span><span>${project.unread_count?`未読 ${project.unread_count}`:`${total}工程`}</span></div>
-    </article>`;
-  }).join(''):`<div class="empty-state"><b>${projects.length?'条件に合う案件はありません':'参加している案件はありません'}</b><span>${projects.length?'検索や絞り込みを変更してください。':'「新しい案件」から最初の工程表を作成できます。'}</span></div>`;
+  $('#projectGrid').innerHTML=visible.length?visible.map(project=>projectRow(project)).join(''):`<div class="empty-state"><b>${projects.length?'条件に合う案件はありません':'参加している案件はありません'}</b><span>${projects.length?'検索や絞り込みを変更してください。':'「新しい案件」から最初の工程表を作成できます。'}</span></div>`;
 }
 
 function renderMigration(){
@@ -230,8 +246,8 @@ async function openProject(id){
     const loaded=await loadProject(id);currentProject=loaded.project;tasks=loaded.tasks;managementItems=loaded.managementItems||[];versions=loaded.versions||[];changeRequests=loaded.changeRequests||[];networkLayouts=loaded.networkLayouts||[];networkEventLayouts=loaded.networkEventLayouts||[];fieldOperations=Boolean(loaded.fieldOperations);todayCompany=loadCompanyFilter(id);
     await cacheProject(profile.id,loaded).catch(()=>{});await hydrateBaseline();
     revealScreen('projectView');location.hash=`project=${id}`;
-    activeView='today';renderProject();startRealtime(id);setConnection('online','同期済み');
-  }catch(error){const cached=profile?await readCachedProject(profile.id,id).catch(()=>null):null;if(!cached){showError(error);await showProjects();return}const loaded=cached.payload;currentProject=loaded.project;tasks=loaded.tasks;managementItems=loaded.managementItems||[];versions=loaded.versions||[];changeRequests=loaded.changeRequests||[];networkLayouts=loaded.networkLayouts||[];networkEventLayouts=loaded.networkEventLayouts||[];fieldOperations=Boolean(loaded.fieldOperations);todayCompany=loadCompanyFilter(id);revealScreen('projectView');location.hash=`project=${id}`;activeView='today';renderProject();setConnection('offline',`オフライン・最終同期 ${formatDateTime(cached.cachedAt)}`);toast('保存済みの工程表を表示しています')}
+    activeView='today';renderProject();rememberProject(id);startRealtime(id);setConnection('online','同期済み');
+  }catch(error){const cached=profile?await readCachedProject(profile.id,id).catch(()=>null):null;if(!cached){showError(error);await showProjects();return}const loaded=cached.payload;currentProject=loaded.project;tasks=loaded.tasks;managementItems=loaded.managementItems||[];versions=loaded.versions||[];changeRequests=loaded.changeRequests||[];networkLayouts=loaded.networkLayouts||[];networkEventLayouts=loaded.networkEventLayouts||[];fieldOperations=Boolean(loaded.fieldOperations);todayCompany=loadCompanyFilter(id);revealScreen('projectView');location.hash=`project=${id}`;activeView='today';renderProject();rememberProject(id);setConnection('offline',`オフライン・最終同期 ${formatDateTime(cached.cachedAt)}`);toast('保存済みの工程表を表示しています')}
 }
 
 function startRealtime(projectId){
@@ -709,11 +725,12 @@ $('#resetPassword').addEventListener('click',async()=>{const email=$('#authEmail
 $('#logoutButton').addEventListener('click',async()=>{const userId=profile?.id,pending=userId?await pendingOperations(userId).catch(()=>[]):[];if(pending.length){toast(`未同期の報告が${pending.length}件あります。接続して同期してからログアウトしてください。`);return}await signOut();if(userId)await clearOfflineUser(userId).catch(()=>{});stopRealtime?.();profile=null;projects=[];currentProject=null;showLanding('home')});
 $('#backButton').addEventListener('click',showProjects);$('#brandLink').addEventListener('click',event=>{event.preventDefault();showProjects()});
 $('#navProjects').addEventListener('click',showProjects);$('#navToday').addEventListener('click',showHome);$('#navProfile').addEventListener('click',showProfile);
+$('#homeResume').addEventListener('click',event=>{const id=event.currentTarget.dataset.projectId;if(id)openProject(id)});
 $('#homeAllProjects').addEventListener('click',showProjects);$('#homeProjectGrid').addEventListener('click',event=>{const card=event.target.closest('[data-home-project]');if(card)openProject(card.dataset.homeProject)});$('#homeAgenda').addEventListener('click',event=>{const item=event.target.closest('[data-home-project]');if(item)openProject(item.dataset.homeProject)});$('#homeNowCard').addEventListener('click',event=>{const projectId=event.currentTarget.dataset.projectId;if(projectId)openProject(projectId)});$('#homeNowCard').addEventListener('keydown',event=>{if(['Enter',' '].includes(event.key)&&event.currentTarget.dataset.projectId){event.preventDefault();openProject(event.currentTarget.dataset.projectId)}});
 $('#profileForm').addEventListener('submit',async event=>{event.preventDefault();const form=event.currentTarget,name=form.elements.display_name.value.trim(),button=form.querySelector('[type="submit"]');if(!name){$('#profileMessage').textContent='お名前を入力してください。';return}setBusy(button,true,'保存中');try{profile=await updateProfileName(name);$('#userName').textContent=profile.display_name||profile.email;$('#userInitial').textContent=(profile.display_name||profile.email||'?').slice(0,1).toUpperCase();$('#profileAvatar').textContent=$('#userInitial').textContent;$('#profileMessage').textContent='保存しました。'}catch(error){showError(error,'#profileMessage')}finally{setBusy(button,false)}});$('#profileLogout').addEventListener('click',()=>$('#logoutButton').click());
 $('#newProjectButton').addEventListener('click',()=>{const form=$('#projectForm');form.reset();form.elements.start_date.value=new Date().toISOString().slice(0,10);$('#projectDialog').showModal()});
 $('#projectForm').addEventListener('submit',async event=>{event.preventDefault();const form=event.currentTarget,button=form.querySelector('[type="submit"]'),data=new FormData(form);setBusy(button,true,'案件を作成中…');try{const id=await createProject(data.get('name'),data.get('start_date'));if(data.has('use_template'))await addStandardTemplate(id,button);$('#projectDialog').close();await openProject(id);if(data.has('use_template'))toast('標準工程を作成しました。日数や順序は自由に編集できます。')}catch(error){showError(error)}finally{setBusy(button,false)}});
-$('#projectGrid').addEventListener('click',event=>{const card=event.target.closest('[data-project-id]');if(card)openProject(card.dataset.projectId)});$('#projectGrid').addEventListener('keydown',event=>{if(['Enter',' '].includes(event.key)){const card=event.target.closest('[data-project-id]');if(card){event.preventDefault();openProject(card.dataset.projectId)}}});
+$('#projectGrid').addEventListener('click',event=>{const card=event.target.closest('[data-project-id]');if(card)openProject(card.dataset.projectId)});
 ['projectSearch','projectFilter','projectSort'].forEach(id=>document.getElementById(id)?.addEventListener(id==='projectSearch'?'input':'change',renderProjects));
 document.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>switchView(button.dataset.view)));
 $('#horizonTabs').addEventListener('click',event=>{const button=event.target.closest('[data-horizon]');if(!button)return;todayHorizon=Number(button.dataset.horizon);$('#horizonTabs').querySelectorAll('button').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));renderToday(lastSchedule)});
